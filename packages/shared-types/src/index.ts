@@ -1,7 +1,7 @@
 /**
  * Tipos compartidos entre apps (api, web, mobile).
  *
- * En FASE 2 se añadirán: envelope de API, eventos tipados (ERPEventMap),
+ * En FASE 2+ se añadirán: eventos tipados (ERPEventMap),
  * permisos canónicos `recurso:acción` y tipos de tenant.
  */
 
@@ -9,6 +9,11 @@
 export interface ApiMeta {
   readonly requestId: string;
   readonly timestamp: string;
+}
+
+/** Envelope de error: `meta` solo lleva requestId (contrato de la API). */
+export interface ApiErrorMeta {
+  readonly requestId: string;
 }
 
 export interface ApiError {
@@ -27,7 +32,7 @@ export type ApiSuccess<T> = {
 export type ApiFailure = {
   readonly success: false;
   readonly data: null;
-  readonly meta: ApiMeta;
+  readonly meta: ApiErrorMeta;
   readonly error: ApiError;
 };
 

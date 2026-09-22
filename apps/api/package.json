@@ -10,6 +10,18 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@erp/shared-types": "*"
+    "@erp/shared-types": "*",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "mongoose": "^9.10.1",
+    "pino": "^10.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2"
   }
 }

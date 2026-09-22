@@ -13,14 +13,15 @@ describe('ApiResponse envelope', () => {
     expect(res.error).toBeNull();
   });
 
-  it('mantiene el contrato de error', () => {
+  it('mantiene el contrato de error (meta solo requestId)', () => {
     const res: ApiResponse<null> = {
       success: false,
       data: null,
-      meta: { requestId: 'r-2', timestamp: '2026-09-21T00:00:00.000Z' },
+      meta: { requestId: 'r-2' },
       error: { code: 'VALIDATION_ERROR', message: 'Invalid body' },
     };
     expect(res.success).toBe(false);
     expect(res.error?.code).toBe('VALIDATION_ERROR');
+    expect(Object.keys(res.meta)).toEqual(['requestId']);
   });
 });

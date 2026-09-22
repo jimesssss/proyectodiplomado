@@ -1,0 +1,6 @@
+{
+  "name": "@erp/tests",
+  "private": true,
+  "type": "module",
+  "description": "Pruebas de integración, seguridad, e2e y rendimiento del ERP"
+}
