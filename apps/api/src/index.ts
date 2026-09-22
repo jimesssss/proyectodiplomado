@@ -21,6 +21,7 @@ import {
   ORG_KINDS_BY_PATH,
   ORG_ROUTE_PATHS,
 } from './modules/organization/index.js';
+import { createCrmRouters } from './modules/crm/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -94,6 +95,7 @@ async function bootstrap(): Promise<void> {
         path: `/api/v1/${ORG_ROUTE_PATHS[kind]}`,
         router: createOrgRouter({ jwt, isSessionActive: createSessionChecker() }, kind),
       })),
+      ...createCrmRouters({ jwt, isSessionActive: createSessionChecker() }),
     ],
   });
 

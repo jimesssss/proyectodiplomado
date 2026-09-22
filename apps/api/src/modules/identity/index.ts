@@ -35,5 +35,9 @@ export {
 } from './application/auth-service.js';
 export { hashPassword, verifyPassword } from '../../core/auth/password.js';
 export { validatePasswordPolicy } from './domain/rules/auth-rules.js';
-export { createUser, findUserById } from './infrastructure/repositories/identity-repository.js';
+export {
+  createUser,
+  findUserById,
+  findUserInTenant,
+} from './infrastructure/repositories/identity-repository.js';
 export { toPublicUser, type PublicUser, type User } from './domain/entities/user.js';

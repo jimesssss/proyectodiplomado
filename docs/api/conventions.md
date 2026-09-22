@@ -63,7 +63,7 @@ Tipos compartidos ya existentes: `packages/shared-types` (`ApiResponse<T>`).
 | 11    | `/inventory/products`, `/inventory/stock`, `/inventory/movements`, `/inventory/transfers`, `/inventory/counts` |
 | 12-13 | `/accounting/...`, `/treasury/...`                                                                             |
 | 14-15 | `/workflows`, `/reports`                                                                                       |
-| —     | `/search` (búsqueda global por permisos, desde FASE 8)                                                         |
+| —     | `/search` (búsqueda global con `<recurso>:read` por tipo — implementada desde FASE 8)                          |
 | —     | `/ai` (FASE 20)                                                                                                |
 
 ## 5. Listados y paginación
