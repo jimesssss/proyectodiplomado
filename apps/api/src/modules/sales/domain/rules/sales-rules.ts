@@ -1,70 +1,27 @@
 /**
  * Reglas de dominio Sales: importes, líneas y transiciones de estado.
- * Puras: sin Mongoose, sin Express, sin I/O. El dinero se calcula SIEMPRE en
- * el servidor a 2 decimales (redondeo commercial: mitad hacia arriba).
+ * Puras: sin Mongoose, sin Express, sin I/O. El cálculo de líneas/totales se
+ * comparte con Purchasing desde `core/domain/line-totals` (FASE 10).
  */
-import type { SaleKind, SaleLine, SaleStatus } from '../entities/sale-document.js';
+import type { SaleKind, SaleStatus } from '../entities/sale-document.js';
 
-export const LINES_MAX = 200;
-export const QUANTITY_MAX = 1_000_000;
-export const MONEY_MAX = 1e12;
+// Líneas y dinero: se re-exportan desde core (únicos dueños del cálculo).
+export {
+  LINES_MAX,
+  MONEY_MAX,
+  QUANTITY_MAX,
+  computeLine,
+  computeTotals,
+  normalizeLines,
+  roundMoney,
+} from '../../../../core/domain/line-totals.js';
+export type { DocumentLineInput as SaleLineInput } from '../../../../core/domain/line-totals.js';
+
 export const NOTES_MAX = 500;
 
 export interface RuleValidation {
   readonly valid: boolean;
   readonly issues: readonly string[];
-}
-
-/** Redondeo comercial a 2 decimales (para el total de línea y los totales). */
-export function roundMoney(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-export interface SaleLineInput {
-  readonly description: string;
-  readonly quantity: number;
-  readonly unitPrice: number;
-  readonly taxRate: number;
-  readonly discountPct: number;
-}
-
-/**
- * Calcula una línea: `subtotal = qty × precio × (1 - dto%)` (2 dec.),
- * `tax = subtotal × taxRate%` (2 dec.), `total = subtotal + tax`.
- * El descuento se aplica ANTES del impuesto.
- */
-export function computeLine(input: SaleLineInput): SaleLine {
-  const base = roundMoney(input.quantity * input.unitPrice * (1 - input.discountPct / 100));
-  const tax = roundMoney(base * (input.taxRate / 100));
-  return {
-    description: input.description,
-    quantity: input.quantity,
-    unitPrice: input.unitPrice,
-    taxRate: input.taxRate,
-    discountPct: input.discountPct,
-    subtotal: base,
-    tax,
-    total: roundMoney(base + tax),
-  };
-}
-
-/** Totales del documento = suma de líneas YA redondeadas (2 dec.). */
-export function computeTotals(lines: readonly SaleLine[]): {
-  readonly subtotal: number;
-  readonly tax: number;
-  readonly total: number;
-} {
-  let subtotal = 0;
-  let tax = 0;
-  for (const line of lines) {
-    subtotal = roundMoney(subtotal + line.subtotal);
-    tax = roundMoney(tax + line.tax);
-  }
-  return { subtotal, tax, total: roundMoney(subtotal + tax) };
-}
-
-export function normalizeLines(inputs: readonly SaleLineInput[]): readonly SaleLine[] {
-  return inputs.map(computeLine);
 }
 
 /**

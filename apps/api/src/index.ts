@@ -23,6 +23,7 @@ import {
 } from './modules/organization/index.js';
 import { createCrmRouters } from './modules/crm/index.js';
 import { createSalesRouters } from './modules/sales/index.js';
+import { createPurchasingRouters } from './modules/purchasing/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -98,6 +99,7 @@ async function bootstrap(): Promise<void> {
       })),
       ...createCrmRouters({ jwt, isSessionActive: createSessionChecker() }),
       ...createSalesRouters({ jwt, isSessionActive: createSessionChecker() }),
+      ...createPurchasingRouters({ jwt, isSessionActive: createSessionChecker() }),
     ],
   });
 

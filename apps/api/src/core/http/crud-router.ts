@@ -62,7 +62,13 @@ export interface CrudResourceSpec<
     readonly read: Permission;
     readonly create: Permission;
     readonly update: Permission;
-    readonly delete: Permission;
+    /**
+     * Permiso de la ruta DELETE (soft-delete). Opcional: recursos cuyo
+     * catálogo NO tiene `:delete` (p. ej. `goods.receipt`) se archivan vía
+     * `PATCH {archived}` con el permiso de actualización y NO se publica la
+     * ruta DELETE (peticiones → 404).
+     */
+    readonly delete?: Permission | undefined;
   };
   /** Nombre canónico: `entityType` y prefijo de acciones de auditoría. */
   readonly entity: string;
@@ -171,24 +177,26 @@ export function createCrudRouter<
     },
   );
 
-  router.delete(
-    '/:id',
-    auth,
-    requirePermission(spec.permissions.delete),
-    validate({ params: crudIdParamsSchema }),
-    async (req, res) => {
-      const params = req.params as { id: string };
-      const archived = await spec.handlers.archive(currentUser(req).tenantId, params.id);
-      await auditFromRequest(req, {
-        action: `${entity}.archive`,
-        entityType: entity,
-        entityId: archived.id,
-        newValue: archived,
-        reason: 'archived:true',
-      });
-      res.status(200).json(successResponse(req.requestId, archived));
-    },
-  );
+  if (spec.permissions.delete !== undefined) {
+    router.delete(
+      '/:id',
+      auth,
+      requirePermission(spec.permissions.delete),
+      validate({ params: crudIdParamsSchema }),
+      async (req, res) => {
+        const params = req.params as { id: string };
+        const archived = await spec.handlers.archive(currentUser(req).tenantId, params.id);
+        await auditFromRequest(req, {
+          action: `${entity}.archive`,
+          entityType: entity,
+          entityId: archived.id,
+          newValue: archived,
+          reason: 'archived:true',
+        });
+        res.status(200).json(successResponse(req.requestId, archived));
+      },
+    );
+  }
 
   return router;
 }
