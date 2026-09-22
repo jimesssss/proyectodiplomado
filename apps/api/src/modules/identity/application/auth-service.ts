@@ -30,6 +30,11 @@ export interface AuthDeps {
   readonly jwt: JwtService;
   readonly accessTokenTtl: number;
   readonly refreshTokenTtl: number;
+  /**
+   * Estado del tenant (inyectado desde tenancy en la composition root;
+   * identity no importa ese módulo → sin ciclos). `false` = suspendido.
+   */
+  readonly isTenantActive: (tenantId: string) => Promise<boolean>;
 }
 
 interface LoginInput {
@@ -90,6 +95,12 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
 
   if (user.status !== 'active') {
     throw new ForbiddenError('Account disabled');
+  }
+
+  // Credenciales verificadas → ahora sí se revela si el tenant está suspendido
+  // (antes revelaría estado sin autenticarse).
+  if (!(await deps.isTenantActive(user.tenantId))) {
+    throw new ForbiddenError('Tenant suspended');
   }
 
   await repo.clearLoginAttempts(user.tenantId, email);
@@ -191,12 +202,12 @@ export async function logout(sessionId: string): Promise<void> {
  * Argon2id nuevo y revoca el resto de sesiones (la actual sobrevive).
  */
 export async function changePassword(
-  user: User,
+  userId: string,
   sessionId: string,
   currentPassword: string,
   newPassword: string,
 ): Promise<void> {
-  const storedHash = await repo.getUserPasswordHash(user.id);
+  const storedHash = await repo.getUserPasswordHash(userId);
   if (storedHash === null || !(await verifyPassword(storedHash, currentPassword))) {
     throw new UnauthenticatedError('Invalid credentials');
   }
@@ -211,8 +222,8 @@ export async function changePassword(
   }
 
   const newHash = await hashPassword(newPassword);
-  await repo.updatePasswordHash(user.id, newHash);
-  await repo.revokeUserSessionsExcept(user.id, sessionId);
+  await repo.updatePasswordHash(userId, newHash);
+  await repo.revokeUserSessionsExcept(userId, sessionId);
 }
 
 export async function getProfile(userId: string): Promise<PublicUser> {
@@ -221,6 +232,14 @@ export async function getProfile(userId: string): Promise<PublicUser> {
     throw new NotFoundError('User not found');
   }
   return toPublicUser(user);
+}
+
+/**
+ * Revoca TODAS las sesiones y refresh tokens de un tenant.
+ * Lo usa tenancy al suspender un tenant: el corte de acceso es inmediato.
+ */
+export async function revokeTenantSessions(tenantId: string): Promise<void> {
+  await repo.revokeTenantSessions(tenantId);
 }
 
 export const createSessionChecker = (): SessionChecker => {

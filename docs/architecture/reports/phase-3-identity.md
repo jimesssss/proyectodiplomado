@@ -88,7 +88,7 @@ Total: **50 (FASE 2) + 32 nuevos = 82 tests PASSED** (ver salida real de `npm ru
 - `[...(input.roles ?? [])]` para aceptar `readonly string[]`; `toUser(doc.toObject() as unknown as UserDoc)`.
 - Import de `createHash` en ESM (`node:crypto`) en lugar de `require`.
 - Imports de rutas `.js` correctos y fixtures `Env` actualizados.
-- Limpieza pendiente anotada: en `auth-routes.ts` change-password hay un import dinámico redundante de `getProfile` → **pendiente para FASE 4** (no bloquea).
+- Limpieza de FASE 3 resuelta en FASE 4: `changePassword` ahora recibe `userId` (no un `User` fabricado) y el import dinámico redundante de `getProfile` se eliminó.
 
 ## RIESGOS
 

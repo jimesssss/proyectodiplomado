@@ -23,6 +23,8 @@ export interface AuthRouterDeps {
   readonly accessTokenTtl: number;
   readonly refreshTokenTtl: number;
   readonly isSessionActive: (sessionId: string, userId: string) => Promise<boolean>;
+  /** Estado del tenant (inyectado desde tenancy; ver AuthDeps). */
+  readonly isTenantActive: (tenantId: string) => Promise<boolean>;
 }
 
 export function createAuthRouter(deps: AuthRouterDeps): Router {
@@ -31,6 +33,7 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
     jwt: deps.jwt,
     accessTokenTtl: deps.accessTokenTtl,
     refreshTokenTtl: deps.refreshTokenTtl,
+    isTenantActive: deps.isTenantActive,
   };
   const auth: RequestHandler = requireAuth(deps.jwt, deps.isSessionActive);
 
@@ -73,10 +76,7 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
         throw new Error('requireAuth should populate request.user');
       }
       const body = req.body as z.infer<typeof changePasswordBodySchema>;
-      const { getProfile: loadProfile } = await import('../../application/auth-service.js');
-      const profile = await loadProfile(user.userId);
-      const fullUser = { ...profile, createdAt: new Date(), updatedAt: new Date() };
-      await changePassword(fullUser, user.sessionId, body.currentPassword, body.newPassword);
+      await changePassword(user.userId, user.sessionId, body.currentPassword, body.newPassword);
       res.status(200).json(successResponse(req.requestId, { passwordChanged: true }));
     },
   );

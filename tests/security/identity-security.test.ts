@@ -52,6 +52,7 @@ const app = createApp({
         accessTokenTtl: 900,
         refreshTokenTtl: 3600,
         isSessionActive: createSessionChecker(),
+        isTenantActive: async () => true,
       }),
     },
   ],

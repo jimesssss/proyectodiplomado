@@ -56,6 +56,7 @@ const app = createApp({
         accessTokenTtl: ACCESS_TTL,
         refreshTokenTtl: REFRESH_TTL,
         isSessionActive: createSessionChecker(),
+        isTenantActive: async () => true,
       }),
     },
   ],

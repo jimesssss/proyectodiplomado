@@ -9,6 +9,7 @@ import { connectDatabase, disconnectDatabase } from './core/db/database.js';
 import { createApp } from './core/http/app.js';
 import { createLogger } from './core/logging/logger.js';
 import { createSessionChecker, createAuthRouter } from './modules/identity/index.js';
+import { createTenantRouter, isTenantActive } from './modules/tenancy/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -55,7 +56,12 @@ async function bootstrap(): Promise<void> {
           accessTokenTtl: env.accessTokenTtl,
           refreshTokenTtl: env.refreshTokenTtl,
           isSessionActive: createSessionChecker(),
+          isTenantActive,
         }),
+      },
+      {
+        path: '/api/v1/tenants',
+        router: createTenantRouter({ jwt, isSessionActive: createSessionChecker() }),
       },
     ],
   });

@@ -229,6 +229,16 @@ export async function revokeSessionRefreshTokens(sessionId: string): Promise<voi
   );
 }
 
+/**
+ * Revoca todas las sesiones y refresh tokens de un tenant (uso: suspensión
+ * del tenant por tenancy → corte inmediato de acceso).
+ */
+export async function revokeTenantSessions(tenantId: string): Promise<void> {
+  const now = new Date();
+  await SessionModel.updateMany({ tenantId, revokedAt: null }, { $set: { revokedAt: now } });
+  await RefreshTokenModel.updateMany({ tenantId, revokedAt: null }, { $set: { revokedAt: now } });
+}
+
 // --- Login attempts ---
 
 function attemptKey(tenantId: string, email: string): string {

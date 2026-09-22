@@ -9,6 +9,11 @@
 export interface ApiMeta {
   readonly requestId: string;
   readonly timestamp: string;
+  /** Paginación de listados (opcional; ver docs/api/conventions.md §5). */
+  readonly page?: number;
+  readonly limit?: number;
+  readonly total?: number;
+  readonly nextCursor?: string | null;
 }
 
 /** Envelope de error: `meta` solo lleva requestId (contrato de la API). */

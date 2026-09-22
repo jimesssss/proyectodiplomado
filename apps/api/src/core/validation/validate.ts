@@ -44,7 +44,14 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
           next(new ValidationError('Invalid request query', { issues: toIssues(result.error) }));
           return;
         }
-        req.query = result.data as typeof req.query;
+        // Express 5 expone `req.query` como getter sin setter: asignar
+        // directamente lanzaría TypeError en módulos ESM (strict mode).
+        Object.defineProperty(req, 'query', {
+          value: result.data,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
       }
       next();
     } catch (error) {
