@@ -22,6 +22,7 @@ import {
   ORG_ROUTE_PATHS,
 } from './modules/organization/index.js';
 import { createCrmRouters } from './modules/crm/index.js';
+import { createSalesRouters } from './modules/sales/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -96,6 +97,7 @@ async function bootstrap(): Promise<void> {
         router: createOrgRouter({ jwt, isSessionActive: createSessionChecker() }, kind),
       })),
       ...createCrmRouters({ jwt, isSessionActive: createSessionChecker() }),
+      ...createSalesRouters({ jwt, isSessionActive: createSessionChecker() }),
     ],
   });
 

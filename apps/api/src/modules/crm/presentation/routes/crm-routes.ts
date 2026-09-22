@@ -1,16 +1,11 @@
-import type { Permission } from '@erp/permissions';
-import { Router, type RequestHandler } from 'express';
-import type { ZodType } from 'zod';
-import type { JwtService } from '../../../../core/auth/jwt.js';
+import type { Router } from 'express';
 import {
-  requireAuth,
-  type AuthUser,
-  type SessionChecker,
-} from '../../../../core/auth/middleware.js';
-import { requirePermission } from '../../../../core/auth/require-permission.js';
-import { auditFromRequest } from '../../../../core/audit/audit.js';
-import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
-import { validate } from '../../../../core/validation/validate.js';
+  createCrudRouter,
+  type CrudListQueryBase,
+  type CrudPatchBase,
+  type CrudResourceSpec,
+  type CrudRouterDeps,
+} from '../../../../core/http/crud-router.js';
 import {
   archiveActivity,
   createActivity,
@@ -59,7 +54,6 @@ import {
   createCustomerBodySchema,
   createLeadBodySchema,
   createOpportunityBodySchema,
-  crmIdParamsSchema,
   customerListQuerySchema,
   leadListQuerySchema,
   opportunityListQuerySchema,
@@ -71,10 +65,15 @@ import {
 } from '../validators/crm-validators.js';
 import { createSearchRouter } from './search-routes.js';
 
-export interface CrmRouterDeps {
-  readonly jwt: JwtService;
-  readonly isSessionActive: SessionChecker;
-}
+/** Deps y spec reutilizan la fábrica genérica de core (FASE 8). */
+export type CrmRouterDeps = CrudRouterDeps;
+
+export type CrmResourceSpec<
+  TPublic extends { readonly id: string },
+  TCreate,
+  TPatch extends CrudPatchBase,
+  TQuery extends CrudListQueryBase,
+> = CrudResourceSpec<TPublic, TCreate, TPatch, TQuery>;
 
 /** Rutas de API por recurso (kebab-case, plural — convenciones §1). */
 export const CRM_ROUTE_PATHS = {
@@ -87,184 +86,21 @@ export const CRM_ROUTE_PATHS = {
 
 export type CrmEntity = keyof typeof CRM_ROUTE_PATHS;
 
-interface CrmListQueryBase {
-  readonly page: number;
-  readonly limit: number;
-}
-
-/** Subconjunto de todo patch de CRM usado por la capa de rutas (auditoría). */
-interface CrmPatchBase {
-  readonly archived?: boolean | undefined;
-  readonly status?: string | undefined;
-  readonly stage?: string | undefined;
-}
-
-export interface CrmListResult<T> {
-  readonly items: readonly T[];
-  readonly total: number;
-}
-
-export interface CrmHandlers<
-  TPublic extends { readonly id: string },
-  TCreate,
-  TPatch extends CrmPatchBase,
-  TQuery extends CrmListQueryBase,
-> {
-  create(tenantId: string, body: TCreate): Promise<TPublic>;
-  list(tenantId: string, query: TQuery): Promise<CrmListResult<TPublic>>;
-  get(tenantId: string, id: string): Promise<TPublic>;
-  update(tenantId: string, id: string, patch: TPatch): Promise<TPublic>;
-  archive(tenantId: string, id: string): Promise<TPublic>;
-}
-
-export interface CrmResourceSpec<
-  TPublic extends { readonly id: string },
-  TCreate,
-  TPatch extends CrmPatchBase,
-  TQuery extends CrmListQueryBase,
-> {
-  readonly permissions: {
-    readonly read: Permission;
-    readonly create: Permission;
-    readonly update: Permission;
-    readonly delete: Permission;
-  };
-  /** Nombre canónico del recurso: `entityType` y prefijo de acciones de auditoría. */
-  readonly entity: CrmEntity;
-  readonly createSchema: ZodType;
-  readonly patchSchema: ZodType;
-  readonly listQuerySchema: ZodType;
-  readonly handlers: CrmHandlers<TPublic, TCreate, TPatch, TQuery>;
-}
-
-function currentUser(req: { user?: AuthUser }): AuthUser {
-  const user = req.user;
-  if (user === undefined) {
-    throw new Error('requireAuth should populate request.user');
-  }
-  return user;
-}
-
-function patchReason(patch: CrmPatchBase): string | undefined {
-  if (patch.status !== undefined) {
-    return `status:${patch.status}`;
-  }
-  if (patch.stage !== undefined) {
-    return `stage:${patch.stage}`;
-  }
-  if (patch.archived !== undefined) {
-    return `archived:${String(patch.archived)}`;
-  }
-  return undefined;
-}
-
 /**
- * CRUD genérico para los 5 recursos de CRM (una sola fábrica, UN set de
- * middlewares). Autorización RBAC (ADR-005): `<recurso>:read|create|update|delete`
- * con denegación por defecto. `tenantId` SIEMPRE del JWT; `:id` ajeno o
- * inexistente → 404 uniforme. DELETE = soft-delete (`archived: true`).
- * Toda mutación deja traza de auditoría (FASE 7 / ADR-006).
+ * CRUD de los 5 recursos de CRM sobre la fábrica de core (autorización
+ * `<recurso>:read|create|update|delete`, denegación por defecto; auditoría de
+ * cada mutación). DELETE = soft-delete (`archived: true`).
  */
 export function createCrmRouter<
   TPublic extends { readonly id: string },
   TCreate,
-  TPatch extends CrmPatchBase,
-  TQuery extends CrmListQueryBase,
+  TPatch extends CrudPatchBase,
+  TQuery extends CrudListQueryBase,
 >(deps: CrmRouterDeps, spec: CrmResourceSpec<TPublic, TCreate, TPatch, TQuery>): Router {
-  const router = Router();
-  const auth: RequestHandler = requireAuth(deps.jwt, deps.isSessionActive);
-  const entity = spec.entity;
-
-  router.post(
-    '/',
-    auth,
-    requirePermission(spec.permissions.create),
-    validate({ body: spec.createSchema }),
-    async (req, res) => {
-      const created = await spec.handlers.create(currentUser(req).tenantId, req.body as TCreate);
-      await auditFromRequest(req, {
-        action: `${entity}.create`,
-        entityType: entity,
-        entityId: created.id,
-        newValue: created,
-      });
-      res.status(201).json(successResponse(req.requestId, created));
-    },
-  );
-
-  router.get(
-    '/',
-    auth,
-    requirePermission(spec.permissions.read),
-    validate({ query: spec.listQuerySchema }),
-    async (req, res) => {
-      const query = req.query as unknown as TQuery;
-      const result = await spec.handlers.list(currentUser(req).tenantId, query);
-      res.status(200).json(
-        successListResponse(req.requestId, result.items, {
-          page: query.page,
-          limit: query.limit,
-          total: result.total,
-        }),
-      );
-    },
-  );
-
-  router.get(
-    '/:id',
-    auth,
-    requirePermission(spec.permissions.read),
-    validate({ params: crmIdParamsSchema }),
-    async (req, res) => {
-      const params = req.params as { id: string };
-      const entityFound = await spec.handlers.get(currentUser(req).tenantId, params.id);
-      res.status(200).json(successResponse(req.requestId, entityFound));
-    },
-  );
-
-  router.patch(
-    '/:id',
-    auth,
-    requirePermission(spec.permissions.update),
-    validate({ params: crmIdParamsSchema, body: spec.patchSchema }),
-    async (req, res) => {
-      const params = req.params as { id: string };
-      const body = req.body as TPatch;
-      const updated = await spec.handlers.update(currentUser(req).tenantId, params.id, body);
-      await auditFromRequest(req, {
-        action: body.archived === false ? `${entity}.restore` : `${entity}.update`,
-        entityType: entity,
-        entityId: updated.id,
-        newValue: updated,
-        reason: patchReason(body),
-      });
-      res.status(200).json(successResponse(req.requestId, updated));
-    },
-  );
-
-  router.delete(
-    '/:id',
-    auth,
-    requirePermission(spec.permissions.delete),
-    validate({ params: crmIdParamsSchema }),
-    async (req, res) => {
-      const params = req.params as { id: string };
-      const archived = await spec.handlers.archive(currentUser(req).tenantId, params.id);
-      await auditFromRequest(req, {
-        action: `${entity}.archive`,
-        entityType: entity,
-        entityId: archived.id,
-        newValue: archived,
-        reason: 'archived:true',
-      });
-      res.status(200).json(successResponse(req.requestId, archived));
-    },
-  );
-
-  return router;
+  return createCrudRouter(deps, spec);
 }
 
-const customerSpec: CrmResourceSpec<
+const customerSpec: CrudResourceSpec<
   PublicCustomer,
   Parameters<typeof createCustomer>[1],
   Parameters<typeof updateCustomer>[2],
@@ -289,7 +125,7 @@ const customerSpec: CrmResourceSpec<
   },
 };
 
-const contactSpec: CrmResourceSpec<
+const contactSpec: CrudResourceSpec<
   PublicContact,
   Parameters<typeof createContact>[1],
   Parameters<typeof updateContact>[2],
@@ -314,7 +150,7 @@ const contactSpec: CrmResourceSpec<
   },
 };
 
-const leadSpec: CrmResourceSpec<
+const leadSpec: CrudResourceSpec<
   PublicLead,
   Parameters<typeof createLead>[1],
   Parameters<typeof updateLead>[2],
@@ -339,7 +175,7 @@ const leadSpec: CrmResourceSpec<
   },
 };
 
-const opportunitySpec: CrmResourceSpec<
+const opportunitySpec: CrudResourceSpec<
   PublicOpportunity,
   Parameters<typeof createOpportunity>[1],
   Parameters<typeof updateOpportunity>[2],
@@ -364,7 +200,7 @@ const opportunitySpec: CrmResourceSpec<
   },
 };
 
-const activitySpec: CrmResourceSpec<
+const activitySpec: CrudResourceSpec<
   PublicActivity,
   Parameters<typeof createActivity>[1],
   Parameters<typeof updateActivity>[2],

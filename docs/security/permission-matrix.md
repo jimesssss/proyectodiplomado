@@ -102,28 +102,34 @@ POST /api/v1/roles
 
 ## Rutas protegidas hasta la fecha
 
-| Ruta                                              | Permiso                                                  |
-| ------------------------------------------------- | -------------------------------------------------------- |
-| `GET/PATCH /tenants/current`                      | — / `tenant:update`                                      |
-| `GET /tenants`, `/:id/suspend`, `/:id/reactivate` | `tenant:read` / `tenant:suspend` / `tenant:reactivate`   |
-| `/organizations`…`/cost-centers` (lectura)        | `org:read`                                               |
-| `/organizations`…`/cost-centers` (escritura)      | `org:write`                                              |
-| `GET /users`, `GET /users/:id`                    | `user:read`                                              |
-| `POST /users`                                     | `user:create`                                            |
-| `PATCH /users/:id`                                | `user:update`                                            |
-| `GET /roles`, `GET /roles/:id`                    | `role:read`                                              |
-| `POST /roles`                                     | `role:create`                                            |
-| `PATCH /roles/:id`                                | `role:update`                                            |
-| `DELETE /roles/:id`                               | `role:delete`                                            |
-| `GET /permissions`                                | — (solo autenticado)                                     |
-| `GET /audit`                                      | `audit:read`                                             |
-| `/customers` (GET/PATCH/POST/DELETE)              | `customer:read` / `:update` / `:create` / `:delete`      |
-| `/contacts` (GET/PATCH/POST/DELETE)               | `contact:read` / `:update` / `:create` / `:delete`       |
-| `/leads` (GET/PATCH/POST/DELETE)                  | `lead:read` / `:update` / `:create` / `:delete`          |
-| `/opportunities` (GET/PATCH/POST/DELETE)          | `opportunity:read` / `:update` / `:create` / `:delete`   |
-| `/activities` (GET/PATCH/POST/DELETE)             | `activity:read` / `:update` / `:create` / `:delete`      |
-| `GET /search`                                     | por TIPO: `<recurso>:read` (sin él → el tipo no aparece) |
-| `/auth/*`                                         | — (autenticación propia)                                 |
+| Ruta                                              | Permiso                                                   |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| `GET/PATCH /tenants/current`                      | — / `tenant:update`                                       |
+| `GET /tenants`, `/:id/suspend`, `/:id/reactivate` | `tenant:read` / `tenant:suspend` / `tenant:reactivate`    |
+| `/organizations`…`/cost-centers` (lectura)        | `org:read`                                                |
+| `/organizations`…`/cost-centers` (escritura)      | `org:write`                                               |
+| `GET /users`, `GET /users/:id`                    | `user:read`                                               |
+| `POST /users`                                     | `user:create`                                             |
+| `PATCH /users/:id`                                | `user:update`                                             |
+| `GET /roles`, `GET /roles/:id`                    | `role:read`                                               |
+| `POST /roles`                                     | `role:create`                                             |
+| `PATCH /roles/:id`                                | `role:update`                                             |
+| `DELETE /roles/:id`                               | `role:delete`                                             |
+| `GET /permissions`                                | — (solo autenticado)                                      |
+| `GET /audit`                                      | `audit:read`                                              |
+| `/customers` (GET/PATCH/POST/DELETE)              | `customer:read` / `:update` / `:create` / `:delete`       |
+| `/contacts` (GET/PATCH/POST/DELETE)               | `contact:read` / `:update` / `:create` / `:delete`        |
+| `/leads` (GET/PATCH/POST/DELETE)                  | `lead:read` / `:update` / `:create` / `:delete`           |
+| `/opportunities` (GET/PATCH/POST/DELETE)          | `opportunity:read` / `:update` / `:create` / `:delete`    |
+| `/activities` (GET/PATCH/POST/DELETE)             | `activity:read` / `:update` / `:create` / `:delete`       |
+| `/sales/quotes` (GET/PATCH/POST/DELETE)           | `sales.quote:read` / `:update` / `:create` / `:delete`    |
+| `POST /sales/quotes/:id/approve`                  | `sales.quote:approve` (separado de `:update`)             |
+| `/sales/orders` (GET/PATCH/POST/DELETE)           | `sales.order:read` / `:update` / `:create` / `:delete`    |
+| `/sales/deliveries` (GET/PATCH/POST/DELETE)       | `sales.delivery:read` / `:update` / `:create` / `:delete` |
+| `/sales/invoices` (GET/PATCH/POST/DELETE)         | `sales.invoice:read` / `:update` / `:create` / `:delete`  |
+| `/sales/returns` (GET/PATCH/POST/DELETE)          | `sales.return:read` / `:update` / `:create` / `:delete`   |
+| `GET /search`                                     | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)  |
+| `/auth/*`                                         | — (autenticación propia)                                  |
 
 ## ABAC (ruta, no implementado — PARTIAL)
 

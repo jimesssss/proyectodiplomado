@@ -49,22 +49,22 @@ Tipos compartidos ya existentes: `packages/shared-types` (`ApiResponse<T>`).
 
 ## 4. Endpoints previstos por fase
 
-| Fase  | Rutas                                                                                                          |
-| ----- | -------------------------------------------------------------------------------------------------------------- |
-| 2     | `/health`, `/health/ready`                                                                                     |
-| 3     | `/auth` (login, logout, refresh, change-password, forgot/reset)                                                |
-| 4     | `/tenants` (admin)                                                                                             |
-| 5     | `/organizations`, `/companies`, `/branches`, `/departments`, `/warehouses`, `/cost-centers`                    |
-| 6     | `/users`, `/roles`, `/permissions` (RBAC; `forgot/reset` sigue pendiente con workers/email)                    |
-| 7     | `/audit` (lectura con `audit:read`)                                                                            |
-| 8     | `/customers`, `/contacts`, `/leads`, `/opportunities`, `/activities`                                           |
-| 9     | `/sales/quotes`, `/sales/orders`, `/sales/deliveries`, `/sales/invoices`, `/sales/returns`                     |
-| 10    | `/purchasing/requests`, `/purchasing/orders`, `/purchasing/receipts`, `/purchasing/invoices`                   |
-| 11    | `/inventory/products`, `/inventory/stock`, `/inventory/movements`, `/inventory/transfers`, `/inventory/counts` |
-| 12-13 | `/accounting/...`, `/treasury/...`                                                                             |
-| 14-15 | `/workflows`, `/reports`                                                                                       |
-| —     | `/search` (búsqueda global con `<recurso>:read` por tipo — implementada desde FASE 8)                          |
-| —     | `/ai` (FASE 20)                                                                                                |
+| Fase  | Rutas                                                                                                                                        |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2     | `/health`, `/health/ready`                                                                                                                   |
+| 3     | `/auth` (login, logout, refresh, change-password, forgot/reset)                                                                              |
+| 4     | `/tenants` (admin)                                                                                                                           |
+| 5     | `/organizations`, `/companies`, `/branches`, `/departments`, `/warehouses`, `/cost-centers`                                                  |
+| 6     | `/users`, `/roles`, `/permissions` (RBAC; `forgot/reset` sigue pendiente con workers/email)                                                  |
+| 7     | `/audit` (lectura con `audit:read`)                                                                                                          |
+| 8     | `/customers`, `/contacts`, `/leads`, `/opportunities`, `/activities`                                                                         |
+| 9     | `/sales/quotes` (+ `POST /:id/approve` con `sales.quote:approve`), `/sales/orders`, `/sales/deliveries`, `/sales/invoices`, `/sales/returns` |
+| 10    | `/purchasing/requests`, `/purchasing/orders`, `/purchasing/receipts`, `/purchasing/invoices`                                                 |
+| 11    | `/inventory/products`, `/inventory/stock`, `/inventory/movements`, `/inventory/transfers`, `/inventory/counts`                               |
+| 12-13 | `/accounting/...`, `/treasury/...`                                                                                                           |
+| 14-15 | `/workflows`, `/reports`                                                                                                                     |
+| —     | `/search` (búsqueda global con `<recurso>:read` por tipo — implementada desde FASE 8)                                                        |
+| —     | `/ai` (FASE 20)                                                                                                                              |
 
 ## 5. Listados y paginación
 
@@ -76,6 +76,7 @@ Tipos compartidos ya existentes: `packages/shared-types` (`ApiResponse<T>`).
 
 - `POST` crea (201 + `data`), `PATCH` actualiza parcial, `PUT` solo si se define reemplazo total, `DELETE` soft-delete cuando aplique.
 - **El body nunca define `tenantId`**: se ignora si viene (y se puede rechazar con `VALIDATION_ERROR` para hacerlo explícito).
+- **Los números de documento comercial los asigna el servidor** (numeración atómica `core/numbering`, FASE 9): `number` en el body → `VALIDATION_ERROR`; los importes calculados (líneas y totales) también los calcula el servidor.
 - Idempotencia: cabecera `Idempotency-Key` en pagos/órdenes (evaluar en FASE 9+; NOT TESTED).
 
 ## 7. Validación
