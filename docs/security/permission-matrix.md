@@ -102,46 +102,51 @@ POST /api/v1/roles
 
 ## Rutas protegidas hasta la fecha
 
-| Ruta                                                | Permiso                                                                                                                                 |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET/PATCH /tenants/current`                        | — / `tenant:update`                                                                                                                     |
-| `GET /tenants`, `/:id/suspend`, `/:id/reactivate`   | `tenant:read` / `tenant:suspend` / `tenant:reactivate`                                                                                  |
-| `/organizations`…`/cost-centers` (lectura)          | `org:read`                                                                                                                              |
-| `/organizations`…`/cost-centers` (escritura)        | `org:write`                                                                                                                             |
-| `GET /users`, `GET /users/:id`                      | `user:read`                                                                                                                             |
-| `POST /users`                                       | `user:create`                                                                                                                           |
-| `PATCH /users/:id`                                  | `user:update`                                                                                                                           |
-| `GET /roles`, `GET /roles/:id`                      | `role:read`                                                                                                                             |
-| `POST /roles`                                       | `role:create`                                                                                                                           |
-| `PATCH /roles/:id`                                  | `role:update`                                                                                                                           |
-| `DELETE /roles/:id`                                 | `role:delete`                                                                                                                           |
-| `GET /permissions`                                  | — (solo autenticado)                                                                                                                    |
-| `GET /audit`                                        | `audit:read`                                                                                                                            |
-| `/customers` (GET/PATCH/POST/DELETE)                | `customer:read` / `:update` / `:create` / `:delete`                                                                                     |
-| `/contacts` (GET/PATCH/POST/DELETE)                 | `contact:read` / `:update` / `:create` / `:delete`                                                                                      |
-| `/leads` (GET/PATCH/POST/DELETE)                    | `lead:read` / `:update` / `:create` / `:delete`                                                                                         |
-| `/opportunities` (GET/PATCH/POST/DELETE)            | `opportunity:read` / `:update` / `:create` / `:delete`                                                                                  |
-| `/activities` (GET/PATCH/POST/DELETE)               | `activity:read` / `:update` / `:create` / `:delete`                                                                                     |
-| `/sales/quotes` (GET/PATCH/POST/DELETE)             | `sales.quote:read` / `:update` / `:create` / `:delete`                                                                                  |
-| `POST /sales/quotes/:id/approve`                    | `sales.quote:approve` (separado de `:update`)                                                                                           |
-| `/sales/orders` (GET/PATCH/POST/DELETE)             | `sales.order:read` / `:update` / `:create` / `:delete`                                                                                  |
-| `/sales/deliveries` (GET/PATCH/POST/DELETE)         | `sales.delivery:read` / `:update` / `:create` / `:delete`                                                                               |
-| `/sales/invoices` (GET/PATCH/POST/DELETE)           | `sales.invoice:read` / `:update` / `:create` / `:delete`                                                                                |
-| `/sales/returns` (GET/PATCH/POST/DELETE)            | `sales.return:read` / `:update` / `:create` / `:delete`                                                                                 |
-| `/suppliers` (GET/PATCH/POST/DELETE)                | `supplier:read` / `:update` / `:create` / `:delete`                                                                                     |
-| `/purchasing/requests` (GET/PATCH/POST/DELETE)      | `purchase.request:read` / `:update` / `:create` / `:delete`                                                                             |
-| `/purchasing/orders` (GET/PATCH/POST/DELETE)        | `purchase.order:read` / `:update` / `:create` / `:delete`                                                                               |
-| `/purchasing/receipts` (GET/PATCH/POST; sin DELETE) | `goods.receipt:read` / `:update` / `:create` (sin `:delete` en el catálogo → ruta DELETE no publicada; archivar vía `PATCH {archived}`) |
-| `/purchasing/invoices` (GET/PATCH/POST/DELETE)      | `supplier.invoice:read` / `:update` / `:create` / `:delete`                                                                             |
-| `/purchasing/returns` (GET/PATCH/POST/DELETE)       | `purchase.return:read` / `:update` / `:create` / `:delete`                                                                              |
-| `/inventory/products` (GET/PATCH/POST/DELETE)       | `product:read` / `:update` / `:create` / `:delete`                                                                                      |
-| `GET /inventory/stock`                              | `stock.movement:read` (solo lectura del saldo proyectado: no existe escritura directa de saldos)                                        |
-| `/inventory/movements` (GET/POST; sin PATCH/DELETE) | `stock.movement:read` / `:create` (ledger append-only: el catálogo no define `:update`/`:delete` → rutas no publicadas)                 |
-| `/inventory/transfers` (GET/PATCH/POST; sin DELETE) | `stock.transfer:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                          |
-| `/inventory/counts` (GET/PATCH/POST; sin DELETE)    | `stock.count:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                             |
-| `POST /inventory/counts/:id/approve`                | `stock.count:approve` (separado de `:update`, como `sales.quote:approve`)                                                               |
-| `GET /search`                                       | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                |
-| `/auth/*`                                           | — (autenticación propia)                                                                                                                |
+| Ruta                                                       | Permiso                                                                                                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET/PATCH /tenants/current`                               | — / `tenant:update`                                                                                                                          |
+| `GET /tenants`, `/:id/suspend`, `/:id/reactivate`          | `tenant:read` / `tenant:suspend` / `tenant:reactivate`                                                                                       |
+| `/organizations`…`/cost-centers` (lectura)                 | `org:read`                                                                                                                                   |
+| `/organizations`…`/cost-centers` (escritura)               | `org:write`                                                                                                                                  |
+| `GET /users`, `GET /users/:id`                             | `user:read`                                                                                                                                  |
+| `POST /users`                                              | `user:create`                                                                                                                                |
+| `PATCH /users/:id`                                         | `user:update`                                                                                                                                |
+| `GET /roles`, `GET /roles/:id`                             | `role:read`                                                                                                                                  |
+| `POST /roles`                                              | `role:create`                                                                                                                                |
+| `PATCH /roles/:id`                                         | `role:update`                                                                                                                                |
+| `DELETE /roles/:id`                                        | `role:delete`                                                                                                                                |
+| `GET /permissions`                                         | — (solo autenticado)                                                                                                                         |
+| `GET /audit`                                               | `audit:read`                                                                                                                                 |
+| `/customers` (GET/PATCH/POST/DELETE)                       | `customer:read` / `:update` / `:create` / `:delete`                                                                                          |
+| `/contacts` (GET/PATCH/POST/DELETE)                        | `contact:read` / `:update` / `:create` / `:delete`                                                                                           |
+| `/leads` (GET/PATCH/POST/DELETE)                           | `lead:read` / `:update` / `:create` / `:delete`                                                                                              |
+| `/opportunities` (GET/PATCH/POST/DELETE)                   | `opportunity:read` / `:update` / `:create` / `:delete`                                                                                       |
+| `/activities` (GET/PATCH/POST/DELETE)                      | `activity:read` / `:update` / `:create` / `:delete`                                                                                          |
+| `/sales/quotes` (GET/PATCH/POST/DELETE)                    | `sales.quote:read` / `:update` / `:create` / `:delete`                                                                                       |
+| `POST /sales/quotes/:id/approve`                           | `sales.quote:approve` (separado de `:update`)                                                                                                |
+| `/sales/orders` (GET/PATCH/POST/DELETE)                    | `sales.order:read` / `:update` / `:create` / `:delete`                                                                                       |
+| `/sales/deliveries` (GET/PATCH/POST/DELETE)                | `sales.delivery:read` / `:update` / `:create` / `:delete`                                                                                    |
+| `/sales/invoices` (GET/PATCH/POST/DELETE)                  | `sales.invoice:read` / `:update` / `:create` / `:delete`                                                                                     |
+| `/sales/returns` (GET/PATCH/POST/DELETE)                   | `sales.return:read` / `:update` / `:create` / `:delete`                                                                                      |
+| `/suppliers` (GET/PATCH/POST/DELETE)                       | `supplier:read` / `:update` / `:create` / `:delete`                                                                                          |
+| `/purchasing/requests` (GET/PATCH/POST/DELETE)             | `purchase.request:read` / `:update` / `:create` / `:delete`                                                                                  |
+| `/purchasing/orders` (GET/PATCH/POST/DELETE)               | `purchase.order:read` / `:update` / `:create` / `:delete`                                                                                    |
+| `/purchasing/receipts` (GET/PATCH/POST; sin DELETE)        | `goods.receipt:read` / `:update` / `:create` (sin `:delete` en el catálogo → ruta DELETE no publicada; archivar vía `PATCH {archived}`)      |
+| `/purchasing/invoices` (GET/PATCH/POST/DELETE)             | `supplier.invoice:read` / `:update` / `:create` / `:delete`                                                                                  |
+| `/purchasing/returns` (GET/PATCH/POST/DELETE)              | `purchase.return:read` / `:update` / `:create` / `:delete`                                                                                   |
+| `/inventory/products` (GET/PATCH/POST/DELETE)              | `product:read` / `:update` / `:create` / `:delete`                                                                                           |
+| `GET /inventory/stock`                                     | `stock.movement:read` (solo lectura del saldo proyectado: no existe escritura directa de saldos)                                             |
+| `/inventory/movements` (GET/POST; sin PATCH/DELETE)        | `stock.movement:read` / `:create` (ledger append-only: el catálogo no define `:update`/`:delete` → rutas no publicadas)                      |
+| `/inventory/transfers` (GET/PATCH/POST; sin DELETE)        | `stock.transfer:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                               |
+| `/inventory/counts` (GET/PATCH/POST; sin DELETE)           | `stock.count:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                                  |
+| `POST /inventory/counts/:id/approve`                       | `stock.count:approve` (separado de `:update`, como `sales.quote:approve`)                                                                    |
+| `/accounting/accounts` (GET/PATCH/POST; sin DELETE)        | `accounting.account:read` / `:update` / `:create` (sin `:delete` en el catálogo → ruta DELETE no publicada; archivar vía `PATCH {archived}`) |
+| `/accounting/journal-entries` (GET/PATCH/POST; sin DELETE) | `accounting.journal:read` / `:update` / `:create` (sin `:delete`: los asientos se descartan cancelándose, no archivándose)                   |
+| `POST /accounting/journal-entries/:id/post`                | `accounting.journal:post` (separado de `:update`, como `sales.quote:approve`)                                                                |
+| `/accounting/periods` (GET/PATCH/POST; sin DELETE)         | `accounting.period:read` / `:update` / `:create` (sin `:delete`: los períodos se cierran, no se archivan)                                    |
+| `/accounting/taxes` (GET/PATCH/POST; sin DELETE)           | `accounting.tax:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                               |
+| `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                     |
+| `/auth/*`                                                  | — (autenticación propia)                                                                                                                     |
 
 ## ABAC (ruta, no implementado — PARTIAL)
 
