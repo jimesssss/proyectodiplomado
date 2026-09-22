@@ -15,7 +15,7 @@ import {
   computeTotals,
   isEditable,
   normalizeCurrency,
-  normalizeLines,
+  normalizePurchaseLines,
   validateCurrency,
   type PurchaseLineInput,
 } from '../domain/rules/purchase-rules.js';
@@ -23,6 +23,13 @@ import {
   purchaseRepo,
   type PurchaseListFilter,
 } from '../infrastructure/repositories/purchase-repository.js';
+// FKs de Organization/Inventory + posting a stock (composición FASE 11).
+// Purchasing → Inventory, pero NUNCA al revés: sin ciclos de módulos.
+import {
+  assertProductActive,
+  assertWarehouseActive,
+  postReceiptToStock,
+} from '../../inventory/index.js';
 import { getSupplier } from './supplier-service.js';
 
 /**
@@ -45,6 +52,8 @@ export interface CreatePurchaseInput {
   readonly requestId?: string | undefined;
   readonly orderId?: string | undefined;
   readonly invoiceId?: string | undefined;
+  /** Almacén destino — obligatorio SOLO en recepciones (FK Organization). */
+  readonly warehouseId?: string | undefined;
 }
 
 export interface PatchPurchaseInput {
@@ -56,6 +65,7 @@ export interface PatchPurchaseInput {
   readonly requestId?: string | null | undefined;
   readonly orderId?: string | null | undefined;
   readonly invoiceId?: string | null | undefined;
+  readonly warehouseId?: string | undefined;
   readonly status?: PurchaseStatus | undefined;
   readonly archived?: boolean | undefined;
 }
@@ -93,6 +103,18 @@ async function assertPurchaseExists(
   return getPurchase(tenantId, kind, id);
 }
 
+/** Vínculos `productId` de líneas de recepción (404 ajeno / 409 archivado). */
+async function assertReceiptProducts(
+  tenantId: string,
+  lines: readonly PurchaseLine[],
+): Promise<void> {
+  for (const line of lines) {
+    if (line.productId !== null) {
+      await assertProductActive(tenantId, line.productId);
+    }
+  }
+}
+
 export async function createPurchase(
   tenantId: string,
   kind: PurchaseKind,
@@ -114,6 +136,16 @@ export async function createPurchase(
     supplierId = input.supplierId;
   }
 
+  // --- Almacén destino (SOLO recepción; inexistente/ajeno → 404, archivado → 409) ---
+  let warehouseId: string | null = null;
+  if (kind === 'goods.receipt') {
+    if (input.warehouseId === undefined) {
+      throw new ValidationError('warehouseId is required for a goods receipt');
+    }
+    await assertWarehouseActive(tenantId, input.warehouseId);
+    warehouseId = input.warehouseId;
+  }
+
   // --- Referencias del tipo (todas del mismo tenant → 404 uniforme) ---
   if (input.requestId !== undefined) {
     await assertPurchaseExists(tenantId, 'purchase.request', input.requestId);
@@ -126,7 +158,10 @@ export async function createPurchase(
   }
 
   const issueDate = input.issueDate ?? new Date();
-  const lines = normalizeLines(input.lines);
+  const lines = normalizePurchaseLines(input.lines);
+  if (kind === 'goods.receipt') {
+    await assertReceiptProducts(tenantId, lines);
+  }
   const totals = computeTotals(lines);
   // Numeración atómica por tenant+tipo+año (core/numbering).
   const number = await nextDocumentNumber(tenantId, kind, PURCHASE_PREFIX[kind]);
@@ -146,6 +181,7 @@ export async function createPurchase(
     requestId: input.requestId ?? null,
     orderId: input.orderId ?? null,
     invoiceId: input.invoiceId ?? null,
+    warehouseId,
   };
   const purchase = await purchaseRepo.create(tenantId, payload);
   return toPublicPurchaseDocument(purchase);
@@ -191,6 +227,7 @@ const BUSINESS_FIELDS = new Set([
   'requestId',
   'orderId',
   'invoiceId',
+  'warehouseId',
 ]);
 
 export async function updatePurchase(
@@ -214,12 +251,20 @@ export async function updatePurchase(
   const set: Record<string, unknown> = {};
 
   if (input.lines !== undefined) {
-    const lines: PurchaseLine[] = [...normalizeLines(input.lines)];
+    const lines: PurchaseLine[] = [...normalizePurchaseLines(input.lines)];
+    if (kind === 'goods.receipt') {
+      await assertReceiptProducts(tenantId, lines);
+    }
     const totals = computeTotals(lines);
     set.lines = [...lines];
     set.subtotal = totals.subtotal;
     set.tax = totals.tax;
     set.total = totals.total;
+  }
+  if (input.warehouseId !== undefined) {
+    // Solo recepciones admiten el campo (esquestricto por tipo) — borrador.
+    await assertWarehouseActive(tenantId, input.warehouseId);
+    set.warehouseId = input.warehouseId;
   }
   if (input.supplierId !== undefined) {
     await getSupplier(tenantId, input.supplierId);
@@ -283,6 +328,18 @@ export async function updatePurchase(
   const updated = await purchaseRepo.update(tenantId, kind, id, set);
   if (updated === null) {
     throw new NotFoundError();
+  }
+  // Recepción a `posted` (terminal) → alimenta el stock en Inventory (FASE 11).
+  // El estado terminal es la guarda de at-most-once sin transacciones: solo las
+  // líneas con `productId` vinculado crean movimiento; el resto se omiten.
+  if (kind === 'goods.receipt' && set.status === 'posted') {
+    await postReceiptToStock({
+      tenantId,
+      id: updated.id,
+      number: updated.number,
+      warehouseId: updated.warehouseId,
+      lines: updated.lines,
+    });
   }
   return toPublicPurchaseDocument(updated);
 }

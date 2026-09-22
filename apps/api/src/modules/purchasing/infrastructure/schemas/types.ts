@@ -32,6 +32,8 @@ export interface PurchaseDoc {
   requestId?: Types.ObjectId | null;
   orderId?: Types.ObjectId | null;
   invoiceId?: Types.ObjectId | null;
+  /** Almacén destino — solo `goods.receipt` (FK a Organization). */
+  warehouseId?: Types.ObjectId | null;
   archived: boolean;
   createdAt: Date;
   updatedAt: Date;

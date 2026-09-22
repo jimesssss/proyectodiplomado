@@ -4,7 +4,8 @@
  * sin I/O. El cálculo de líneas/totales se comparte con Sales desde
  * `core/domain/line-totals` (FASE 10).
  */
-import type { PurchaseKind, PurchaseStatus } from '../entities/purchase-document.js';
+import type { PurchaseKind, PurchaseLine, PurchaseStatus } from '../entities/purchase-document.js';
+import { computeLine, type DocumentLineInput } from '../../../../core/domain/line-totals.js';
 
 export const NOTES_MAX = 500;
 
@@ -23,7 +24,27 @@ export {
   normalizeLines,
   roundMoney,
 } from '../../../../core/domain/line-totals.js';
-export type { DocumentLineInput as PurchaseLineInput } from '../../../../core/domain/line-totals.js';
+
+/**
+ * Input de línea de compra: el de core + `productId` opcional (solo válido en
+ * recepciones; el validador por tipo decide si se admite — resto de tipos → 400).
+ */
+export interface PurchaseLineInput extends DocumentLineInput {
+  readonly productId?: string | undefined;
+}
+
+/**
+ * Normaliza líneas de compra preservando el vínculo opcional `productId`
+ * (computeLine solo devuelve importes: el enlace se reaplica aquí).
+ */
+export function normalizePurchaseLines(
+  inputs: readonly PurchaseLineInput[],
+): readonly PurchaseLine[] {
+  return inputs.map((input) => ({
+    ...computeLine(input),
+    productId: input.productId ?? null,
+  }));
+}
 
 /**
  * Transiciones válidas por tipo. Cada tipo solo declara SUS estados (el resto

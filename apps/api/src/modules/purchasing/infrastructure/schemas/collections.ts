@@ -21,6 +21,8 @@ const lineSchema = new Schema(
     subtotal: { type: Number, required: true },
     tax: { type: Number, required: true },
     total: { type: Number, required: true },
+    // Vínculo con `products` — solo recepciones lo enlazan (resto: null).
+    productId: { type: Schema.Types.ObjectId },
   },
   { _id: false },
 );
@@ -42,6 +44,8 @@ const purchaseSchema = new Schema<PurchaseDoc>(
     requestId: { type: Schema.Types.ObjectId, default: null },
     orderId: { type: Schema.Types.ObjectId, default: null },
     invoiceId: { type: Schema.Types.ObjectId, default: null },
+    // Almacén destino (SOLO recepciones; FK a Organization — FASE 11).
+    warehouseId: { type: Schema.Types.ObjectId, default: null },
     archived: { type: Boolean, required: true, default: false },
   },
   { timestamps: true, collection: PURCHASES_COLLECTION },

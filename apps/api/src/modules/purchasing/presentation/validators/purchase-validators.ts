@@ -4,6 +4,7 @@ import {
   PURCHASE_PATCH_STATUSES,
   PURCHASE_REFS,
   PURCHASE_REQUIRES_SUPPLIER,
+  PURCHASE_REQUIRES_WAREHOUSE,
   PURCHASE_STATUSES,
   type PurchaseKind,
   type PurchaseStatus,
@@ -37,7 +38,19 @@ const purchaseLineSchema = z.strictObject({
   discountPct: z.number().min(0).max(100).default(0),
 });
 
-const linesField = z.array(purchaseLineSchema).min(1).max(LINES_MAX);
+/**
+ * Línea de recepción: admite `productId` opcional (vínculo con el maestro de
+ * productos que, al pasar a `posted`, alimenta el stock — FASE 11). Los demás
+ * tipos usan la línea base estricta: `productId` → 400.
+ */
+const receiptLineSchema = purchaseLineSchema.extend({
+  productId: objectId.optional(),
+});
+
+function linesFieldFor(kind: PurchaseKind) {
+  const line = kind === 'goods.receipt' ? receiptLineSchema : purchaseLineSchema;
+  return z.array(line).min(1).max(LINES_MAX);
+}
 const currencyField = z
   .string()
   .regex(/^[A-Za-z]{3}$/, 'Invalid currency (ISO-4217)')
@@ -53,13 +66,17 @@ function statusEnum(statuses: readonly PurchaseStatus[]): z.ZodType<PurchaseStat
 export function createPurchaseBodySchema(kind: PurchaseKind): z.ZodType {
   const refs = PURCHASE_REFS[kind];
   const shape: Record<string, z.ZodType> = {
-    lines: linesField,
+    lines: linesFieldFor(kind),
     currency: currencyField,
     issueDate: z.coerce.date().optional(),
     notes: notesField.optional(),
   };
   if (PURCHASE_REQUIRES_SUPPLIER[kind]) {
     shape.supplierId = objectId;
+  }
+  if (PURCHASE_REQUIRES_WAREHOUSE[kind]) {
+    // Recepción SIEMPRE nace con almacén destino (FK a Organization).
+    shape.warehouseId = objectId;
   }
   if (refs.includes('requestId')) {
     shape.requestId = objectId.optional();
@@ -77,7 +94,7 @@ export function createPurchaseBodySchema(kind: PurchaseKind): z.ZodType {
 export function patchPurchaseBodySchema(kind: PurchaseKind): z.ZodType {
   const refs = PURCHASE_REFS[kind];
   const shape: Record<string, z.ZodType> = {
-    lines: linesField.optional(),
+    lines: linesFieldFor(kind).optional(),
     currency: currencyField,
     issueDate: z.coerce.date().optional(),
     notes: notesField.nullable().optional(),
@@ -87,6 +104,10 @@ export function patchPurchaseBodySchema(kind: PurchaseKind): z.ZodType {
   // En recepciones el proveedor se deriva de la orden: el campo NO existe.
   if (PURCHASE_REQUIRES_SUPPLIER[kind]) {
     shape.supplierId = objectId.optional();
+  }
+  if (PURCHASE_REQUIRES_WAREHOUSE[kind]) {
+    // Almacén editable solo en borrador (bloqueo de campos de negocio).
+    shape.warehouseId = objectId.optional();
   }
   if (refs.includes('requestId')) {
     shape.requestId = objectId.nullable().optional();

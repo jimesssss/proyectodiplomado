@@ -19,20 +19,21 @@ Dos colecciones del módulo `purchasing`. Documentos de negocio: `tenantId` SIEM
 
 ## Colección `purchaseDocuments`
 
-| Campo                            | Tipo / notas                                                                                                                                                    |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tenantId`                       | string (SIEMPRE del JWT)                                                                                                                                        |
-| `kind`                           | `purchase.request\|purchase.order\|goods.receipt\|supplier.invoice\|purchase.return` (enum en BD + filtro en todo query)                                        |
-| `number`                         | string, inmutable, serie del servidor (`RQ/PO/GR/PI/RET-YYYY-000001`)                                                                                           |
-| `supplierId`                     | ObjectId → `suppliers` (validado en servicio; derivado de la orden en recepciones)                                                                              |
-| `status`                         | string, máquina de estados por `kind` (validada en servicio)                                                                                                    |
-| `currency`                       | ISO-4217 a mayúsculas (default `USD`)                                                                                                                           |
-| `issueDate`                      | Date (default: ahora del servidor)                                                                                                                              |
-| `lines[]`                        | subdoc **sin `_id`**: `description`, `quantity`, `unitPrice`, `taxRate`, `discountPct`, `subtotal`, `tax`, `total` (los 3 últimos SOLO los escribe el servidor) |
-| `subtotal/tax/total`             | number, redondeo comercial a 2 decimales (suman líneas ya redondeadas)                                                                                          |
-| `notes?`                         | string, limpiable con `null`                                                                                                                                    |
-| `requestId?/orderId?/invoiceId?` | ObjectId, solo los permitidos por `kind` (FK purchases, validadas en servicio)                                                                                  |
-| `archived`                       | boolean (soft-delete)                                                                                                                                           |
+| Campo                            | Tipo / notas                                                                                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tenantId`                       | string (SIEMPRE del JWT)                                                                                                                                                                                                                       |
+| `kind`                           | `purchase.request\|purchase.order\|goods.receipt\|supplier.invoice\|purchase.return` (enum en BD + filtro en todo query)                                                                                                                       |
+| `number`                         | string, inmutable, serie del servidor (`RQ/PO/GR/PI/RET-YYYY-000001`)                                                                                                                                                                          |
+| `supplierId`                     | ObjectId → `suppliers` (validado en servicio; derivado de la orden en recepciones)                                                                                                                                                             |
+| `status`                         | string, máquina de estados por `kind` (validada en servicio)                                                                                                                                                                                   |
+| `currency`                       | ISO-4217 a mayúsculas (default `USD`)                                                                                                                                                                                                          |
+| `issueDate`                      | Date (default: ahora del servidor)                                                                                                                                                                                                             |
+| `lines[]`                        | subdoc **sin `_id`**: `description`, `quantity`, `unitPrice`, `taxRate`, `discountPct`, `subtotal`, `tax`, `total` (los 3 últimos SOLO los escribe el servidor) + `productId` (`ObjectId → products`, solo en recepciones; `null` en el resto) |
+| `subtotal/tax/total`             | number, redondeo comercial a 2 decimales (suman líneas ya redondeadas)                                                                                                                                                                         |
+| `notes?`                         | string, limpiable con `null`                                                                                                                                                                                                                   |
+| `requestId?/orderId?/invoiceId?` | ObjectId, solo los permitidos por `kind` (FK purchases, validadas en servicio)                                                                                                                                                                 |
+| `warehouseId?`                   | ObjectId → `warehouses` (Organization). **Solo `goods.receipt`** (FK validada en servicio); `null` en el resto                                                                                                                                 |
+| `archived`                       | boolean (soft-delete)                                                                                                                                                                                                                          |
 
 - `null` = campo limpiado vía PATCH (solo borradores); `undefined` = nunca escrito.
 - `number`, `issueDate`, `lines` y refs son **inmutables fuera de `draft`** (bloqueo en servicio con 409).
@@ -64,5 +65,6 @@ La unicidad de número y de código es **por tenant**: lo mismo en dos tenants n
 
 - **PARTIAL**: sin transacciones Mongo (standalone): documento y contador en operaciones separadas (el contador es atómico).
 - **PARTIAL**: sin referential integrity en BD (cascadas/borrado en bloque): el soft-delete conserva enlaces por diseño (coherente con FASE 5/8/9).
-- **NOT TESTED**: Atlas real (índices creados en memory server igual que en dev); recepciones `posted` → stock (pendiente de FASE 11); volumen alto de escrituras sobre `counters`.
+- **NOT TESTED**: Atlas real (índices creados en memory server igual que en dev); volumen alto de escrituras sobre `counters`.
+- **RISK**: posting `posted`→stock sin transacciones (at-most-once: el estado terminal evita el doble-posting, pero una caída entre escrituras deja stock pendiente — recuperable con un movimiento manual); `warehouseId` de recepciones sin índice (los listados de compras NO filtran por almacén; query justificada no existe → ADR-003 no exige índice).
 - **RISK**: sin índice de texto (búsqueda de proveedores en fases de reporting); sin retención/TTL.

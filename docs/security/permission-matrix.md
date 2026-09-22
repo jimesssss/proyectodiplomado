@@ -134,6 +134,12 @@ POST /api/v1/roles
 | `/purchasing/receipts` (GET/PATCH/POST; sin DELETE) | `goods.receipt:read` / `:update` / `:create` (sin `:delete` en el catálogo → ruta DELETE no publicada; archivar vía `PATCH {archived}`) |
 | `/purchasing/invoices` (GET/PATCH/POST/DELETE)      | `supplier.invoice:read` / `:update` / `:create` / `:delete`                                                                             |
 | `/purchasing/returns` (GET/PATCH/POST/DELETE)       | `purchase.return:read` / `:update` / `:create` / `:delete`                                                                              |
+| `/inventory/products` (GET/PATCH/POST/DELETE)       | `product:read` / `:update` / `:create` / `:delete`                                                                                      |
+| `GET /inventory/stock`                              | `stock.movement:read` (solo lectura del saldo proyectado: no existe escritura directa de saldos)                                        |
+| `/inventory/movements` (GET/POST; sin PATCH/DELETE) | `stock.movement:read` / `:create` (ledger append-only: el catálogo no define `:update`/`:delete` → rutas no publicadas)                 |
+| `/inventory/transfers` (GET/PATCH/POST; sin DELETE) | `stock.transfer:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                          |
+| `/inventory/counts` (GET/PATCH/POST; sin DELETE)    | `stock.count:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                             |
+| `POST /inventory/counts/:id/approve`                | `stock.count:approve` (separado de `:update`, como `sales.quote:approve`)                                                               |
 | `GET /search`                                       | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                |
 | `/auth/*`                                           | — (autenticación propia)                                                                                                                |
 

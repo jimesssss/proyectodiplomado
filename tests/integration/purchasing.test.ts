@@ -1,10 +1,11 @@
 /**
- * Integración Purchasing — FASE 10.
+ * Integración Purchasing — FASE 10 (+ composición FASE 11).
  * Contra MongoDB real (memory server): maestro de proveedores (código único
  * por tenant e inmutable), numeración secuencial por tenant+tipo+año,
  * líneas con importes calculados en el servidor, máquinas de estado,
- * recepción sin ruta DELETE (solo PATCH {archived}), FKs del mismo tenant
- * (404 uniforme) y aislamiento cruzado.
+ * recepción exige ORDEN + ALMACEN (FK a Organization), sin ruta DELETE
+ * (solo PATCH {archived}), FKs del mismo tenant (404 uniforme) y
+ * aislamiento cruzado.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -20,6 +21,11 @@ import {
   createAuthRouter,
   createSessionChecker,
 } from '../../apps/api/src/modules/identity/index.js';
+import {
+  createOrgRouter,
+  ORG_KINDS_BY_PATH,
+  ORG_ROUTE_PATHS,
+} from '../../apps/api/src/modules/organization/index.js';
 import { createTenantRouter, isTenantActive } from '../../apps/api/src/modules/tenancy/index.js';
 import { createPurchasingRouters } from '../../apps/api/src/modules/purchasing/index.js';
 
@@ -64,6 +70,11 @@ const app = createApp({
     },
     { path: '/api/v1/tenants', router: createTenantRouter(deps) },
     { path: '/api/v1/audit', router: createAuditRouter(deps) },
+    // Cadena de organización para el almacén de las recepciones (FK).
+    ...ORG_KINDS_BY_PATH.map((kind) => ({
+      path: `/api/v1/${ORG_ROUTE_PATHS[kind]}`,
+      router: createOrgRouter(deps, kind),
+    })),
     ...createPurchasingRouters(deps),
   ],
 });
@@ -107,11 +118,42 @@ describe('purchasing: maestro de proveedores y documentos de compra', () => {
   let orderId1 = '';
   let invoiceId1 = '';
   let receiptId1 = '';
+  let warehouseAId = '';
 
   const postA = (path: string, body: object) =>
     request(app).post(path).set('Authorization', `Bearer ${tokenA}`).send(body);
   const patchA = (path: string, body: object) =>
     request(app).patch(path).set('Authorization', `Bearer ${tokenA}`).send(body);
+
+  /** Crea la cadena organization→company→branch→warehouse y devuelve el almacén. */
+  async function createWarehouseChain(token: string, suffix: string): Promise<string> {
+    const post = (path: string, body: object) =>
+      request(app).post(path).set('Authorization', `Bearer ${token}`).send(body);
+    const org = await post('/api/v1/organizations', {
+      code: `ORG-${suffix}`,
+      name: `Org ${suffix}`,
+    });
+    expect(org.status).toBe(201);
+    const comp = await post('/api/v1/companies', {
+      code: `COMP-${suffix}`,
+      name: `Comp ${suffix}`,
+      parentId: org.body.data.id as string,
+    });
+    expect(comp.status).toBe(201);
+    const branch = await post('/api/v1/branches', {
+      code: `BR-${suffix}`,
+      name: `Branch ${suffix}`,
+      parentId: comp.body.data.id as string,
+    });
+    expect(branch.status).toBe(201);
+    const warehouse = await post('/api/v1/warehouses', {
+      code: `WH-${suffix}`,
+      name: `Warehouse ${suffix}`,
+      parentId: branch.body.data.id as string,
+    });
+    expect(warehouse.status).toBe(201);
+    return warehouse.body.data.id as string;
+  }
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
@@ -120,6 +162,7 @@ describe('purchasing: maestro de proveedores y documentos de compra', () => {
     const b = await provision('purch-tenant-b', 'owner-b@purch.example');
     tokenA = a.token;
     tokenB = b.token;
+    warehouseAId = await createWarehouseChain(tokenA, 'A');
   }, 120_000);
 
   afterAll(async () => {
@@ -273,24 +316,36 @@ describe('purchasing: maestro de proveedores y documentos de compra', () => {
     expect(requestB.body.data.id).not.toBe(requestId1);
   });
 
-  it('recepción: exige orden, deriva el proveedor y NO tiene ruta DELETE', async () => {
-    const noOrder = await postA('/api/v1/purchasing/receipts', { lines: LINES });
-    expect(noOrder.status).toBe(400);
+  it('recepción: exige orden + almacén, deriva el proveedor y NO tiene ruta DELETE', async () => {
+    const noOrder = await postA('/api/v1/purchasing/receipts', {
+      lines: LINES,
+      warehouseId: warehouseAId,
+    });
+    expect(noOrder.status).toBe(400); // falta orderId
+
+    const noWarehouse = await postA('/api/v1/purchasing/receipts', {
+      orderId: orderId1,
+      lines: LINES,
+    });
+    expect(noWarehouse.status).toBe(400); // FASE 11: la recepción nace con almacén
 
     const unknownOrder = await postA('/api/v1/purchasing/receipts', {
       orderId: MISSING_ID,
+      warehouseId: warehouseAId,
       lines: LINES,
     });
     expect(unknownOrder.status).toBe(404);
 
     const created = await postA('/api/v1/purchasing/receipts', {
       orderId: orderId1,
+      warehouseId: warehouseAId,
       lines: LINES,
     });
     expect(created.status).toBe(201);
     expect(created.body.data.number).toBe(`GR-${YEAR}-000001`);
     expect(created.body.data.supplierId).toBe(supplierAId); // derivado de la orden
     expect(created.body.data.orderId).toBe(orderId1);
+    expect(created.body.data.warehouseId).toBe(warehouseAId); // destino del stock
     receiptId1 = created.body.data.id as string;
 
     const supplierInjected = await patchA(`/api/v1/purchasing/receipts/${receiptId1}`, {
@@ -326,6 +381,7 @@ describe('purchasing: maestro de proveedores y documentos de compra', () => {
 
     const second = await postA('/api/v1/purchasing/receipts', {
       orderId: orderId1,
+      warehouseId: warehouseAId,
       lines: LINES,
     });
     expect(second.status).toBe(201);

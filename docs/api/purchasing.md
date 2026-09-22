@@ -29,7 +29,7 @@ Estado: implementado. Módulo `apps/api/src/modules/purchasing`; reglas de domin
 
 ## Documento: forma común y numeración
 
-- **Mismas reglas de FASE 9**: líneas `{ description, quantity>0, unitPrice≥0, taxRate 0-100 (default 0), discountPct 0-100 (default 0) }` (1–200); el servidor calcula por línea `subtotal/tax/total` y los totales (descuento **antes** del impuesto, redondeo comercial a 2 decimales; compartir `core/domain/line-totals` con Sales). Campos calculados en el body → 400.
+- **Mismas reglas de FASE 9**: líneas `{ description, quantity>0, unitPrice≥0, taxRate 0-100 (default 0), discountPct 0-100 (default 0) }` (1–200); el servidor calcula por línea `subtotal/tax/total` y los totales (descuento **antes** del impuesto, redondeo comercial a 2 decimales; compartir `core/domain/line-totals` con Sales). Campos calculados en el body → 400. **Solo las líneas de recepción** admiten además `productId` opcional (vínculo con el maestro de productos; en el resto de tipos → 400).
 - **`number`**: serie `PREFIX-YYYY-000001` por **tenant + tipo + año UTC** (`RQ/PO/GR/PI/RET`), atómica (`core/numbering`, `$inc`), inmutable; enviado en create → 400.
 - `currency` ISO-4217 (default `USD`), `issueDate` (default: ahora), `notes` opcional. Todo nace en **`draft`**.
 - `kind` aísla los documentos: `GET /purchasing/orders/:id` con un id de solicitud → 404.
@@ -47,13 +47,13 @@ Estado: implementado. Módulo `apps/api/src/modules/purchasing`; reglas de domin
 - Salto inválido o repetir estado → `409` (`Invalid status transition` / `Status is already the requested one`).
 - **Aprobación de solicitud**: vía `PATCH {status:'approved'}` con `purchase.request:update` — el catálogo NO define permiso `:approve` para compras (decisión documentada; a diferencia de Sales donde `sales.quote:approve` es explícito).
 - **Edición**: más allá de `draft` solo `status`/`archived`; cualquier otro campo → `409 Only draft documents can be edited`. PATCH sin campos → `400`.
-- `posted` en recepciones marca el documento listo para el ledger de stock (**FASE 11** lo consumirá).
+- **`posted` → stock (composición FASE 11)**: al pasar una recepción a `posted` (estado terminal), el servidor invoca el ledger de Inventory: cada línea con `productId` vinculado crea un movimiento `receipt` en el `warehouseId` de la recepción (líneas sin producto son solo trazabilidad textual y NO mueven stock). El estado terminal es la guarda de at-most-once sin transacciones (ver RISK).
 
 ## Reglas por tipo
 
 - **Solicitud**: `supplierId` obligatorio (proveedor del tenant → 404 si no existe/ajeno); sin referencias.
 - **Orden**: `supplierId` + `requestId` opcional (FK purchases → 404).
-- **Recepción**: `orderId` **obligatorio** (400 si falta); el servidor **deriva `supplierId` de la orden** — el body no admite `supplierId` (→ 400). **Sin ruta `DELETE`** (el catálogo no tiene `goods.receipt:delete`): se archiva con `PATCH {archived:true}` (`goods.receipt:update`); peticiones `DELETE` → 404 (ruta ausente).
+- **Recepción**: `orderId` **obligatorio** (400 si falta) y `warehouseId` **obligatorio** (FK Organization → 404 si es inexistente/ajeno, 409 si el almacén está archivado); el servidor **deriva `supplierId` de la orden** — el body no admite `supplierId` (→ 400). Las líneas pueden enlazar `productId` (FK Inventory → 404 ajeno, 409 archivado) para que `posted` alimente el stock. **Sin ruta `DELETE`** (el catálogo no tiene `goods.receipt:delete`): se archiva con `PATCH {archived:true}` (`goods.receipt:update`); peticiones `DELETE` → 404 (ruta ausente). En los demás tipos, `warehouseId`/`productId` ni siquiera existen en el esquestricto → 400.
 - **Factura de proveedor**: `supplierId` + `orderId` opcional.
 - **Devolución**: `supplierId` + `orderId`/`invoiceId` opcionales (FK purchases → 404).
 - FKs cruzadas (proveedor/orden/factura de OTRO tenant) → **404 uniforme**.
@@ -76,6 +76,6 @@ Estado: implementado. Módulo `apps/api/src/modules/purchasing`; reglas de domin
 ## NOT TESTED / RISK
 
 - **PARTIAL**: sin transacciones Mongo (standalone): documento y contador en operaciones separadas (el contador es atómico vía `$inc`); sin `Idempotency-Key` (convenciones §6).
-- **PARTIAL**: recepciones `posted` NO mueven stock todavía (FASE 11 los consumirá — NOT TESTED hasta entonces); sin conversión automática solicitud→orden (hoy manual con `requestId`).
+- **RISK**: el posting `posted`→stock es **at-most-once** sin transacciones: si el proceso cae entre la escritura del estado y el ledger, ese stock queda pendiente (recuperable con un movimiento manual en `/inventory/movements` referenciando el documento en su `reason`); sin conversión automática solicitud→orden (hoy manual con `requestId`).
 - **NOT TESTED**: `apps/web`/`apps/mobile`; Atlas real; cargas concurrentes sobre `counters`.
 - **RISK**: sin cascadas (archivar proveedor no afecta documentos enlazados); paginación por offset (cursor pendiente); sin `/search` de proveedores.

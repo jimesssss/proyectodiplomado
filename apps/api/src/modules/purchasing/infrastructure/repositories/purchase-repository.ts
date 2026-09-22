@@ -93,6 +93,7 @@ function mapLine(line: PurchaseLine): PurchaseLine {
     subtotal: line.subtotal,
     tax: line.tax,
     total: line.total,
+    productId: line.productId ?? null,
   };
 }
 
@@ -114,6 +115,7 @@ function mapPurchase(doc: PurchaseDoc): PurchaseDocument {
     requestId: optionalRef(doc.requestId),
     orderId: optionalRef(doc.orderId),
     invoiceId: optionalRef(doc.invoiceId),
+    warehouseId: optionalRef(doc.warehouseId),
     archived: doc.archived,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,

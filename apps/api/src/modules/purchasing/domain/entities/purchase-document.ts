@@ -53,6 +53,19 @@ export const PURCHASE_REQUIRES_SUPPLIER: Record<PurchaseKind, boolean> = {
   'purchase.return': true,
 };
 
+/**
+ * Solo la recepción lleva `warehouseId` (almacén de Organization): es el
+ * destino físico del stock y lo exige el posting a Inventory (FASE 11). Los
+ * demás tipos ni siquiera admiten el campo en su esquestricto (→ 400).
+ */
+export const PURCHASE_REQUIRES_WAREHOUSE: Record<PurchaseKind, boolean> = {
+  'purchase.request': false,
+  'purchase.order': false,
+  'goods.receipt': true,
+  'supplier.invoice': false,
+  'purchase.return': false,
+};
+
 /** Prefijo de numeración por tipo (`PREFIX-YYYY-000001`). */
 export const PURCHASE_PREFIX: Record<PurchaseKind, string> = {
   'purchase.request': 'RQ',
@@ -90,6 +103,12 @@ export interface PurchaseLine {
   readonly subtotal: number;
   readonly tax: number;
   readonly total: number;
+  /**
+   * Vínculo opcional con `products` — SOLO en líneas de recepción: al pasar
+   * la recepción a `posted` esas líneas alimentan el stock (FASE 11). Las
+   * demás líneas lo guardan en `null`.
+   */
+  readonly productId: string | null;
 }
 
 export interface PurchaseDocument {
@@ -111,6 +130,8 @@ export interface PurchaseDocument {
   readonly requestId: string | null;
   readonly orderId: string | null;
   readonly invoiceId: string | null;
+  /** Almacén destino (SOLO en recepciones; FK a Organization). */
+  readonly warehouseId: string | null;
   readonly archived: boolean;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -133,6 +154,7 @@ export interface PublicPurchaseDocument {
   readonly requestId: string | null;
   readonly orderId: string | null;
   readonly invoiceId: string | null;
+  readonly warehouseId: string | null;
   readonly archived: boolean;
 }
 
@@ -153,6 +175,7 @@ export function toPublicPurchaseDocument(doc: PurchaseDocument): PublicPurchaseD
     requestId: doc.requestId,
     orderId: doc.orderId,
     invoiceId: doc.invoiceId,
+    warehouseId: doc.warehouseId,
     archived: doc.archived,
   };
 }
