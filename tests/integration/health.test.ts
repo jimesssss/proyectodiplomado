@@ -10,6 +10,10 @@ const testEnv: Env = {
   mongoDbUri: 'mongodb://127.0.0.1:9/unused',
   logLevel: 'silent',
   corsOrigins: [],
+  jwtIssuer: 'erp-test',
+  jwtAudience: 'erp-api',
+  accessTokenTtl: 900,
+  refreshTokenTtl: 3600,
 };
 
 const app = createApp({ logger: createLogger('silent'), env: testEnv });

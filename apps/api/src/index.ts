@@ -2,10 +2,13 @@
  * Composition root del API.
  * Fail fast: si la configuración o la base de datos fallan, el proceso no arranca.
  */
+import { resolveJwtKeys } from './core/auth/keys.js';
+import { createJwtService } from './core/auth/jwt.js';
 import { loadConfig } from './core/config/env.js';
 import { connectDatabase, disconnectDatabase } from './core/db/database.js';
 import { createApp } from './core/http/app.js';
 import { createLogger } from './core/logging/logger.js';
+import { createSessionChecker, createAuthRouter } from './modules/identity/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -26,7 +29,37 @@ async function bootstrap(): Promise<void> {
     process.exit(1);
   }
 
-  const app = createApp({ logger, env });
+  const keys = resolveJwtKeys(
+    {
+      ...(env.jwtPrivateKeyB64 !== undefined ? { privateKeyB64: env.jwtPrivateKeyB64 } : {}),
+      ...(env.jwtPublicKeyB64 !== undefined ? { publicKeyB64: env.jwtPublicKeyB64 } : {}),
+    },
+    logger,
+  );
+  const jwt = createJwtService({
+    privateKey: keys.privateKey,
+    publicKey: keys.publicKey,
+    issuer: env.jwtIssuer,
+    audience: env.jwtAudience,
+    accessTtlSeconds: env.accessTokenTtl,
+  });
+
+  const app = createApp({
+    logger,
+    env,
+    routes: [
+      {
+        path: '/api/v1/auth',
+        router: createAuthRouter({
+          jwt,
+          accessTokenTtl: env.accessTokenTtl,
+          refreshTokenTtl: env.refreshTokenTtl,
+          isSessionActive: createSessionChecker(),
+        }),
+      },
+    ],
+  });
+
   const server = app.listen(env.port, () => {
     logger.info({ port: env.port, nodeEnv: env.nodeEnv }, 'api listening');
   });
