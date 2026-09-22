@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { JwtService } from '../../../../core/auth/jwt.js';
 import { requireAuth, type SessionChecker } from '../../../../core/auth/middleware.js';
 import { requirePermission } from '../../../../core/auth/require-permission.js';
+import { auditFromRequest } from '../../../../core/audit/audit.js';
 import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
 import { validate } from '../../../../core/validation/validate.js';
 import {
@@ -71,6 +72,12 @@ export function createUserRouter(deps: UserRouterDeps): Router {
     async (req, res) => {
       const body = req.body as z.infer<typeof createUserBodySchema>;
       const user = await createAppUser(currentUser(req).tenantId, body);
+      await auditFromRequest(req, {
+        action: 'user.create',
+        entityType: 'user',
+        entityId: user.id,
+        newValue: { email: user.email, roles: user.roles },
+      });
       res.status(201).json(successResponse(req.requestId, user));
     },
   );
@@ -84,6 +91,12 @@ export function createUserRouter(deps: UserRouterDeps): Router {
       const params = req.params as { id: string };
       const body = req.body as z.infer<typeof patchUserBodySchema>;
       const user = await updateAppUser(currentUser(req).tenantId, params.id, body);
+      await auditFromRequest(req, {
+        action: 'user.update',
+        entityType: 'user',
+        entityId: user.id,
+        newValue: body,
+      });
       res.status(200).json(successResponse(req.requestId, user));
     },
   );

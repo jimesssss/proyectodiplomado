@@ -116,6 +116,7 @@ POST /api/v1/roles
 | `PATCH /roles/:id`                                | `role:update`                                          |
 | `DELETE /roles/:id`                               | `role:delete`                                          |
 | `GET /permissions`                                | — (solo autenticado)                                   |
+| `GET /audit`                                      | `audit:read`                                           |
 | `/auth/*`                                         | — (autenticación propia)                               |
 
 ## ABAC (ruta, no implementado — PARTIAL)

@@ -14,6 +14,7 @@ import {
   createRoleRouter,
   createUserRouter,
 } from './modules/identity/index.js';
+import { createAuditRouter } from './modules/audit/index.js';
 import { createTenantRouter, isTenantActive } from './modules/tenancy/index.js';
 import {
   createOrgRouter,
@@ -84,6 +85,10 @@ async function bootstrap(): Promise<void> {
       {
         path: '/api/v1/permissions',
         router: createPermissionRouter({ jwt, isSessionActive: createSessionChecker() }),
+      },
+      {
+        path: '/api/v1/audit',
+        router: createAuditRouter({ jwt, isSessionActive: createSessionChecker() }),
       },
       ...ORG_KINDS_BY_PATH.map((kind) => ({
         path: `/api/v1/${ORG_ROUTE_PATHS[kind]}`,

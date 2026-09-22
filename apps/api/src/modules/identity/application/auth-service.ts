@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { PERMISSION_CATALOG_VERSION } from '@erp/permissions';
+import { recordAudit } from '../../../core/audit/audit.js';
 import type { JwtService } from '../../../core/auth/jwt.js';
 import { hashPassword, verifyPassword } from '../../../core/auth/password.js';
 import type { SessionChecker } from '../../../core/auth/middleware.js';
@@ -45,6 +46,14 @@ interface LoginInput {
   readonly tenantId?: string;
   readonly ip?: string;
   readonly userAgent?: string;
+  /** Contexto de auditoría (siempre presente desde la ruta). */
+  readonly requestId: string;
+}
+
+export interface RefreshContext {
+  readonly requestId: string;
+  readonly ip?: string;
+  readonly userAgent?: string;
 }
 
 /**
@@ -58,6 +67,12 @@ interface LoginInput {
 export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthTokens> {
   const email = input.email.toLowerCase().trim();
   const now = Date.now();
+  const auditCtx = {
+    requestId: input.requestId,
+    entityType: 'user',
+    ip: input.ip,
+    userAgent: input.userAgent,
+  } as const;
 
   // El bloqueo necesita tenant; si no viene, no podemos evaluar la clave.
   // Se evalúa por clave resuelta tras encontrar el usuario, y de forma
@@ -65,6 +80,13 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
   if (input.tenantId !== undefined) {
     const state = await repo.getLoginAttemptState(input.tenantId, email);
     if (isLocked(state, now)) {
+      await recordAudit({
+        ...auditCtx,
+        tenantId: input.tenantId,
+        action: 'auth.login.failed',
+        entityId: email,
+        reason: 'rate_limited',
+      });
       throw new RateLimitedError('Too many login attempts. Try again later.');
     }
   }
@@ -78,11 +100,28 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
 
   if (user === null) {
     // Contestar con credenciales inválidas sin revelar existencia.
+    // tenantId queda '' (no resoluble): el intento queda en la colección
+    // pero fuera del listado por tenant (documentado en docs/database/audit.md).
+    await recordAudit({
+      ...auditCtx,
+      tenantId: input.tenantId ?? '',
+      action: 'auth.login.failed',
+      entityId: email,
+      reason: 'invalid_credentials',
+    });
     throw new UnauthenticatedError('Invalid credentials');
   }
 
   const state = await repo.getLoginAttemptState(user.tenantId, email);
   if (isLocked(state, now)) {
+    await recordAudit({
+      ...auditCtx,
+      tenantId: user.tenantId,
+      userId: user.id,
+      action: 'auth.login.failed',
+      entityId: email,
+      reason: 'rate_limited',
+    });
     throw new RateLimitedError('Too many login attempts. Try again later.');
   }
 
@@ -92,16 +131,40 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
   if (!validPassword) {
     const next = recordFailedAttempt(state, now);
     await repo.saveLoginAttemptState(user.tenantId, email, next.state);
+    await recordAudit({
+      ...auditCtx,
+      tenantId: user.tenantId,
+      userId: user.id,
+      action: 'auth.login.failed',
+      entityId: email,
+      reason: 'invalid_credentials',
+    });
     throw new UnauthenticatedError('Invalid credentials');
   }
 
   if (user.status !== 'active') {
+    await recordAudit({
+      ...auditCtx,
+      tenantId: user.tenantId,
+      userId: user.id,
+      action: 'auth.login.failed',
+      entityId: email,
+      reason: 'account_disabled',
+    });
     throw new ForbiddenError('Account disabled');
   }
 
   // Credenciales verificadas → ahora sí se revela si el tenant está suspendido
   // (antes revelaría estado sin autenticarse).
   if (!(await deps.isTenantActive(user.tenantId))) {
+    await recordAudit({
+      ...auditCtx,
+      tenantId: user.tenantId,
+      userId: user.id,
+      action: 'auth.login.failed',
+      entityId: email,
+      reason: 'tenant_suspended',
+    });
     throw new ForbiddenError('Tenant suspended');
   }
 
@@ -135,6 +198,19 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
     ttlSeconds: deps.refreshTokenTtl,
   });
 
+  await recordAudit({
+    requestId: input.requestId,
+    tenantId: user.tenantId,
+    userId: user.id,
+    sessionId,
+    action: 'auth.login',
+    entityType: 'user',
+    entityId: user.id,
+    newValue: { email: user.email, roles: user.roles },
+    ip: input.ip,
+    userAgent: input.userAgent,
+  });
+
   return { accessToken, refreshToken, expiresIn: deps.accessTokenTtl, user: toPublicUser(user) };
 }
 
@@ -143,7 +219,11 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
  * - Token usado (reutilización) → revoca toda la sesión (posible robo).
  * - Token inválido/expirado/revocado o sesión caída → 401.
  */
-export async function refresh(deps: AuthDeps, refreshToken: string): Promise<AuthTokens> {
+export async function refresh(
+  deps: AuthDeps,
+  refreshToken: string,
+  ctx: RefreshContext,
+): Promise<AuthTokens> {
   const record = await repo.findRefreshToken(repo.hashRefreshToken(refreshToken));
   const invalid = new UnauthenticatedError('Invalid refresh token');
 
@@ -152,9 +232,21 @@ export async function refresh(deps: AuthDeps, refreshToken: string): Promise<Aut
   }
 
   if (record.usedAt !== null) {
-    // Reutilización de refresh token → revocar la sesión completa.
+    // Reutilización de refresh token → revocar la sesión completa + traza.
     await repo.revokeSession(record.sessionId);
     await repo.revokeSessionRefreshTokens(record.sessionId);
+    await recordAudit({
+      requestId: ctx.requestId,
+      tenantId: record.tenantId,
+      userId: record.userId,
+      sessionId: record.sessionId,
+      action: 'auth.refresh.reuse',
+      entityType: 'session',
+      entityId: record.sessionId,
+      reason: 'token_reuse',
+      ip: ctx.ip,
+      userAgent: ctx.userAgent,
+    });
     throw invalid;
   }
 
@@ -187,6 +279,18 @@ export async function refresh(deps: AuthDeps, refreshToken: string): Promise<Aut
     userId: user.id,
     tenantId: user.tenantId,
     ttlSeconds: deps.refreshTokenTtl,
+  });
+
+  await recordAudit({
+    requestId: ctx.requestId,
+    tenantId: user.tenantId,
+    userId: user.id,
+    sessionId: record.sessionId,
+    action: 'auth.refresh',
+    entityType: 'session',
+    entityId: record.sessionId,
+    ip: ctx.ip,
+    userAgent: ctx.userAgent,
   });
 
   return {

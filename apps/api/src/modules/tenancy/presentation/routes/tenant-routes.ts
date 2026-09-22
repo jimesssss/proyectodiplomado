@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
 import type { z } from 'zod';
+import { auditFromRequest, recordAudit } from '../../../../core/audit/audit.js';
 import type { JwtService } from '../../../../core/auth/jwt.js';
 import { requireAuth, type SessionChecker } from '../../../../core/auth/middleware.js';
 import { requirePermission } from '../../../../core/auth/require-permission.js';
@@ -51,6 +52,17 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
       owner: body.owner,
       ...(body.slug !== undefined ? { slug: body.slug } : {}),
     });
+    await recordAudit({
+      requestId: req.requestId,
+      tenantId: result.tenant.id,
+      userId: result.owner.id,
+      action: 'tenant.provision',
+      entityType: 'tenant',
+      entityId: result.tenant.id,
+      newValue: { slug: result.tenant.slug, name: result.tenant.name },
+      ip: req.ip,
+      userAgent: req.header('user-agent'),
+    });
     res.status(201).json(successResponse(req.requestId, result));
   });
 
@@ -70,6 +82,12 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
       const user = req.user ?? requireUser();
       const body = req.body as z.infer<typeof renameTenantBodySchema>;
       const tenant = await renameTenant(user.tenantId, body.name);
+      await auditFromRequest(req, {
+        action: 'tenant.rename',
+        entityType: 'tenant',
+        entityId: user.tenantId,
+        newValue: { name: body.name },
+      });
       res.status(200).json(successResponse(req.requestId, toPublicTenant(tenant)));
     },
   );
@@ -101,6 +119,19 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
     async (req, res) => {
       const params = req.params as z.infer<typeof tenantIdParamsSchema>;
       const tenant = await suspendTenant(params.id);
+      // La traza se escribe EN el tenant afectado (el de plataforma que la
+      // ejecuta es el actor: userId/sessionId quedan en la entrada).
+      await recordAudit({
+        requestId: req.requestId,
+        tenantId: params.id,
+        userId: req.user?.userId ?? '',
+        sessionId: req.user?.sessionId ?? '',
+        action: 'tenant.suspend',
+        entityType: 'tenant',
+        entityId: params.id,
+        ip: req.ip,
+        userAgent: req.header('user-agent'),
+      });
       res.status(200).json(successResponse(req.requestId, toPublicTenant(tenant)));
     },
   );
@@ -113,6 +144,17 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
     async (req, res) => {
       const params = req.params as z.infer<typeof tenantIdParamsSchema>;
       const tenant = await reactivateTenant(params.id);
+      await recordAudit({
+        requestId: req.requestId,
+        tenantId: params.id,
+        userId: req.user?.userId ?? '',
+        sessionId: req.user?.sessionId ?? '',
+        action: 'tenant.reactivate',
+        entityType: 'tenant',
+        entityId: params.id,
+        ip: req.ip,
+        userAgent: req.header('user-agent'),
+      });
       res.status(200).json(successResponse(req.requestId, toPublicTenant(tenant)));
     },
   );

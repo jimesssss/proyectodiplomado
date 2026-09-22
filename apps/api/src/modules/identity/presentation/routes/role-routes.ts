@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { JwtService } from '../../../../core/auth/jwt.js';
 import { requireAuth, type SessionChecker } from '../../../../core/auth/middleware.js';
 import { requirePermission } from '../../../../core/auth/require-permission.js';
+import { auditFromRequest } from '../../../../core/audit/audit.js';
 import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
 import { validate } from '../../../../core/validation/validate.js';
 import {
@@ -72,6 +73,12 @@ export function createRoleRouter(deps: RoleRouterDeps): Router {
     async (req, res) => {
       const body = req.body as z.infer<typeof createRoleBodySchema>;
       const role = await createRole(currentUser(req).tenantId, body);
+      await auditFromRequest(req, {
+        action: 'role.create',
+        entityType: 'role',
+        entityId: role.id,
+        newValue: { key: role.key, permissions: role.permissions },
+      });
       res.status(201).json(successResponse(req.requestId, role));
     },
   );
@@ -85,6 +92,12 @@ export function createRoleRouter(deps: RoleRouterDeps): Router {
       const params = req.params as { id: string };
       const body = req.body as z.infer<typeof patchRoleBodySchema>;
       const role = await updateRole(currentUser(req).tenantId, params.id, body);
+      await auditFromRequest(req, {
+        action: 'role.update',
+        entityType: 'role',
+        entityId: role.id,
+        newValue: body,
+      });
       res.status(200).json(successResponse(req.requestId, role));
     },
   );
@@ -97,6 +110,11 @@ export function createRoleRouter(deps: RoleRouterDeps): Router {
     async (req, res) => {
       const params = req.params as { id: string };
       const result = await deleteRole(currentUser(req).tenantId, params.id);
+      await auditFromRequest(req, {
+        action: 'role.delete',
+        entityType: 'role',
+        entityId: params.id,
+      });
       res.status(200).json(successResponse(req.requestId, result));
     },
   );

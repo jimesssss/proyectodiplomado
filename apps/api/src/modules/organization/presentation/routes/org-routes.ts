@@ -7,6 +7,7 @@ import {
   type SessionChecker,
 } from '../../../../core/auth/middleware.js';
 import { requirePermission } from '../../../../core/auth/require-permission.js';
+import { auditFromRequest } from '../../../../core/audit/audit.js';
 import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
 import { validate } from '../../../../core/validation/validate.js';
 import {
@@ -76,6 +77,12 @@ export function createOrgRouter(deps: OrgRouterDeps, kind: OrgKind): Router {
     async (req, res) => {
       const body = req.body as OrgCreateBody;
       const unit = await createOrgUnit(currentUser(req).tenantId, kind, body);
+      await auditFromRequest(req, {
+        action: 'org.create',
+        entityType: kind,
+        entityId: unit.id,
+        newValue: unit,
+      });
       res.status(201).json(successResponse(req.requestId, unit));
     },
   );
@@ -122,6 +129,13 @@ export function createOrgRouter(deps: OrgRouterDeps, kind: OrgKind): Router {
         status?: 'active' | 'archived' | undefined;
       };
       const unit = await updateOrgUnit(currentUser(req).tenantId, kind, params.id, body);
+      await auditFromRequest(req, {
+        action: 'org.update',
+        entityType: kind,
+        entityId: unit.id,
+        newValue: unit,
+        reason: body.status !== undefined ? `status:${body.status}` : undefined,
+      });
       res.status(200).json(successResponse(req.requestId, unit));
     },
   );
@@ -134,6 +148,12 @@ export function createOrgRouter(deps: OrgRouterDeps, kind: OrgKind): Router {
     async (req, res) => {
       const params = req.params as { id: string };
       const unit = await archiveOrgUnit(currentUser(req).tenantId, kind, params.id);
+      await auditFromRequest(req, {
+        action: 'org.archive',
+        entityType: kind,
+        entityId: unit.id,
+        newValue: unit,
+      });
       res.status(200).json(successResponse(req.requestId, unit));
     },
   );

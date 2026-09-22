@@ -67,4 +67,4 @@ Claims del access token: `sub`, `tenantId`, `roles[]`, `permissions[]`, `pv` (ve
 
 ## 8. Estado
 
-Implementado: autenticación y autorización (FASE 3 y FASE 6 — RBAC con `requirePermission`, matriz de permisos real). **PARTIAL**: ABAC sin implementar. **NOT TESTED**: reset por email, MFA, rate-limit por IP, Atlas real. Auditoría desde FASE 7.
+Implementado: autenticación (FASE 3), autorización RBAC (FASE 6 — `requirePermission`, matriz de permisos real) y auditoría append-only (FASE 7 — `core/audit` + `GET /audit` con `audit:read`). **PARTIAL**: ABAC sin implementar; `previousValue` de auditoría sin poblar. **NOT TESTED**: reset por email, MFA, rate-limit por IP, Atlas real.
