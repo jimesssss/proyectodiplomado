@@ -52,6 +52,7 @@ Requiere `Authorization: Bearer`. `200` → perfil público (sin hash). `401` si
 ## Garantías
 
 - Contraseñas: **Argon2id** (m=19456, t=2, p=1). Nunca texto plano; nunca en respuestas ni logs.
-- Access JWT: **RS256**, TTL 900 s; claims `sub, tenantId, roles, permissions, sid, iss, aud`.
+- Access JWT: **RS256**, TTL 900 s; claims `sub, tenantId, roles, permissions, pv, sid, iss, aud`.
+  `permissions` se resuelven del catálogo RBAC al hacer login/refresh (FASE 6) y `pv` es la versión del catálogo (tokens con `pv` viejo → `403` en rutas con `requirePermission`).
 - Refresh: token opaco de 48 bytes, guardado como SHA-256; TTL 2592000 s; rotación + detección de reutilización.
 - `401` en: token ausente, malformado, manipulado, expirado, firma ajena, sesión revocada.

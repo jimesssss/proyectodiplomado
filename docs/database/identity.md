@@ -5,16 +5,17 @@ otro módulo debe usar `modules/identity/index.ts`, nunca la colección directa.
 
 ## users
 
-| Campo                   | Tipo                | Notas                                   |
-| ----------------------- | ------------------- | --------------------------------------- |
-| `_id`                   | ObjectId            |                                         |
-| `email`                 | string              | lowercase, trim en aplicación           |
-| `tenantId`              | string              | ObjectId hex                            |
-| `passwordHash`          | string              | Argon2id (`$argon2id$…`)                |
-| `displayName`           | string              |                                         |
-| `roles`                 | string[]            | claves de rol (catálogo RBAC en FASE 6) |
-| `status`                | `active`/`disabled` |                                         |
-| `createdAt`/`updatedAt` | Date                | timestamps                              |
+| Campo                      | Tipo                | Notas                                                           |
+| -------------------------- | ------------------- | --------------------------------------------------------------- |
+| `_id`                      | ObjectId            |                                                                 |
+| `email`                    | string              | lowercase, trim en aplicación                                   |
+| `tenantId`                 | string              | ObjectId hex                                                    |
+| `passwordHash`             | string              | Argon2id (`$argon2id$…`)                                        |
+| `displayName`              | string              |                                                                 |
+| `roles`                    | string[]            | claves de rol (RBAC desde FASE 6)                               |
+| `permissions` (en `roles`) | string[]            | permisos `recurso:acción` del rol (catálogo `@erp/permissions`) |
+| `status`                   | `active`/`disabled` |                                                                 |
+| `createdAt`/`updatedAt`    | Date                | timestamps                                                      |
 
 Índices:
 

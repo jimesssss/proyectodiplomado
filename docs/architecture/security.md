@@ -21,13 +21,13 @@ HTTPS → helmet/CORS → body limit → requestId → Zod validation
 - Bloqueo por intentos con backoff (cuenta e IP).
 - MFA TOTP: esquema y flujo preparados, implementación diferida (PARTIAL por diseño).
 
-Claims del access token: `sub`, `tenantId`, `roles[]`, `permissions[]` (con `permVersion`), `sid`, `iss`, `aud`, `iat`, `exp`.
+Claims del access token: `sub`, `tenantId`, `roles[]`, `permissions[]`, `pv` (versión del catálogo), `sid`, `iss`, `aud`, `iat`, `exp`.
 
 ## 3. Autorización
 
 - Claves canónicas `recurso:acción` definidas en `packages/permissions` (compartido con la UI).
 - Denegación por defecto; sin permiso ⇒ 403 siempre (nunca "sorpresa" 200).
-- Ejemplos matriz (detalle en `docs/security/permission-matrix.md`, a crear en FASE 6):
+- Ejemplos matriz (detalle en `docs/security/permission-matrix.md`, creado en FASE 6):
 
 | Rol      | Puede                                           | No puede                            |
 | -------- | ----------------------------------------------- | ----------------------------------- |
@@ -67,4 +67,4 @@ Claims del access token: `sub`, `tenantId`, `roles[]`, `permissions[]` (con `per
 
 ## 8. Estado
 
-Todo lo anterior es **diseño**; implementación y pruebas de seguridad reales desde FASE 2-3 (**NOT TESTED**).
+Implementado: autenticación y autorización (FASE 3 y FASE 6 — RBAC con `requirePermission`, matriz de permisos real). **PARTIAL**: ABAC sin implementar. **NOT TESTED**: reset por email, MFA, rate-limit por IP, Atlas real. Auditoría desde FASE 7.

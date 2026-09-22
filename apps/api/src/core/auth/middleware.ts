@@ -8,6 +8,8 @@ export interface AuthUser {
   readonly tenantId: string;
   readonly roles: readonly string[];
   readonly permissions: readonly string[];
+  /** Versión del catálogo de permisos con la que se firmó el token. */
+  readonly permVersion: number;
   readonly sessionId: string;
 }
 
@@ -46,6 +48,7 @@ export function requireAuth(jwt: JwtService, isSessionActive: SessionChecker): R
         tenantId: claims.tenantId,
         roles: claims.roles,
         permissions: claims.permissions,
+        permVersion: claims.pv,
         sessionId: claims.sid,
       };
       next();

@@ -38,6 +38,7 @@ describe('JWT RS256', () => {
     tenantId: '64b0f1a2c3d4e5f607182930',
     roles: ['vendedor'],
     permissions: ['customer:read'],
+    permVersion: 1,
     sessionId: 's1',
   };
 
@@ -48,6 +49,7 @@ describe('JWT RS256', () => {
     expect(claims.tenantId).toBe(input.tenantId);
     expect(claims.roles).toEqual(['vendedor']);
     expect(claims.permissions).toEqual(['customer:read']);
+    expect(claims.pv).toBe(1);
     expect(claims.sid).toBe('s1');
     expect(claims.iss).toBe('erp-test');
     expect(claims.aud).toBe('api-test');

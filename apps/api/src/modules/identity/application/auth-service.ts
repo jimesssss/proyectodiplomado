@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { PERMISSION_CATALOG_VERSION } from '@erp/permissions';
 import type { JwtService } from '../../../core/auth/jwt.js';
 import { hashPassword, verifyPassword } from '../../../core/auth/password.js';
 import type { SessionChecker } from '../../../core/auth/middleware.js';
@@ -18,6 +19,7 @@ import {
   validatePasswordPolicy,
 } from '../domain/rules/auth-rules.js';
 import * as repo from '../infrastructure/repositories/identity-repository.js';
+import { resolvePermissions } from './rbac-service.js';
 
 export interface AuthTokens {
   readonly accessToken: string;
@@ -113,12 +115,14 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
     ...(input.userAgent !== undefined ? { userAgent: input.userAgent } : {}),
   });
 
-  // permissions vacío hasta FASE 6 (catálogo RBAC).
+  // Permisos resueltos del catálogo RBAC + roles del tenant (ADR-005).
+  const permissions = await resolvePermissions(user.tenantId, user.roles);
   const accessToken = deps.jwt.signAccessToken({
     userId: user.id,
     tenantId: user.tenantId,
     roles: user.roles,
-    permissions: [],
+    permissions,
+    permVersion: PERMISSION_CATALOG_VERSION,
     sessionId,
   });
 
@@ -166,11 +170,13 @@ export async function refresh(deps: AuthDeps, refreshToken: string): Promise<Aut
 
   await repo.markRefreshTokenUsed(record.id);
 
+  const permissions = await resolvePermissions(user.tenantId, user.roles);
   const accessToken = deps.jwt.signAccessToken({
     userId: user.id,
     tenantId: user.tenantId,
     roles: user.roles,
-    permissions: [],
+    permissions,
+    permVersion: PERMISSION_CATALOG_VERSION,
     sessionId: record.sessionId,
   });
 

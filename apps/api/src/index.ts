@@ -9,6 +9,11 @@ import { connectDatabase, disconnectDatabase } from './core/db/database.js';
 import { createApp } from './core/http/app.js';
 import { createLogger } from './core/logging/logger.js';
 import { createSessionChecker, createAuthRouter } from './modules/identity/index.js';
+import {
+  createPermissionRouter,
+  createRoleRouter,
+  createUserRouter,
+} from './modules/identity/index.js';
 import { createTenantRouter, isTenantActive } from './modules/tenancy/index.js';
 import {
   createOrgRouter,
@@ -67,6 +72,18 @@ async function bootstrap(): Promise<void> {
       {
         path: '/api/v1/tenants',
         router: createTenantRouter({ jwt, isSessionActive: createSessionChecker() }),
+      },
+      {
+        path: '/api/v1/users',
+        router: createUserRouter({ jwt, isSessionActive: createSessionChecker() }),
+      },
+      {
+        path: '/api/v1/roles',
+        router: createRoleRouter({ jwt, isSessionActive: createSessionChecker() }),
+      },
+      {
+        path: '/api/v1/permissions',
+        router: createPermissionRouter({ jwt, isSessionActive: createSessionChecker() }),
       },
       ...ORG_KINDS_BY_PATH.map((kind) => ({
         path: `/api/v1/${ORG_ROUTE_PATHS[kind]}`,

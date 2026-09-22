@@ -3,6 +3,25 @@
  * Otros módulos solo pueden importar desde aquí.
  */
 export { createAuthRouter, type AuthRouterDeps } from './presentation/routes/auth-routes.js';
+export { createUserRouter, type UserRouterDeps } from './presentation/routes/user-routes.js';
+export { createRoleRouter, type RoleRouterDeps } from './presentation/routes/role-routes.js';
+export {
+  createPermissionRouter,
+  type PermissionRouterDeps,
+} from './presentation/routes/permission-routes.js';
+export {
+  createAppUser,
+  deleteRole,
+  createRole,
+  getAppUser,
+  getRole,
+  listAppUsers,
+  listRoles,
+  permissionCatalog,
+  resolvePermissions,
+  updateAppUser,
+  updateRole,
+} from './application/rbac-service.js';
 export {
   changePassword,
   createSessionChecker,

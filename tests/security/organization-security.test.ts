@@ -137,12 +137,14 @@ describe('organization security', () => {
     }
   });
 
-  it('sin rol de escritura: 403 en POST/PATCH/DELETE pero 200 en lectura', async () => {
+  it('sin permiso de escritura (roles vacíos): 403 en TODOS los verbos', async () => {
     const post = await request(app)
       .post('/api/v1/organizations')
       .set('Authorization', `Bearer ${readerToken}`)
       .send({ code: 'READ-BLOCK', name: 'Bloqueado' });
     expect(post.status).toBe(403);
+    expect(post.body.error.code).toBe('FORBIDDEN');
+    expect(post.body.error.message).toBe('Missing permission');
 
     const patch = await request(app)
       .patch(`/api/v1/organizations/${OTHER_TENANT_ID}`)
@@ -155,10 +157,12 @@ describe('organization security', () => {
       .set('Authorization', `Bearer ${readerToken}`);
     expect(del.status).toBe(403);
 
+    // Denegación por defecto (ADR-005): la lectura TAMBIÉN exige `org:read`.
     const read = await request(app)
       .get('/api/v1/organizations')
       .set('Authorization', `Bearer ${readerToken}`);
-    expect(read.status).toBe(200);
+    expect(read.status).toBe(403);
+    expect(read.body.error.message).toBe('Missing permission');
   });
 
   it('tenantId en el body se RECHAZA (esquema estricto)', async () => {

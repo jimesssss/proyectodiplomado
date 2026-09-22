@@ -1,6 +1,6 @@
 # API — Organization (`/api/v1/{organizations,companies,branches,departments,warehouses,cost-centers}`)
 
-Estado: implementado (FASE 5). Roles provisionales hasta FASE 6 (RBAC).
+Estado: implementado (FASE 5). Autorización por permisos desde FASE 6 (RBAC, ADR-005): `org:read` / `org:write`.
 
 ## Jerarquía
 
@@ -25,13 +25,13 @@ Tenant (JWT)
 
 ## Endpoints (por cada recurso)
 
-| Método | Ruta   | Auth | Rol                   | Notas                                                     |
-| ------ | ------ | ---- | --------------------- | --------------------------------------------------------- |
-| POST   | `/`    | Sí   | `owner`/`super_admin` | 201; `parentId` obligatorio salvo en `organizations`      |
-| GET    | `/`    | Sí   | —                     | Paginado: `page` (≥1), `limit` (1-100), `meta.total`      |
-| GET    | `/:id` | Sí   | —                     | 200 solo si es del propio tenant                          |
-| PATCH  | `/:id` | Sí   | `owner`/`super_admin` | `{ name?, status? }`; transición de estado inválida → 409 |
-| DELETE | `/:id` | Sí   | `owner`/`super_admin` | Archiva (200); ya archivado → 409                         |
+| Método | Ruta   | Auth | Permiso     | Notas                                                     |
+| ------ | ------ | ---- | ----------- | --------------------------------------------------------- |
+| POST   | `/`    | Sí   | `org:write` | 201; `parentId` obligatorio salvo en `organizations`      |
+| GET    | `/`    | Sí   | `org:read`  | Paginado: `page` (≥1), `limit` (1-100), `meta.total`      |
+| GET    | `/:id` | Sí   | `org:read`  | 200 solo si es del propio tenant                          |
+| PATCH  | `/:id` | Sí   | `org:write` | `{ name?, status? }`; transición de estado inválida → 409 |
+| DELETE | `/:id` | Sí   | `org:write` | Archiva (200); ya archivado → 409                         |
 
 ## Cuerpos
 
@@ -54,12 +54,11 @@ Actualizar: `{ "name": "…", "status": "active" | "archived" }` (ambos opcional
 | ----------------------------------------------------------------- | ---- | ------------------ |
 | Campos desconocidos / id mal formado                              | 400  | `VALIDATION_ERROR` |
 | Sin token / token inválido                                        | 401  | `UNAUTHENTICATED`  |
-| Sin rol de escritura                                              | 403  | `FORBIDDEN`        |
+| Permiso faltante (`org:read`/`org:write`)                         | 403  | `FORBIDDEN`        |
 | Id ajeno/inexistente, padre ajeno                                 | 404  | `NOT_FOUND`        |
 | `code` duplicado (mismo tenant), estado inválido, doble archivado | 409  | `CONFLICT`         |
 
 ## NOT TESTED / RISK
 
-- **PARTIAL**: roles `owner`/`super_admin` provisionales (RBAC real en FASE 6).
 - **NOT TESTED**: contra Atlas real; borrado físico de unidades (solo archivado); auditoría de cambios (FASE 7).
 - La existencia de hijos al archivar el padre **no** se bloquea (el archivado es por unidad) — decisión documentada; evaluar regla de negocio en FASE 6+ si hace falta.

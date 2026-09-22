@@ -6,7 +6,7 @@ import {
   type AuthUser,
   type SessionChecker,
 } from '../../../../core/auth/middleware.js';
-import { requireRole } from '../../../../core/auth/require-role.js';
+import { requirePermission } from '../../../../core/auth/require-permission.js';
 import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
 import { validate } from '../../../../core/validation/validate.js';
 import {
@@ -59,44 +59,61 @@ function currentUser(req: { user?: AuthUser }): AuthUser {
 
 /**
  * CRUD por tipo de unidad organizativa.
- * Lectura: cualquier usuario autenticado del tenant.
- * Escritura: roles provisionales `owner`/`super_admin` (hasta RBAC FASE 6).
+ * Autorización RBAC (ADR-005): lectura `org:read`, escritura `org:write`
+ * (denegación por defecto: sin permiso → 403).
  * `tenantId` SIEMPRE del JWT; `:id` ajeno o inexistente → 404 uniforme.
  */
 export function createOrgRouter(deps: OrgRouterDeps, kind: OrgKind): Router {
   const router = Router();
   const auth: RequestHandler = requireAuth(deps.jwt, deps.isSessionActive);
-  const writer: RequestHandler = requireRole('owner', 'super_admin');
   const bodySchema = createOrgBodySchema(kind);
 
-  router.post('/', auth, writer, validate({ body: bodySchema }), async (req, res) => {
-    const body = req.body as OrgCreateBody;
-    const unit = await createOrgUnit(currentUser(req).tenantId, kind, body);
-    res.status(201).json(successResponse(req.requestId, unit));
-  });
+  router.post(
+    '/',
+    auth,
+    requirePermission('org:write'),
+    validate({ body: bodySchema }),
+    async (req, res) => {
+      const body = req.body as OrgCreateBody;
+      const unit = await createOrgUnit(currentUser(req).tenantId, kind, body);
+      res.status(201).json(successResponse(req.requestId, unit));
+    },
+  );
 
-  router.get('/', auth, validate({ query: orgListQuerySchema }), async (req, res) => {
-    const query = req.query as unknown as { page: number; limit: number };
-    const page = await listOrgUnits(currentUser(req).tenantId, kind, query.page, query.limit);
-    res.status(200).json(
-      successListResponse(req.requestId, page.items, {
-        page: page.page,
-        limit: page.limit,
-        total: page.total,
-      }),
-    );
-  });
+  router.get(
+    '/',
+    auth,
+    requirePermission('org:read'),
+    validate({ query: orgListQuerySchema }),
+    async (req, res) => {
+      const query = req.query as unknown as { page: number; limit: number };
+      const page = await listOrgUnits(currentUser(req).tenantId, kind, query.page, query.limit);
+      res.status(200).json(
+        successListResponse(req.requestId, page.items, {
+          page: page.page,
+          limit: page.limit,
+          total: page.total,
+        }),
+      );
+    },
+  );
 
-  router.get('/:id', auth, validate({ params: orgIdParamsSchema }), async (req, res) => {
-    const params = req.params as { id: string };
-    const unit = await getOrgUnit(currentUser(req).tenantId, kind, params.id);
-    res.status(200).json(successResponse(req.requestId, unit));
-  });
+  router.get(
+    '/:id',
+    auth,
+    requirePermission('org:read'),
+    validate({ params: orgIdParamsSchema }),
+    async (req, res) => {
+      const params = req.params as { id: string };
+      const unit = await getOrgUnit(currentUser(req).tenantId, kind, params.id);
+      res.status(200).json(successResponse(req.requestId, unit));
+    },
+  );
 
   router.patch(
     '/:id',
     auth,
-    writer,
+    requirePermission('org:write'),
     validate({ params: orgIdParamsSchema, body: patchOrgBodySchema }),
     async (req, res) => {
       const params = req.params as { id: string };
@@ -109,11 +126,17 @@ export function createOrgRouter(deps: OrgRouterDeps, kind: OrgKind): Router {
     },
   );
 
-  router.delete('/:id', auth, writer, validate({ params: orgIdParamsSchema }), async (req, res) => {
-    const params = req.params as { id: string };
-    const unit = await archiveOrgUnit(currentUser(req).tenantId, kind, params.id);
-    res.status(200).json(successResponse(req.requestId, unit));
-  });
+  router.delete(
+    '/:id',
+    auth,
+    requirePermission('org:write'),
+    validate({ params: orgIdParamsSchema }),
+    async (req, res) => {
+      const params = req.params as { id: string };
+      const unit = await archiveOrgUnit(currentUser(req).tenantId, kind, params.id);
+      res.status(200).json(successResponse(req.requestId, unit));
+    },
+  );
 
   return router;
 }

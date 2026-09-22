@@ -6,9 +6,5 @@
     "outDir": "./dist"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"],
-  "references": [
-    { "path": "../../packages/shared-types" },
-    { "path": "../../packages/permissions" }
-  ]
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

@@ -35,6 +35,7 @@ const roleSchema = new Schema<RoleDoc>(
     key: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String },
+    permissions: { type: [String], default: [] },
   },
   { timestamps: true, collection: 'roles' },
 );

@@ -3,7 +3,7 @@ import type { RequestHandler } from 'express';
 import type { z } from 'zod';
 import type { JwtService } from '../../../../core/auth/jwt.js';
 import { requireAuth, type SessionChecker } from '../../../../core/auth/middleware.js';
-import { requireRole } from '../../../../core/auth/require-role.js';
+import { requirePermission } from '../../../../core/auth/require-permission.js';
 import { successListResponse, successResponse } from '../../../../core/http/envelope.js';
 import { NotFoundError } from '../../../../core/errors/app-error.js';
 import { validate } from '../../../../core/validation/validate.js';
@@ -30,15 +30,14 @@ export interface TenantRouterDeps {
 
 /**
  * Rutas /api/v1/tenants.
- * Roles provisionales (`owner`, `super_admin`) vía `requireRole` hasta que
- * FASE 6 (RBAC) los sustituya por permisos `recurso:acción` (ADR-005).
+ * Autorización por permisos `recurso:acción` (ADR-005, FASE 6): los permisos
+ * de plataforma (`tenant:read/suspend/reactivate`) NO los tiene el `owner` de
+ * un tenant; `super_admin` sí (catálogo compartido `@erp/permissions`).
  * El tenant SIEMPRE sale del JWT (ADR-002): `:id` solo resuelve el propio.
  */
 export function createTenantRouter(deps: TenantRouterDeps): Router {
   const router = Router();
   const auth: RequestHandler = requireAuth(deps.jwt, deps.isSessionActive);
-  const platformAdmin: RequestHandler = requireRole('super_admin');
-  const tenantOwner: RequestHandler = requireRole('owner', 'super_admin');
 
   function requireUser(): NonNullable<Express.Request['user']> {
     throw new Error('requireAuth should populate request.user');
@@ -65,7 +64,7 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
   router.patch(
     '/current',
     auth,
-    tenantOwner,
+    requirePermission('tenant:update'),
     validate({ body: renameTenantBodySchema }),
     async (req, res) => {
       const user = req.user ?? requireUser();
@@ -75,11 +74,11 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
     },
   );
 
-  // Listado global: solo plataforma (super_admin). Paginado (page/limit/total).
+  // Listado global: solo plataforma (permiso `tenant:read`). Paginado.
   router.get(
     '/',
     auth,
-    platformAdmin,
+    requirePermission('tenant:read'),
     validate({ query: tenantListQuerySchema }),
     async (req, res) => {
       const query = req.query as unknown as z.infer<typeof tenantListQuerySchema>;
@@ -97,7 +96,7 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
   router.post(
     '/:id/suspend',
     auth,
-    platformAdmin,
+    requirePermission('tenant:suspend'),
     validate({ params: tenantIdParamsSchema }),
     async (req, res) => {
       const params = req.params as z.infer<typeof tenantIdParamsSchema>;
@@ -109,7 +108,7 @@ export function createTenantRouter(deps: TenantRouterDeps): Router {
   router.post(
     '/:id/reactivate',
     auth,
-    platformAdmin,
+    requirePermission('tenant:reactivate'),
     validate({ params: tenantIdParamsSchema }),
     async (req, res) => {
       const params = req.params as z.infer<typeof tenantIdParamsSchema>;

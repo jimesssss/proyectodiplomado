@@ -52,10 +52,11 @@ Tipos compartidos ya existentes: `packages/shared-types` (`ApiResponse<T>`).
 | Fase  | Rutas                                                                                                          |
 | ----- | -------------------------------------------------------------------------------------------------------------- |
 | 2     | `/health`, `/health/ready`                                                                                     |
-| 3     | `/auth` (login, logout, refresh, change-password, forgot/reset), `/users`, `/roles`                            |
+| 3     | `/auth` (login, logout, refresh, change-password, forgot/reset)                                                |
 | 4     | `/tenants` (admin)                                                                                             |
 | 5     | `/organizations`, `/companies`, `/branches`, `/departments`, `/warehouses`, `/cost-centers`                    |
-| 6-7   | `/permissions`, `/audit` (lectura con `audit:read`)                                                            |
+| 6     | `/users`, `/roles`, `/permissions` (RBAC; `forgot/reset` sigue pendiente con workers/email)                    |
+| 7     | `/audit` (lectura con `audit:read`)                                                                            |
 | 8     | `/customers`, `/contacts`, `/leads`, `/opportunities`, `/activities`                                           |
 | 9     | `/sales/quotes`, `/sales/orders`, `/sales/deliveries`, `/sales/invoices`, `/sales/returns`                     |
 | 10    | `/purchasing/requests`, `/purchasing/orders`, `/purchasing/receipts`, `/purchasing/invoices`                   |

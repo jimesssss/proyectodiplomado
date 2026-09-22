@@ -1,25 +1,25 @@
 # API — Tenancy (`/api/v1/tenants`)
 
-Estado: implementado (FASE 4). Roles provisionales hasta FASE 6 (RBAC).
+Estado: implementado (FASE 4) · Autorización por permisos desde FASE 6 (RBAC, ADR-005).
 
 ## Reglas
 
 - El `tenantId` **nunca** llega del cliente (ADR-002): el body es estricto y rechaza campos desconocidos con `400 VALIDATION_ERROR`.
 - El `_id` del tenant ES el `tenantId` de todos los documentos de negocio.
 - `GET /:id` solo resuelve el **propio** tenant (el del JWT); cualquier otro id responde `404` idéntico a un inexistente.
-- Roles provisorios: `owner` (se crea en el provisionamiento) y `super_admin` (plataforma; sembrado por pruebas hasta FASE 6).
+- Permisos: `GET /current` es solo-autenticada (perfil básico); `PATCH /current` exige `tenant:update`; los permisos `tenant:read`, `tenant:suspend` y `tenant:reactivate` son de **plataforma** y solo los tiene `super_admin` (el `owner` de un tenant NO los recibe — ver `docs/security/permission-matrix.md`).
 
 ## Endpoints
 
-| Método | Ruta                      | Auth | Rol                   | Descripción                                           |
-| ------ | ------------------------- | ---- | --------------------- | ----------------------------------------------------- |
-| POST   | `/tenants`                | No   | —                     | Provisiona tenant + usuario owner (201)               |
-| GET    | `/tenants/current`        | Sí   | —                     | Tenant del propio JWT (404 si no existe)              |
-| PATCH  | `/tenants/current`        | Sí   | `owner`/`super_admin` | Renombra el tenant propio (slug inmutable)            |
-| GET    | `/tenants`                | Sí   | `super_admin`         | Listado paginado (`page`, `limit`, `total`)           |
-| GET    | `/tenants/:id`            | Sí   | —                     | Solo el propio tenant; ajeno/inexistente → 404        |
-| POST   | `/tenants/:id/suspend`    | Sí   | `super_admin`         | Suspende + revoca todas las sesiones del tenant (200) |
-| POST   | `/tenants/:id/reactivate` | Sí   | `super_admin`         | Reactiva un tenant suspendido (200)                   |
+| Método | Ruta                      | Auth | Permiso             | Descripción                                           |
+| ------ | ------------------------- | ---- | ------------------- | ----------------------------------------------------- |
+| POST   | `/tenants`                | No   | —                   | Provisiona tenant + usuario owner (201)               |
+| GET    | `/tenants/current`        | Sí   | —                   | Tenant del propio JWT (404 si no existe)              |
+| PATCH  | `/tenants/current`        | Sí   | `tenant:update`     | Renombra el tenant propio (slug inmutable)            |
+| GET    | `/tenants`                | Sí   | `tenant:read`       | Listado paginado (`page`, `limit`, `total`)           |
+| GET    | `/tenants/:id`            | Sí   | —                   | Solo el propio tenant; ajeno/inexistente → 404        |
+| POST   | `/tenants/:id/suspend`    | Sí   | `tenant:suspend`    | Suspende + revoca todas las sesiones del tenant (200) |
+| POST   | `/tenants/:id/reactivate` | Sí   | `tenant:reactivate` | Reactiva un tenant suspendido (200)                   |
 
 ## POST `/tenants` (provisionamiento)
 
@@ -87,7 +87,7 @@ Query: `page` (≥1, defecto 1), `limit` (1-100, defecto 20).
 | Slug ya usado                                      | 409  | `CONFLICT`         |
 | Password fuera de política / nombre/slug inválidos | 400  | `VALIDATION_ERROR` |
 | Sin token / token inválido / sesión revocada       | 401  | `UNAUTHENTICATED`  |
-| Rol insuficiente (`owner`, `super_admin`)          | 403  | `FORBIDDEN`        |
+| Permiso faltante (p. ej. `tenant:suspend` sin él)  | 403  | `FORBIDDEN`        |
 | Tenant ajeno o inexistente                         | 404  | `NOT_FOUND`        |
 | Estado inválido (doble suspensión, etc.)           | 409  | `CONFLICT`         |
 
@@ -95,4 +95,4 @@ Query: `page` (≥1, defecto 1), `limit` (1-100, defecto 20).
 
 - **RISK**: `POST /tenants` es público (bootstrap de alta) **sin rate-limit por IP** — pendiente (junto al rate-limit de login declarado en FASE 3).
 - **PARTIAL**: sin transacción real en el provisioning (Mongo standalone en test): si falla el owner se compensa borrando el tenant. En Atlas (replica set) migrar a `session.withTransaction` → **NOT TESTED**.
-- `super_admin` se crea directamente en BD (pruebas): el CRUD de usuarios/roles llega con FASE 6.
+- El CRUD de usuarios/roles está en `/api/v1/users` y `/api/v1/roles` (FASE 6 — ver `docs/api/users-roles.md`).

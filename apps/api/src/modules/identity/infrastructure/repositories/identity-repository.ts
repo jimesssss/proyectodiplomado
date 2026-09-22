@@ -1,15 +1,19 @@
 import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
+import { ConflictError } from '../../../../core/errors/app-error.js';
 import { asTenantId } from '../../../../core/tenant/tenant-id.js';
+import type { Permission } from '@erp/permissions';
+import type { Role } from '../../domain/entities/role.js';
 import type { User } from '../../domain/entities/user.js';
 import type { AttemptState } from '../../domain/rules/auth-rules.js';
 import {
   LoginAttemptModel,
   RefreshTokenModel,
+  RoleModel,
   SessionModel,
   UserModel,
 } from '../schemas/collections.js';
-import type { UserDoc } from '../schemas/types.js';
+import type { RoleDoc, UserDoc } from '../schemas/types.js';
 
 /**
  * Repositorios de identity — único camino a MongoDB del módulo.
@@ -61,14 +65,27 @@ export async function createUser(input: {
   displayName: string;
   roles?: readonly string[];
 }): Promise<User> {
-  const doc = await UserModel.create({
-    email: input.email.toLowerCase().trim(),
-    tenantId: input.tenantId,
-    passwordHash: input.passwordHash,
-    displayName: input.displayName,
-    roles: [...(input.roles ?? [])],
-  });
-  return toUser(doc.toObject() as unknown as UserDoc);
+  try {
+    const doc = await UserModel.create({
+      email: input.email.toLowerCase().trim(),
+      tenantId: input.tenantId,
+      passwordHash: input.passwordHash,
+      displayName: input.displayName,
+      roles: [...(input.roles ?? [])],
+    });
+    return toUser(doc.toObject() as unknown as UserDoc);
+  } catch (error) {
+    // (tenantId, email) unique → el duplicado del MISMO tenant es un 409.
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 11000
+    ) {
+      throw new ConflictError('Email already in use in this tenant');
+    }
+    throw error;
+  }
 }
 
 export async function updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
@@ -284,4 +301,181 @@ export async function clearLoginAttempts(tenantId: string, email: string): Promi
 
 export function tenantIdOf(user: User): string {
   return asTenantId(user.tenantId);
+}
+
+// --- Users (RBAC: listado/consulta/actualización por tenant) ---
+
+export interface Page<T> {
+  readonly items: readonly T[];
+  readonly total: number;
+}
+
+export async function listUsers(
+  tenantId: string,
+  page: number,
+  limit: number,
+): Promise<Page<User>> {
+  const skip = (page - 1) * limit;
+  const [docs, total] = await Promise.all([
+    UserModel.find({ tenantId }).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean(),
+    UserModel.countDocuments({ tenantId }),
+  ]);
+  return { items: docs.map((doc) => toUser(doc as unknown as UserDoc)), total };
+}
+
+/** Usuario DENTRO del tenant (id ajeno → null → 404 uniforme). */
+export async function findUserInTenant(tenantId: string, id: string): Promise<User | null> {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  const doc = await UserModel.findOne({ _id: new Types.ObjectId(id), tenantId }).lean();
+  return doc === null ? null : toUser(doc as unknown as UserDoc);
+}
+
+export async function updateUserInTenant(
+  tenantId: string,
+  id: string,
+  patch: { displayName?: string; status?: 'active' | 'disabled'; roles?: readonly string[] },
+): Promise<User | null> {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  const $set: { displayName?: string; status?: 'active' | 'disabled'; roles?: string[] } = {};
+  if (patch.displayName !== undefined) {
+    $set.displayName = patch.displayName;
+  }
+  if (patch.status !== undefined) {
+    $set.status = patch.status;
+  }
+  if (patch.roles !== undefined) {
+    $set.roles = [...patch.roles];
+  }
+  const doc = await UserModel.findOneAndUpdate(
+    { _id: new Types.ObjectId(id), tenantId },
+    { $set },
+    { returnDocument: 'after' },
+  ).lean();
+  return doc === null ? null : toUser(doc as unknown as UserDoc);
+}
+
+// --- Roles (tenant-scoped, ADR-005) ---
+
+function toRole(doc: RoleDoc): Role {
+  return {
+    id: doc._id.toString(),
+    tenantId: doc.tenantId,
+    key: doc.key,
+    name: doc.name,
+    description: doc.description ?? null,
+    permissions: [...(doc.permissions ?? [])] as readonly Permission[],
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}
+
+export async function listRoles(
+  tenantId: string,
+  page: number,
+  limit: number,
+): Promise<Page<Role>> {
+  const skip = (page - 1) * limit;
+  const [docs, total] = await Promise.all([
+    RoleModel.find({ tenantId }).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean(),
+    RoleModel.countDocuments({ tenantId }),
+  ]);
+  return { items: docs.map((doc) => toRole(doc as unknown as RoleDoc)), total };
+}
+
+export async function findRoleById(tenantId: string, id: string): Promise<Role | null> {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  const doc = await RoleModel.findOne({ _id: new Types.ObjectId(id), tenantId }).lean();
+  return doc === null ? null : toRole(doc as unknown as RoleDoc);
+}
+
+export async function findRoleByKey(tenantId: string, key: string): Promise<Role | null> {
+  const doc = await RoleModel.findOne({ tenantId, key }).lean();
+  return doc === null ? null : toRole(doc as unknown as RoleDoc);
+}
+
+/** Permisos efectivos de un conjunto de roles (para el JWT en login/refresh). */
+export async function findRolePermissions(
+  tenantId: string,
+  keys: readonly string[],
+): Promise<readonly Role[]> {
+  if (keys.length === 0) {
+    return [];
+  }
+  const docs = await RoleModel.find({ tenantId, key: { $in: [...keys] } }).lean();
+  return docs.map((doc) => toRole(doc as unknown as RoleDoc));
+}
+
+export async function insertRole(
+  tenantId: string,
+  input: {
+    key: string;
+    name: string;
+    description?: string;
+    permissions: readonly Permission[];
+  },
+): Promise<Role> {
+  try {
+    const doc = await RoleModel.create({
+      tenantId,
+      key: input.key,
+      name: input.name,
+      ...(input.description !== undefined ? { description: input.description } : {}),
+      permissions: [...input.permissions],
+    });
+    return toRole(doc.toObject() as unknown as RoleDoc);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 11000
+    ) {
+      throw new ConflictError('Role key already in use in this tenant');
+    }
+    throw error;
+  }
+}
+
+export async function updateRoleInTenant(
+  tenantId: string,
+  id: string,
+  patch: { name?: string; description?: string; permissions?: readonly Permission[] },
+): Promise<Role | null> {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  const $set: { name?: string; description?: string; permissions?: string[] } = {};
+  if (patch.name !== undefined) {
+    $set.name = patch.name;
+  }
+  if (patch.description !== undefined) {
+    $set.description = patch.description;
+  }
+  if (patch.permissions !== undefined) {
+    $set.permissions = [...patch.permissions];
+  }
+  const doc = await RoleModel.findOneAndUpdate(
+    { _id: new Types.ObjectId(id), tenantId },
+    { $set },
+    { returnDocument: 'after' },
+  ).lean();
+  return doc === null ? null : toRole(doc as unknown as RoleDoc);
+}
+
+export async function deleteRoleInTenant(tenantId: string, id: string): Promise<boolean> {
+  if (!Types.ObjectId.isValid(id)) {
+    return false;
+  }
+  const result = await RoleModel.deleteOne({ _id: new Types.ObjectId(id), tenantId });
+  return result.deletedCount === 1;
+}
+
+export async function countUsersWithRole(tenantId: string, key: string): Promise<number> {
+  return UserModel.countDocuments({ tenantId, roles: key });
 }

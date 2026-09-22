@@ -23,6 +23,7 @@ export interface RoleDoc {
   key: string;
   name: string;
   description?: string;
+  permissions: string[];
   createdAt: Date;
   updatedAt: Date;
 }

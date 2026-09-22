@@ -10,6 +10,8 @@ export interface AuthClaims {
   readonly tenantId: string;
   readonly roles: readonly string[];
   readonly permissions: readonly string[];
+  /** Versión del catálogo de permisos con la que se firmó el token. */
+  readonly pv: number;
   readonly sid: string;
   readonly iss: string;
   readonly aud: string;
@@ -23,6 +25,7 @@ export interface JwtService {
     tenantId: string;
     roles: readonly string[];
     permissions: readonly string[];
+    permVersion: number;
     sessionId: string;
   }): string;
   verifyAccessToken(token: string): AuthClaims;
@@ -38,14 +41,18 @@ export interface CreateJwtServiceOptions {
 
 export function createJwtService(options: CreateJwtServiceOptions): JwtService {
   return {
-    signAccessToken({ userId, tenantId, roles, permissions, sessionId }) {
-      return jwt.sign({ tenantId, roles, permissions, sid: sessionId }, options.privateKey, {
-        algorithm: 'RS256',
-        subject: userId,
-        issuer: options.issuer,
-        audience: options.audience,
-        expiresIn: options.accessTtlSeconds,
-      });
+    signAccessToken({ userId, tenantId, roles, permissions, permVersion, sessionId }) {
+      return jwt.sign(
+        { tenantId, roles, permissions, pv: permVersion, sid: sessionId },
+        options.privateKey,
+        {
+          algorithm: 'RS256',
+          subject: userId,
+          issuer: options.issuer,
+          audience: options.audience,
+          expiresIn: options.accessTtlSeconds,
+        },
+      );
     },
     verifyAccessToken(token) {
       try {
@@ -57,7 +64,7 @@ export function createJwtService(options: CreateJwtServiceOptions): JwtService {
         if (typeof payload === 'string') {
           throw new UnauthenticatedError('Invalid token');
         }
-        const { sub, tenantId, roles, permissions, sid, iss, aud, iat, exp } = payload;
+        const { sub, tenantId, roles, permissions, pv, sid, iss, aud, iat, exp } = payload;
         if (
           typeof sub !== 'string' ||
           typeof tenantId !== 'string' ||
@@ -72,6 +79,8 @@ export function createJwtService(options: CreateJwtServiceOptions): JwtService {
           tenantId,
           roles: roles as string[],
           permissions: permissions as string[],
+          // Tokens antiguos sin `pv` → 0 (desactualizados frente al catálogo).
+          pv: typeof pv === 'number' ? pv : 0,
           sid,
           iss: typeof iss === 'string' ? iss : options.issuer,
           aud: typeof aud === 'string' ? aud : options.audience,
