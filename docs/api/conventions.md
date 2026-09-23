@@ -64,7 +64,7 @@ Tipos compartidos ya existentes: `packages/shared-types` (`ApiResponse<T>`).
 | 12   | `/accounting/accounts` (sin DELETE), `/accounting/journal-entries` (sin DELETE + `POST /:id/post` con `accounting.journal:post`), `/accounting/periods` (sin DELETE), `/accounting/taxes` (sin DELETE)                               |
 | 13   | `/treasury/accounts` (sin DELETE + `GET /:id/movements`), `/treasury/payments` (sin DELETE), `/treasury/receipts` (sin DELETE), `/treasury/bank-transactions` (sin DELETE), `/treasury/reconciliations` (sin DELETE)                 |     |
 | 14   | `/workflows` (definiciones CRUD sin DELETE), `POST /workflows/:id/run`, `GET /workflows/:id/instances`, `GET /workflows/approvals[/:id]`, `POST /workflows/approvals/:id/decision`                                                   |
-| 15   | `/reports`                                                                                                                                                                                                                           |     |
+| 15   | `/reports` (catálogo + ventas/compras/cashflow/inventory/inventory-low-stock/crm + 5 exports CSV en `/reports/{key}/export`) — 11 GET, permisos ENCADENADOS `report:read/export` + subyacentes                                       |
 | —    | `/search` (búsqueda global con `<recurso>:read` por tipo — implementada desde FASE 8)                                                                                                                                                |
 | —    | `/ai` (FASE 20)                                                                                                                                                                                                                      |
 

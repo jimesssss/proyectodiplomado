@@ -41,16 +41,17 @@ Dos colecciones del módulo `purchasing`. Documentos de negocio: `tenantId` SIEM
 
 ## Índices (query → índice, todos con `tenantId` primero)
 
-| Colección           | Índice                                       | Query justificada                                              |
-| ------------------- | -------------------------------------------- | -------------------------------------------------------------- |
-| `purchaseDocuments` | `{tenantId, kind, number}` **unique**        | unicidad de la serie por tenant+tipo (`core/numbering` `$inc`) |
-| `purchaseDocuments` | `{tenantId, kind, createdAt:-1}`             | `GET /purchasing/<tipo>` (listado paginado desc por tipo)      |
-| `purchaseDocuments` | `{tenantId, kind, status, createdAt:-1}`     | `GET /purchasing/<tipo>?status=`                               |
-| `purchaseDocuments` | `{tenantId, kind, supplierId, createdAt:-1}` | `GET …?supplierId=` (documentos de un proveedor)               |
-| `purchaseDocuments` | `{tenantId, kind, orderId}`                  | `GET …?orderId=` y FKs por orden                               |
-| `suppliers`         | `{tenantId, code}` **unique**                | clave natural + `POST` (duplicado → 409)                       |
-| `suppliers`         | `{tenantId, createdAt:-1}`                   | `GET /suppliers`                                               |
-| `suppliers`         | `{tenantId, archived, createdAt:-1}`         | `GET /suppliers?archived=`                                     |
+| Colección           | Índice                                       | Query justificada                                                                       |
+| ------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `purchaseDocuments` | `{tenantId, kind, number}` **unique**        | unicidad de la serie por tenant+tipo (`core/numbering` `$inc`)                          |
+| `purchaseDocuments` | `{tenantId, kind, createdAt:-1}`             | `GET /purchasing/<tipo>` (listado paginado desc por tipo)                               |
+| `purchaseDocuments` | `{tenantId, kind, status, createdAt:-1}`     | `GET /purchasing/<tipo>?status=`                                                        |
+| `purchaseDocuments` | `{tenantId, kind, supplierId, createdAt:-1}` | `GET …?supplierId=` (documentos de un proveedor)                                        |
+| `purchaseDocuments` | `{tenantId, kind, orderId}`                  | `GET …?orderId=` y FKs por orden                                                        |
+| `purchaseDocuments` | `{tenantId, kind, issueDate:-1}`             | reportes/exportes FASE 15 por rango `issueDate` (declarado por `reporting/read-models`) |
+| `suppliers`         | `{tenantId, code}` **unique**                | clave natural + `POST` (duplicado → 409)                                                |
+| `suppliers`         | `{tenantId, createdAt:-1}`                   | `GET /suppliers`                                                                        |
+| `suppliers`         | `{tenantId, archived, createdAt:-1}`         | `GET /suppliers?archived=`                                                              |
 
 La unicidad de número y de código es **por tenant**: lo mismo en dos tenants no colisiona (índice compuesto, ADR-002) — verificado en tests de aislamiento.
 

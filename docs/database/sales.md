@@ -30,13 +30,14 @@ Adicional: `counters` (dueño: `core/numbering`) para la numeración atómica `P
 
 ## Índices (query → índice, todos con `tenantId` primero)
 
-| Índice                                       | Query justificada                                              |
-| -------------------------------------------- | -------------------------------------------------------------- |
-| `{tenantId, kind, number}` **unique**        | unicidad de la serie por tenant+tipo (`core/numbering` `$inc`) |
-| `{tenantId, kind, createdAt:-1}`             | `GET /sales/<tipo>` (listado paginado desc por tipo)           |
-| `{tenantId, kind, status, createdAt:-1}`     | `GET /sales/<tipo>?status=`                                    |
-| `{tenantId, kind, customerId, createdAt:-1}` | `GET /sales/<tipo>?customerId=` (documentos de un cliente)     |
-| `{tenantId, kind, orderId}`                  | `GET /sales/deliveries?orderId=` y FKs por pedido              |
+| Índice                                       | Query justificada                                                                       |
+| -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `{tenantId, kind, number}` **unique**        | unicidad de la serie por tenant+tipo (`core/numbering` `$inc`)                          |
+| `{tenantId, kind, createdAt:-1}`             | `GET /sales/<tipo>` (listado paginado desc por tipo)                                    |
+| `{tenantId, kind, status, createdAt:-1}`     | `GET /sales/<tipo>?status=`                                                             |
+| `{tenantId, kind, customerId, createdAt:-1}` | `GET /sales/<tipo>?customerId=` (documentos de un cliente)                              |
+| `{tenantId, kind, orderId}`                  | `GET /sales/deliveries?orderId=` y FKs por pedido                                       |
+| `{tenantId, kind, issueDate:-1}`             | reportes/exportes FASE 15 por rango `issueDate` (declarado por `reporting/read-models`) |
 
 La unicidad del número es **por tenant y tipo**: el mismo `QT-2026-000001` en dos tenants (o en series distintas) no colisiona (índice compuesto, ADR-002) — verificado en test de aislamiento.
 

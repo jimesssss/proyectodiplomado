@@ -156,6 +156,14 @@ POST /api/v1/roles
 | `GET /workflows/:id/instances`                             | `workflow:read` (lista paginada; sin detalle individual → ruta `GET /workflows/instances/:id` ausente → 404)                                 |
 | `GET /workflows/approvals[/:id]`                           | `approval:read` (cola de solicitudes; separada de `workflow:*`: el configurador con `workflow:update` NO la lee)                             |
 | `POST /workflows/approvals/:id/decision`                   | `approval:approve` (leer ≠ decidir: `approval:read` NO decide; sin creación/PATCH/DELETE de solicitudes → rutas ausentes → 404)              |
+| `GET /reports`                                             | `report:read` (catálogo estático SIN datos: las 5 claves y sus `params`)                                                                     |
+| `GET /reports/sales`                                       | `report:read` + `sales.invoice:read` + `customer:read` (encadenados ADR-008 §1: la API filtraría igual con los subyacentes)                  |
+| `GET /reports/purchases`                                   | `report:read` + `supplier.invoice:read` + `supplier:read`                                                                                    |
+| `GET /reports/cashflow`                                    | `report:read` + `bank.account:read`                                                                                                          |
+| `GET /reports/inventory` + `/inventory/low-stock`          | `report:read` + `product:read` + `stock.movement:read`                                                                                       |
+| `GET /reports/crm`                                         | `report:read` + `lead:read` + `opportunity:read`                                                                                             |
+| `GET /reports/{inventory,sales,purchases}/export`          | `report:export` + LOS MISMOS subyacentes del reporte (consultar ≠ exportar: `report:read` NO exporta y `report:export` NO lee)               |
+| `GET /reports/:key/export` (`cashflow\|crm`)               | `report:export` + subyacentes de `key` (`bank.account:read` / `lead:read`+`opportunity:read`); clave desconocida → 400 (enum de params)      |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                     |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                     |
 
