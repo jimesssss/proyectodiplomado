@@ -145,6 +145,12 @@ POST /api/v1/roles
 | `POST /accounting/journal-entries/:id/post`                | `accounting.journal:post` (separado de `:update`, como `sales.quote:approve`)                                                                |
 | `/accounting/periods` (GET/PATCH/POST; sin DELETE)         | `accounting.period:read` / `:update` / `:create` (sin `:delete`: los períodos se cierran, no se archivan)                                    |
 | `/accounting/taxes` (GET/PATCH/POST; sin DELETE)           | `accounting.tax:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                               |
+| `/treasury/accounts` (GET/PATCH/POST; sin DELETE)          | `bank.account:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                                 |
+| `GET /treasury/accounts/:id/movements`                     | `bank.account:read` (extracto append-only: sin PATCH/DELETE → rutas ausentes → 404)                                                          |
+| `/treasury/payments` (GET/PATCH/POST; sin DELETE)          | `payment:read` / `:update` / `:create` (sin `:delete`; la publicación `PATCH {status:'posted'}` va con `:update` — no existe `payment:post`) |
+| `/treasury/receipts` (GET/PATCH/POST; sin DELETE)          | `receipt:read` / `:update` / `:create` (mismo patrón que pagos: publicar = `PATCH {status:'posted'}` con `:update`)                          |
+| `/treasury/bank-transactions` (GET/PATCH/POST; sin DELETE) | `bank.account:read` / `:update` / `:create` (vía `bank.account:*`: el catálogo no define `bank.transaction:*`)                               |
+| `/treasury/reconciliations` (GET/PATCH/POST; sin DELETE)   | `reconciliation:read` / `:update` / `:create` (sin `:delete`; las líneas se corrigen reemplazándolas en `PATCH`)                             |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                     |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                     |
 
