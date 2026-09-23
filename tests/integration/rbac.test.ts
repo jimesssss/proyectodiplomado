@@ -7,6 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
+import { PERMISSION_CATALOG_VERSION } from '@erp/permissions';
 import type { Env } from '../../apps/api/src/core/config/env.js';
 import { createJwtService } from '../../apps/api/src/core/auth/jwt.js';
 import { resolveJwtKeys } from '../../apps/api/src/core/auth/keys.js';
@@ -127,7 +128,7 @@ describe('rbac: permisos en el JWT, roles y usuarios', () => {
     expect(claims.permissions).toContain('user:create');
     expect(claims.permissions).not.toContain('tenant:suspend');
     expect(claims.permissions).not.toContain('tenant:read');
-    expect(claims.pv).toBe(1);
+    expect(claims.pv).toBe(PERMISSION_CATALOG_VERSION);
   });
 
   it('GET /permissions devuelve el catálogo completo con versión', async () => {
@@ -135,7 +136,7 @@ describe('rbac: permisos en el JWT, roles y usuarios', () => {
       .get('/api/v1/permissions')
       .set('Authorization', `Bearer ${ownerTokenA}`);
     expect(res.status).toBe(200);
-    expect(res.body.data.version).toBe(1);
+    expect(res.body.data.version).toBe(PERMISSION_CATALOG_VERSION);
     expect(res.body.data.permissions).toContain('customer:read');
     expect(res.body.data.permissions).toContain('sales.order:create');
     expect(res.body.data.groups.tenant).toContain('tenant:suspend');

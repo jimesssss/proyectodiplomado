@@ -30,15 +30,16 @@ Estado: Aceptado (FASE 1) · Ver también ADR-002 y ADR-003
 
 ### NEGOCIO
 
-| Colección                                                                                                                                                                          | Notas                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `customers` · `contacts` · `leads` · `opportunities` · `activities` · `customerTags`                                                                                               | CRM; timeline = colección derivada/unión de eventos |
-| `quotes` · `salesOrders` · `salesOrderLines` · `deliveries` · `invoices` · `salesReturns` · `commissions`                                                                          | líneas separadas si > umbral de tamaño              |
-| `suppliers` · `purchaseRequests` · `purchaseOrders` · `goodsReceipts` · `supplierInvoices` · `purchaseReturns`                                                                     |                                                     |
-| `products` · `productVariants` · `categories` · `brands` · `units` · `stock` · `stockMovements` · `stockReservations` · `lots` · `serialNumbers` · `inventoryCounts` · `transfers` | ledger de stock                                     |
-| `accounts` · `journalEntries` · `journalLines` · `fiscalPeriods` · `taxes` · `currencies` · `exchangeRates` · `budgets` · `accountingDocuments`                                    | invariante DEBIT=CREDIT                             |
-| `bankAccounts` · `cashAccounts` · `bankTransactions` · `payments` · `receipts` · `reconciliations` · `cashMovements`                                                               |                                                     |
-| `projects` · `tickets` · `employees` · `attendance` …                                                                                                                              | fases 17-19                                         |
+| Colección                                                                                                                                                                          | Notas                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `customers` · `contacts` · `leads` · `opportunities` · `activities` · `customerTags`                                                                                               | CRM; timeline = colección derivada/unión de eventos           |
+| `quotes` · `salesOrders` · `salesOrderLines` · `deliveries` · `invoices` · `salesReturns` · `commissions`                                                                          | líneas separadas si > umbral de tamaño                        |
+| `suppliers` · `purchaseRequests` · `purchaseOrders` · `goodsReceipts` · `supplierInvoices` · `purchaseReturns`                                                                     |                                                               |
+| `products` · `productVariants` · `categories` · `brands` · `units` · `stock` · `stockMovements` · `stockReservations` · `lots` · `serialNumbers` · `inventoryCounts` · `transfers` | ledger de stock                                               |
+| `accounts` · `journalEntries` · `journalLines` · `fiscalPeriods` · `taxes` · `currencies` · `exchangeRates` · `budgets` · `accountingDocuments`                                    | invariante DEBIT=CREDIT                                       |
+| `bankAccounts` · `cashAccounts` · `bankTransactions` · `payments` · `receipts` · `reconciliations` · `cashMovements`                                                               |                                                               |
+| `boms` · `productionOrders`                                                                                                                                                        | manufacturing (FASE 16); plan POR UNIDAD + máquina de estados |
+| `projects` · `tickets` · `employees` · `attendance` …                                                                                                                              | fases 17-19                                                   |
 
 Cada creación de colección exige pasar las **6 preguntas** de ADR-003 antes de escribir el schema.
 

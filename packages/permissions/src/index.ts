@@ -132,6 +132,15 @@ export const PERMISSIONS = {
   approval: ['approval:read', 'approval:approve'],
   // --- Reportes (FASE 15) ---
   report: ['report:read', 'report:export'],
+  // --- Manufacturing (FASE 16) ---
+  // Sin `:delete` en ninguno de los dos: las BOM y las órdenes se archivan
+  // vía `PATCH {archived}` (las órdenes se CANCELAN, no se borran — trazabilidad).
+  bom: ['bom:read', 'bom:create', 'bom:update'],
+  'production.order': [
+    'production.order:read',
+    'production.order:create',
+    'production.order:update',
+  ],
   // --- Restantes módulos (FASE 17-20) ---
   project: ['project:read', 'project:create', 'project:update', 'project:delete'],
   ticket: ['ticket:read', 'ticket:create', 'ticket:update', 'ticket:delete'],
@@ -146,8 +155,9 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS][number];
 /**
  * Versión del catálogo. Obligatoria en el JWT (`pv`): al cambiar permisos,
  * los tokens antiguos dejan de superar `requirePermission` (re-login/refresh).
+ * v2 (FASE 16): alta de `bom:*` y `production.order:*` → re-login obligatorio.
  */
-export const PERMISSION_CATALOG_VERSION = 1;
+export const PERMISSION_CATALOG_VERSION = 2;
 
 export const ALL_PERMISSIONS: readonly Permission[] = Object.values(PERMISSIONS).flat();
 

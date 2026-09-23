@@ -164,6 +164,9 @@ POST /api/v1/roles
 | `GET /reports/crm`                                         | `report:read` + `lead:read` + `opportunity:read`                                                                                             |
 | `GET /reports/{inventory,sales,purchases}/export`          | `report:export` + LOS MISMOS subyacentes del reporte (consultar ≠ exportar: `report:read` NO exporta y `report:export` NO lee)               |
 | `GET /reports/:key/export` (`cashflow\|crm`)               | `report:export` + subyacentes de `key` (`bank.account:read` / `lead:read`+`opportunity:read`); clave desconocida → 400 (enum de params)      |
+| `/manufacturing/boms` (GET/PATCH/POST; sin DELETE)         | `bom:read` / `:update` / `:create` (sin `:delete` en el catálogo → ruta DELETE no publicada; archivar vía `PATCH {archived}`)                |
+| `/manufacturing/orders` (GET/PATCH/POST; sin DELETE)       | `production.order:read` / `:update` / `:create` (sin `:delete`: se CANCELAN, no se borran — trazabilidad; archivar vía `PATCH {archived}`)   |
+| `PATCH /manufacturing/orders/:id` (`{status}`)             | `production.order:update` (las transiciones `draft→in_progress→completed/cancelled` van por el PATCH, sin endpoint `POST /:id/start`)        |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                     |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                     |
 
@@ -174,3 +177,8 @@ Interfaz prevista `Policy.evaluate(subject, action, resource, context)` con `All
 ## Cambios del catálogo
 
 Cualquier alta/baja/renombre de permiso DEBE incrementar `PERMISSION_CATALOG_VERSION` en `packages/permissions/src/index.ts`: los tokens con `pv` anterior quedan invalidados para rutas con `requirePermission` (re-login). Existe test unitario que exige `version ≥ 1` y forma canónica de cada clave.
+
+| Versión | Fase | Cambio                                                                                                                                                        |
+| ------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | 6    | catálogo inicial (identity, org, CRM, sales, purchasing, inventory, accounting, treasury, workflow, …)                                                        |
+| 2       | 16   | alta de `bom:read/create/update` y `production.order:read/create/update` (SIN `:delete` en ambos grupos) → todos los tokens existentes requieren **re-login** |

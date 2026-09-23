@@ -18,7 +18,7 @@ Estado: implementado. Módulo `apps/api/src/modules/workflow`; colecciones e ín
 - Filtros: definiciones `?archived=true|false`; instancias `?state=awaiting_approval|approved|rejected|skipped`; aprobaciones `?status=pending|approved|rejected`, `?workflowId=`, `?entityType=`, `?entityId=`.
 - El catálogo **no define `workflow:delete`** → ruta `DELETE` no publicada (**404 incluso para el owner**); el soft-delete es `PATCH {archived:true}`.
 - **Separación explícita** `workflow:*` (configurar/ejecutar) ≠ `approval:*` (leer la cola / decidir): un configurador con `workflow:update` NO decide; un aprobador con `approval:approve` NO reconfigura (verificado en `tests/security/workflow-security.test.ts`).
-- Denegación por defecto (ADR-005): sin el permiso exacto → `403` con `details.permission`. `pv` viejo → `403` re-login. **Sin bump de `pv`**: la fase reutiliza `workflow:read/create/update` y `approval:read/approve` ya existentes (`PERMISSION_CATALOG_VERSION = 1`).
+- Denegación por defecto (ADR-005): sin el permiso exacto → `403` con `details.permission`. `pv` viejo → `403` re-login. **Sin bump de `pv` en FASE 14**: la fase reutiliza `workflow:read/create/update` y `approval:read/approve` ya existentes (el catálogo estaba en v1; hoy `PERMISSION_CATALOG_VERSION = 2` desde la FASE 16 — ver `docs/security/permission-matrix.md`).
 - `tenantId` SIEMPRE del JWT; esquemas **estrictos**: `tenantId`/`archived`/`id` (en create), `key`/`trigger`/`condition`/`action` (en PATCH — inmutables), `status`/`instanceId`/`decidedBy`/`tenantId`/`state`/`workflowId` (en run/decisión) u otro campo desconocido → `400`. Respuestas **sin** `tenantId`.
 
 ## Definiciones (`/workflows`) — configuración POR DATOS

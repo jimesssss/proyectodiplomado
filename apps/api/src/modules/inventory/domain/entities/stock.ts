@@ -15,6 +15,8 @@ export const MOVEMENT_TYPES = [
   'transfer_in', // transferencia: llegada al destino
   'transfer_out', // transferencia: salida del origen
   'count_adjustment', // diferencia de conteo físico (±)
+  'production_in', // producción: producto terminado (completar orden, FASE 16)
+  'production_out', // producción: consumo de componentes (completar orden, FASE 16)
 ] as const;
 export type MovementType = (typeof MOVEMENT_TYPES)[number];
 
@@ -23,7 +25,8 @@ export const MANUAL_MOVEMENT_TYPES = ['manual_in', 'manual_out'] as const;
 export type ManualMovementType = (typeof MANUAL_MOVEMENT_TYPES)[number];
 
 /** Sistema de origen de un movimiento (trazabilidad). */
-export type MovementSourceType = 'goods.receipt' | 'stock.transfer' | 'stock.count';
+export type MovementSourceType =
+  'goods.receipt' | 'stock.transfer' | 'stock.count' | 'production.order';
 
 export interface StockBalance {
   readonly id: string;

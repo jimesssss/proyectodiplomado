@@ -29,6 +29,7 @@ import { createAccountingRouters } from './modules/accounting/index.js';
 import { createTreasuryRouters } from './modules/treasury/index.js';
 import { createWorkflowRouters } from './modules/workflow/index.js';
 import { createReportingRouters } from './modules/reporting/index.js';
+import { createManufacturingRouters } from './modules/manufacturing/index.js';
 
 async function bootstrap(): Promise<void> {
   let env;
@@ -110,6 +111,7 @@ async function bootstrap(): Promise<void> {
       ...createTreasuryRouters({ jwt, isSessionActive: createSessionChecker() }),
       ...createWorkflowRouters({ jwt, isSessionActive: createSessionChecker() }),
       ...createReportingRouters({ jwt, isSessionActive: createSessionChecker() }),
+      ...createManufacturingRouters({ jwt, isSessionActive: createSessionChecker() }),
     ],
   });
 

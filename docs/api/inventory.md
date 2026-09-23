@@ -30,7 +30,7 @@ Estado: implementado. Módulo `apps/api/src/modules/inventory`; reglas de domini
 - **Invariante**: el saldo por (producto, almacén) **NUNCA es negativo**. Una salida se aplica con guardia atómica en el propio filtro del update (`qty ≥ −delta`): si no alcanza → `422 DOMAIN_ERROR` con `details {productId, warehouseId, available, required}` y **nada cambia**.
 - **`GET /inventory/stock`** es una PROYECCIÓN (colección `stock`): no hay endpoint que la escriba; solo cambia aplicando movimientos.
 - **Movimientos manuales** (`POST /inventory/movements`): solo `type ∈ {manual_in, manual_out}` (los tipos del sistema los crea el servidor); `quantity > 0` con signo aplicado por el servidor (+/−); `reason` obligatorio (1–200). El ledger guarda `balanceAfter` (saldo resultante) y `sourceType/sourceId` (documento origen; `null` en manuales).
-- **Tipos del sistema**: `receipt` (recepción `posted`), `transfer_out`/`transfer_in` (completar transferencia), `count_adjustment` (aprobar conteo). Intentar crearlos por API → `400`.
+- **Tipos del sistema**: `receipt` (recepción `posted`), `transfer_out`/`transfer_in` (completar transferencia), `count_adjustment` (aprobar conteo), `production_out`/`production_in` (completar orden de producción, FASE 16 — `sourceType: 'production.order'`). Intentar crearlos por API → `400`.
 - **Append-only**: no existen rutas PATCH/DELETE de movimientos (peticiones → 404): la corrección es un movimiento compensatorio (`manual_in`/`manual_out`), nunca reescribir historia.
 - FKs: producto inexistente/ajeno → `404`; archivado → `409`; almacén inexistente/ajeno → `404`; almacén archivado → `409 Warehouse is archived`.
 

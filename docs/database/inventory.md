@@ -31,18 +31,18 @@ Cinco colecciones del módulo `inventory` (las rutas de `docs/architecture/datab
 
 ## Colección `stockMovements` (ledger append-only)
 
-| Campo          | Tipo / notas                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------- |
-| `tenantId`     | string (SIEMPRE del JWT)                                                                                |
-| `productId`    | ObjectId → `products`                                                                                   |
-| `warehouseId`  | ObjectId → `warehouses`                                                                                 |
-| `type`         | enum `receipt \| manual_in \| manual_out \| transfer_in \| transfer_out \| count_adjustment`            |
-| `qty`          | number **con signo**: + entrada, − salida                                                               |
-| `balanceAfter` | number, saldo resultante de (producto, almacén) tras aplicar este movimiento                            |
-| `sourceType?`  | `goods.receipt \| stock.transfer \| stock.count` (null en manuales)                                     |
-| `sourceId?`    | ObjectId del documento origen (null en manuales)                                                        |
-| `reason?`      | string (obligatorio en manuales; los del sistema llevan `<documento> <número>` o el detalle del conteo) |
-| `createdAt`    | Date — **sin `updatedAt`**: nada se reescribe                                                           |
+| Campo          | Tipo / notas                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `tenantId`     | string (SIEMPRE del JWT)                                                                                                        |
+| `productId`    | ObjectId → `products`                                                                                                           |
+| `warehouseId`  | ObjectId → `warehouses`                                                                                                         |
+| `type`         | enum `receipt \| manual_in \| manual_out \| transfer_in \| transfer_out \| count_adjustment \| production_in \| production_out` |
+| `qty`          | number **con signo**: + entrada, − salida                                                                                       |
+| `balanceAfter` | number, saldo resultante de (producto, almacén) tras aplicar este movimiento                                                    |
+| `sourceType?`  | `goods.receipt \| stock.transfer \| stock.count \| production.order` (null en manuales)                                         |
+| `sourceId?`    | ObjectId del documento origen (null en manuales)                                                                                |
+| `reason?`      | string (obligatorio en manuales; los del sistema llevan `<documento> <número>` o el detalle del conteo)                         |
+| `createdAt`    | Date — **sin `updatedAt`**: nada se reescribe                                                                                   |
 
 ## Colección `stockTransfers`
 
