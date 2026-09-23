@@ -15,6 +15,11 @@ export {
   type CrmSearchType,
   type SearchResultItem,
 } from './presentation/routes/search-routes.js';
+export {
+  searchCrm,
+  type SearchCrmOptions,
+  type SearchCrmResult,
+} from './application/search-service.js';
 export { getCustomer, listCustomers } from './application/customer-service.js';
 export { getContact, listContacts } from './application/contact-service.js';
 export { getLead, listLeads } from './application/lead-service.js';

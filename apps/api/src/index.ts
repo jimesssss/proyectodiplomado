@@ -32,6 +32,7 @@ import { createReportingRouters } from './modules/reporting/index.js';
 import { createManufacturingRouters } from './modules/manufacturing/index.js';
 import { createProjectsRouters } from './modules/projects/index.js';
 import { createHrRouters } from './modules/hr/index.js';
+import { createAiRouters } from './modules/ai/index.js';
 import { createServiceRouters } from './modules/service/index.js';
 
 async function bootstrap(): Promise<void> {
@@ -118,6 +119,7 @@ async function bootstrap(): Promise<void> {
       ...createProjectsRouters({ jwt, isSessionActive: createSessionChecker() }),
       ...createServiceRouters({ jwt, isSessionActive: createSessionChecker() }),
       ...createHrRouters({ jwt, isSessionActive: createSessionChecker() }),
+      ...createAiRouters({ jwt, isSessionActive: createSessionChecker() }),
     ],
   });
 
