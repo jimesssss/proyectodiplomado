@@ -173,6 +173,10 @@ POST /api/v1/roles
 | `PATCH /tasks/:id` (`{status}`)                            | `project:update` (`open→in_progress→done\|cancelled` con salto directo `open→done`; los terminales no editan negocio)                                                       |
 | `/tickets` (GET/PATCH/POST/**DELETE**)                     | `ticket:read` / `:update` / `:create` / `:delete` (el catálogo v1 YA tenía `:delete` → DELETE publicado = soft-delete, patrón CRM/product)                                  |
 | `PATCH /tickets/:id` (`{status}`)                          | `ticket:update` (transiciones de soporte CON reapertura `resolved→in_progress` — limpia la nota; `→ resolved` exige `resolution` en el MISMO patch; terminales sin edición) |
+| `/employees` (GET/PATCH/POST/**DELETE**)                   | `employee:read` / `:update` / `:create` / `:delete` (el catálogo v1 YA tenía `:delete` → DELETE publicado = soft-delete, patrón CRM/product)                                |
+| `PATCH /employees/:id` (`{status}`)                        | `employee:update` (transiciones `active↔inactive→terminated`; `terminated` terminal congela los campos de negocio → 409; `archived` ortogonal)                              |
+| `/attendance` (GET/PATCH/POST; **sin DELETE**)             | `attendance:read` / `:update` / `:create` (sin `attendance:delete` en el catálogo → ruta DELETE NO publicada = 404; archivar vía `PATCH {archived}`)                        |
+| `/salaries` (GET/PATCH/POST; **sin DELETE**)               | `hr.salary:read` / `:update` / `:create` (sin `hr.salary:delete` en el catálogo → ruta DELETE NO publicada = 404; archivar vía `PATCH {archived}`)                          |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                                                    |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                                                    |
 
@@ -192,3 +196,5 @@ Cualquier alta/baja/renombre de permiso DEBE incrementar `PERMISSION_CATALOG_VER
 Sin bump en FASE 17 (Projects): `project:read/create/update/delete` ya existía desde v1 → los tokens vigentes (pv 2) siguen siendo válidos; la fase solo publicó rutas nuevas sobre permisos existentes.
 
 Sin bump en FASE 18 (Service): `ticket:read/create/update/delete` también entró en el catálogo inicial de FASE 6 (commit `d5d8753`, verificado con `git log -S`) → pv sigue en 2 y NO hay re-login. **Corrección**: el reporte `phase-17-projects.md` anunciaba erróneamente un "grupo nuevo → bump pv 2→3" para `ticket:*`; era falso y quedó corregido en FASE 18.
+
+Sin bump en FASE 19 (HR): `employee:*`, `attendance:*` y `hr.salary:*` (los 3 grupos) entraron también en FASE 6 (`d5d8753`, verificado con `git log -S`) → **pv sigue en 2** y NO hay re-login. Como en FASE 17/18, la fase solo publicó rutas nuevas sobre permisos existentes: empleados con DELETE publicado (el catálogo sí tiene `employee:delete`), asistencia y nómina SIN ruta DELETE (`attendance:*`/`hr.salary:*` no tienen `:delete` → 404; archivar con `PATCH {archived}`).
