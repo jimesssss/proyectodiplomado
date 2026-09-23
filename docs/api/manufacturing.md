@@ -51,9 +51,9 @@ Estado: implementado. Módulo `apps/api/src/modules/manufacturing`; colecciones 
   - El estado **terminal es la guarda de at-most-once** (sin transacciones Mongo): repetir `PATCH {status:'completed'}` → `409` y el ledger no duplica movimientos. Cancelar (`draft`/`in_progress → cancelled`) NO mueve stock.
 - **Archivar**: `PATCH {archived}` con doble archive → `409` (`Production order is already archived` / `... is not archived`).
 
-## Query (strictObject)
+## Query
 
-Parámetro desconocido → `400 VALIDATION_ERROR` (`Invalid request query`); incluye `?tenantId=` (el tenant viene SOLO del JWT).
+Parámetro DESCONOCIDO (incluido `?tenantId=`) → se **descarta sin error** (`z.object` de Zod lo elimina; el filtro de tenant SIEMPRE sale del JWT y la query no lo altera). Valor **inválido de un parámetro conocido** (`status=bogus`, `page=0`) → `400 VALIDATION_ERROR` (`Invalid request query`). Corrige la afirmación previa de "desconocido → 400", que no coincidía con el comportamiento real de los listados CRUD (solo Reporting usa `z.strictObject` por clave, ver `docs/api/reports.md`).
 
 | Recurso  | Params                                                                        |
 | -------- | ----------------------------------------------------------------------------- |
