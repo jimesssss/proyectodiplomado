@@ -1,6 +1,12 @@
 import type { ErrorRequestHandler } from 'express';
 import type { ApiError, ApiFailure } from '@erp/shared-types';
-import { AppError, InternalError, ValidationError, isAppError } from '../errors/app-error.js';
+import {
+  AppError,
+  ConflictError,
+  InternalError,
+  ValidationError,
+  isAppError,
+} from '../errors/app-error.js';
 import type { Logger } from '../logging/logger.js';
 import { errorResponse } from './envelope.js';
 
@@ -8,15 +14,50 @@ import { errorResponse } from './envelope.js';
  * Normaliza cualquier error hacia un AppError:
  * - AppError → tal cual.
  * - SyntaxError de body-parser (JSON malformado) → 400 VALIDATION_ERROR.
+ * - Errores de mongoose por SHAPE: `ValidationError` (paths requeridos/enums
+ *   violados — p. ej. un texto en blanco que zod no rechazaba) y `CastError`
+ *   → 400; `MongoServerError` code 11000 (índice único, ventana de carrera
+ *   de upsert) → 409. Sin este puente se escaparían como 500.
  * - Errores 4xx de middleware (payload too large, etc.) → su status.
  * - Cualquier otro → 500 INTERNAL_ERROR (mensaje oculto al cliente).
  */
+function asRecord(error: unknown): Record<string, unknown> | null {
+  return typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
+}
+
+function mongooseValidationError(errors: Record<string, { message?: unknown }>): ValidationError {
+  const issues = Object.entries(errors).map(([path, detail]) => ({
+    path,
+    message: typeof detail.message === 'string' ? detail.message : 'Invalid value',
+  }));
+  return new ValidationError('Invalid request payload', { issues });
+}
+
 export function normalizeError(error: unknown): AppError {
   if (isAppError(error)) {
     return error;
   }
   if (error instanceof SyntaxError && 'body' in error) {
     return new ValidationError('Invalid JSON body');
+  }
+  const record = asRecord(error);
+  if (record !== null) {
+    if (
+      record.name === 'ValidationError' &&
+      typeof record.errors === 'object' &&
+      record.errors !== null
+    ) {
+      return mongooseValidationError(record.errors as Record<string, { message?: unknown }>);
+    }
+    if (record.name === 'CastError') {
+      const path = typeof record.path === 'string' ? record.path : '(root)';
+      return new ValidationError('Invalid request payload', {
+        issues: [{ path, message: 'Invalid value' }],
+      });
+    }
+    if (record.code === 11000) {
+      return new ConflictError('Resource already exists');
+    }
   }
   if (typeof error === 'object' && error !== null && 'status' in error) {
     const status = (error as { status?: unknown }).status;

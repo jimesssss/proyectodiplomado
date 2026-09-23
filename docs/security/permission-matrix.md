@@ -171,6 +171,8 @@ POST /api/v1/roles
 | `PATCH /projects/:id` (`{status}`)                         | `project:update` (transiciones `planning→active→completed/cancelled` + `on_hold`; editan negocio solo los NO terminales)                                                    |
 | `/tasks` (GET/PATCH/POST/**DELETE**)                       | `project:*` — MISMO grupo que proyectos: `project:read` habilita ambos recursos; `dependsOn` acíclico y del mismo proyecto; completar pre-chequea bloqueo → 409 `blockedBy` |
 | `PATCH /tasks/:id` (`{status}`)                            | `project:update` (`open→in_progress→done\|cancelled` con salto directo `open→done`; los terminales no editan negocio)                                                       |
+| `/tickets` (GET/PATCH/POST/**DELETE**)                     | `ticket:read` / `:update` / `:create` / `:delete` (el catálogo v1 YA tenía `:delete` → DELETE publicado = soft-delete, patrón CRM/product)                                  |
+| `PATCH /tickets/:id` (`{status}`)                          | `ticket:update` (transiciones de soporte CON reapertura `resolved→in_progress` — limpia la nota; `→ resolved` exige `resolution` en el MISMO patch; terminales sin edición) |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                                                    |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                                                    |
 
@@ -188,3 +190,5 @@ Cualquier alta/baja/renombre de permiso DEBE incrementar `PERMISSION_CATALOG_VER
 | 2       | 16   | alta de `bom:read/create/update` y `production.order:read/create/update` (SIN `:delete` en ambos grupos) → todos los tokens existentes requieren **re-login** |
 
 Sin bump en FASE 17 (Projects): `project:read/create/update/delete` ya existía desde v1 → los tokens vigentes (pv 2) siguen siendo válidos; la fase solo publicó rutas nuevas sobre permisos existentes.
+
+Sin bump en FASE 18 (Service): `ticket:read/create/update/delete` también entró en el catálogo inicial de FASE 6 (commit `d5d8753`, verificado con `git log -S`) → pv sigue en 2 y NO hay re-login. **Corrección**: el reporte `phase-17-projects.md` anunciaba erróneamente un "grupo nuevo → bump pv 2→3" para `ticket:*`; era falso y quedó corregido en FASE 18.

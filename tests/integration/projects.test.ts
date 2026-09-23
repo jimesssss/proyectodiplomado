@@ -163,6 +163,11 @@ describe('projects: proyectos, tareas y dependencias', () => {
     expect(invalidCode.status).toBe(400);
     expect(JSON.stringify(invalidCode.body)).toContain('Invalid code');
 
+    // Regresión FASE 18: nombre en blanco llegaba a mongoose (`required`) → 500.
+    const blankName = await postA('/api/v1/projects', { code: 'blank-nm', name: '   ' });
+    expect(blankName.status).toBe(400); // zod `.trim()` + min(1) sobre el recortado
+    expect(blankName.body.error.code).toBe('VALIDATION_ERROR');
+
     // Mismo código en OTRO tenant → permitido (unicidad por tenant).
     const fromB = await postB('/api/v1/projects', { code: 'WEB-PORTAL', name: 'Portal B' });
     expect(fromB.status).toBe(201);
@@ -229,6 +234,11 @@ describe('projects: proyectos, tareas y dependencias', () => {
     const renamed = await patchA(`/api/v1/projects/${projectA1Id}`, { name: 'Web Portal v2' });
     expect(renamed.status).toBe(200); // no terminal → editable
     expect(renamed.body.data.name).toBe('Web Portal v2');
+
+    // Regresión FASE 18: renombrar a solo espacios → 400 (no vaciar el campo).
+    const blankRename = await patchA(`/api/v1/projects/${projectA1Id}`, { name: '   ' });
+    expect(blankRename.status).toBe(400);
+    expect(blankRename.body.error.code).toBe('VALIDATION_ERROR');
 
     const held = await patchA(`/api/v1/projects/${projectA1Id}`, { status: 'on_hold' });
     expect(held.status).toBe(200);
@@ -337,6 +347,13 @@ describe('projects: proyectos, tareas y dependencias', () => {
       priority: 'urgent',
     });
     expect(badPriority.status).toBe(400);
+
+    // Regresión FASE 18: título en blanco → 400 (zod `.trim()`), no 500.
+    const blankTitle = await postA('/api/v1/tasks', {
+      projectId: projectA1Id,
+      title: '   ',
+    });
+    expect(blankTitle.status).toBe(400);
 
     // Proyecto archivado no admite tareas nuevas (409), pero sigue legible.
     const archived = await patchA(`/api/v1/projects/${projectA2Id}`, { archived: true });

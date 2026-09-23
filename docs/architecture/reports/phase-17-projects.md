@@ -85,4 +85,4 @@ Detalle (queries, mensajes exactos, máquina de estados, dependencias): `docs/ap
 
 ## PRÓXIMA FASE
 
-**18 SERVICE**: módulo `service` (`ticket:*` en el catálogo — grupo nuevo → **bump pv 2→3** y re-login), tickets con SLA/prioridad y asignación, máquina de estados de soporte, archivado con `ticket:delete`, filtros de cola; docs + QA + commit por fase.
+**18 SERVICE**: módulo `service` (`ticket:*` YA estaba en el catálogo desde v1 — verificado en FASE 18 con `git log -S`; **sin bump**, pv=2 — esta línea anunciaba erróneamente un bump y fue corregida), tickets con SLA/prioridad y asignación, máquina de estados de soporte, archivado con `ticket:delete`, filtros de cola; docs + QA + commit por fase.

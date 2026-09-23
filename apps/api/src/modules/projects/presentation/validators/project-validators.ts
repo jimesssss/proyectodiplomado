@@ -25,7 +25,7 @@ const dependenciesField = z.array(objectId).max(DEPENDENCIES_MAX);
 
 export const createProjectBodySchema = z.strictObject({
   code: z.string().min(1).max(32),
-  name: z.string().min(1).max(120),
+  name: z.string().trim().min(1).max(120),
   description: descriptionField.optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
@@ -33,7 +33,7 @@ export const createProjectBodySchema = z.strictObject({
 });
 
 export const patchProjectBodySchema = z.strictObject({
-  name: z.string().min(1).max(120).optional(),
+  name: z.string().trim().min(1).max(120).optional(),
   description: descriptionField.nullable().optional(),
   startDate: z.coerce.date().nullable().optional(),
   endDate: z.coerce.date().nullable().optional(),
@@ -53,7 +53,7 @@ export const projectListQuerySchema = z.object({
 
 export const createTaskBodySchema = z.strictObject({
   projectId: objectId,
-  title: z.string().min(1).max(120),
+  title: z.string().trim().min(1).max(120),
   description: descriptionField.optional(),
   priority: z.enum(TASK_PRIORITIES).optional(),
   assigneeId: objectId.optional(),
@@ -62,7 +62,7 @@ export const createTaskBodySchema = z.strictObject({
 });
 
 export const patchTaskBodySchema = z.strictObject({
-  title: z.string().min(1).max(120).optional(),
+  title: z.string().trim().min(1).max(120).optional(),
   description: descriptionField.nullable().optional(),
   priority: z.enum(TASK_PRIORITIES).optional(),
   assigneeId: objectId.nullable().optional(),

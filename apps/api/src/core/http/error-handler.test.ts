@@ -77,6 +77,34 @@ describe('normalizeError', () => {
     expect(normalized.statusCode).toBe(413);
   });
 
+  it('ValidationError de mongoose → 400 con details.issues por path (nunca 500)', () => {
+    const mongooseError = {
+      name: 'ValidationError',
+      errors: { subject: { message: 'Path `subject` is required.' } },
+    };
+    const normalized = normalizeError(mongooseError);
+    expect(normalized).toBeInstanceOf(ValidationError);
+    expect(normalized.statusCode).toBe(400);
+    expect(normalized.message).toBe('Invalid request payload');
+    expect(normalized.details).toEqual({
+      issues: [{ path: 'subject', message: 'Path `subject` is required.' }],
+    });
+  });
+
+  it('CastError de mongoose → 400 con el path', () => {
+    const normalized = normalizeError({ name: 'CastError', path: 'assigneeId', value: 'x' });
+    expect(normalized.statusCode).toBe(400);
+    expect(normalized.details).toEqual({
+      issues: [{ path: 'assigneeId', message: 'Invalid value' }],
+    });
+  });
+
+  it('MongoServerError 11000 (índice único) → 409 en lugar de 500', () => {
+    const normalized = normalizeError({ name: 'MongoServerError', code: 11000 });
+    expect(normalized.code).toBe('CONFLICT');
+    expect(normalized.statusCode).toBe(409);
+  });
+
   it('cualquier otro error se vuelve INTERNAL_ERROR 500 sin exponer mensaje', () => {
     const normalized = normalizeError(new Error('connection string with password'));
     expect(normalized).toBeInstanceOf(InternalError);

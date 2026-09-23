@@ -43,6 +43,15 @@ export function formatNumber(prefix: string, year: number, seq: number): string 
   return `${prefix}-${year}-${String(seq).padStart(6, '0')}`;
 }
 
+function isDuplicateKey(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 11000
+  );
+}
+
 /**
  * Siguiente número de documento para `{tenantId, series}` en el año actual
  * (UTC). Atómico: `$inc` sobre el contador del tenant — dos peticiones
@@ -55,11 +64,24 @@ export async function nextDocumentNumber(
 ): Promise<string> {
   const year = new Date().getUTCFullYear();
   const counter = getModel();
-  const doc = await counter.findOneAndUpdate(
-    { _id: buildCounterKey(tenantId, series, year) },
-    { $inc: { seq: 1 } },
-    { upsert: true, returnDocument: 'after' },
-  );
+  const increment = async (): Promise<CounterDoc | null> =>
+    counter.findOneAndUpdate(
+      { _id: buildCounterKey(tenantId, series, year) },
+      { $inc: { seq: 1 } },
+      { upsert: true, returnDocument: 'after' },
+    );
+  let doc: CounterDoc | null;
+  try {
+    doc = await increment();
+  } catch (error) {
+    // Carrera de upsert: dos altas concurrentes en la MISMA serie/año — la
+    // que pierde recibe E11000 y el reintento ya encuentra el documento
+    // (sin perder ni duplicar números). FASE 18.
+    if (!isDuplicateKey(error)) {
+      throw error;
+    }
+    doc = await increment();
+  }
   if (doc === null) {
     throw new Error('counter increment failed');
   }
