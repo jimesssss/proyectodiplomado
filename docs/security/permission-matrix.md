@@ -151,6 +151,11 @@ POST /api/v1/roles
 | `/treasury/receipts` (GET/PATCH/POST; sin DELETE)          | `receipt:read` / `:update` / `:create` (mismo patrón que pagos: publicar = `PATCH {status:'posted'}` con `:update`)                          |
 | `/treasury/bank-transactions` (GET/PATCH/POST; sin DELETE) | `bank.account:read` / `:update` / `:create` (vía `bank.account:*`: el catálogo no define `bank.transaction:*`)                               |
 | `/treasury/reconciliations` (GET/PATCH/POST; sin DELETE)   | `reconciliation:read` / `:update` / `:create` (sin `:delete`; las líneas se corrigen reemplazándolas en `PATCH`)                             |
+| `/workflows` (GET/PATCH/POST; sin DELETE)                  | `workflow:read` / `:update` / `:create` (sin `:delete` en el catálogo → archivar vía `PATCH {archived}`)                                     |
+| `POST /workflows/:id/run`                                  | `workflow:update` (ejecutar la evaluación; NO crea definiciones — separado de `:create`)                                                     |
+| `GET /workflows/:id/instances`                             | `workflow:read` (lista paginada; sin detalle individual → ruta `GET /workflows/instances/:id` ausente → 404)                                 |
+| `GET /workflows/approvals[/:id]`                           | `approval:read` (cola de solicitudes; separada de `workflow:*`: el configurador con `workflow:update` NO la lee)                             |
+| `POST /workflows/approvals/:id/decision`                   | `approval:approve` (leer ≠ decidir: `approval:read` NO decide; sin creación/PATCH/DELETE de solicitudes → rutas ausentes → 404)              |
 | `GET /search`                                              | por TIPO: `<recurso>:read` (sin él → el tipo no aparece)                                                                                     |
 | `/auth/*`                                                  | — (autenticación propia)                                                                                                                     |
 
