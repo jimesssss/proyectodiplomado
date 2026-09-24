@@ -1,7 +1,7 @@
 {
-  "name": "@erp/permissions",
+  "name": "@erp/utils",
   "version": "0.0.1",
-  "description": "Permission and authorization system",
+  "description": "Shared utility functions",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,9 +10,6 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@erp/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.3.0",

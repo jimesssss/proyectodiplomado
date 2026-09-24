@@ -1,0 +1,28 @@
+{
+  "name": "@erp/worker",
+  "version": "0.0.1",
+  "description": "ERP Background Worker",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "bull": "^4.11.0",
+    "redis": "^4.6.0",
+    "pino": "^8.17.0",
+    "zod": "^3.22.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.7.0",
+    "vitest": "^1.0.0"
+  }
+}

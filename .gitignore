@@ -1,14 +1,72 @@
-node_modules/
-dist/
-build/
-coverage/
-*.log
-npm-debug.log*
+# Environment variables
 .env
 .env.*
 !.env.example
+!.env.*.example
+
+# Dependencies
+node_modules/
+yarn.lock
+package-lock.json
+
+# Keep the pnpm lockfile tracked for reproducible installs
+# pnpm-lock.yaml is intentionally not ignored
+
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
-*.tsbuildinfo
-.expo/
-.vite/
+
+# Testing
+.nyc_output/
+*.lcov
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Temporary and cache files
+tmp/
+temp/
+.cache/
+.turbo/
+.parcel-cache/
+
+# Secrets and certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Android native artifacts (future module support)
+android/**/*.iml
+android/.gradle/
+android/local.properties
+android/**/build/
+android/**/captures/
+android/**/*.keystore
+android/**/signing/*.gradle
+android/**/generated/
+
+# OS
+.DS_Store
+Thumbs.db

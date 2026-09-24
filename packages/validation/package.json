@@ -1,7 +1,7 @@
 {
-  "name": "@erp/permissions",
+  "name": "@erp/validation",
   "version": "0.0.1",
-  "description": "Permission and authorization system",
+  "description": "Shared validation schemas with Zod",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@erp/types": "workspace:*"
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
