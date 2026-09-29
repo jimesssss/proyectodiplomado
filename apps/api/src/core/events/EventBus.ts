@@ -21,12 +21,12 @@ export class EventBus {
     }
 
     const listeners = this.listeners.get(eventName)!;
-    listeners.push({ handler, priority });
+    const entry: EventListener = { handler: handler as EventHandler, priority };
+    listeners.push(entry);
     listeners.sort((a, b) => (b.priority || 0) - (a.priority || 0));
 
-    // Return unsubscribe function
     return () => {
-      const index = listeners.indexOf({ handler, priority });
+      const index = listeners.indexOf(entry);
       if (index > -1) {
         listeners.splice(index, 1);
       }

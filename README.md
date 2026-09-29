@@ -81,68 +81,67 @@ erp-system/
 
 ### Prerequisites
 - Node.js 18+
-- pnpm 8+
+- npm 10+ or pnpm 8+
 - MongoDB Atlas account
-- Optional: Android Studio for the mobile module
+- Android Studio + Android SDK for mobile validation
+- Render account for API deployment
 
-### Setup
+### Environment setup
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Create environment file
 cp .env.example .env
-# Edit .env with your MongoDB URI and secrets
-
-# Build workspace packages
-pnpm build
-
-# Start all apps
-pnpm dev
-
-# Run tests
-pnpm test
-
-# Check types
-pnpm typecheck
-
-# Format code
-pnpm format
+# add your local MONGODB_URI and JWT secrets to .env
 ```
 
-### Run Web
+### Local development
 
 ```bash
-cd apps/web
-pnpm install
-pnpm dev
-```
+# install workspace deps
+npm install
 
-### Run Mobile
-
-```bash
-cd apps/mobile
-pnpm install
-pnpm start
-# then run Android or iOS from the Metro bundler
-```
-
-### Run API
-
-```bash
+# API only
 cd apps/api
-pnpm install
-pnpm dev
+npm install
+npm run dev
+
+# web app
+cd ../web
+npm install
+npm run dev
+
+# mobile app
+cd ../mobile
+npm install
+npx expo start --android
 ```
 
-### Run Worker
+### Android Studio + emulator
 
-```bash
-cd apps/worker
-pnpm install
-pnpm dev
-```
+1. Open the folder with Android Studio when a native Android app exists.
+2. For the current React Native/Expo setup, generate an Android project with Expo prebuild when ready.
+3. Use a system image and emulator AVD with API 34 or newer.
+4. Keep API URLs in environment variables instead of hardcoding them in the app.
+
+### Render deployment
+
+- Use a Web Service on Render.
+- Root directory should be the API app folder, not the whole monorepo.
+- Build command: `cd apps/api && npm install && npm run build`
+- Start command: `cd apps/api && npm run start`
+- Add `NODE_ENV=production`, `PORT=10000`, `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CORS_ORIGINS`, and `LOG_LEVEL` in Render.
+
+### API client setup
+
+- Mobile and web should use a single shared client, not raw fetch calls spread across screens.
+- Public client variables must stay in environment files and never go into Git or native Android code.
+
+### Documentation
+
+- [docs/ANDROID_SETUP.md](./docs/ANDROID_SETUP.md)
+- [docs/RENDER_DEPLOYMENT.md](./docs/RENDER_DEPLOYMENT.md)
+- [docs/ENVIRONMENTS.md](./docs/ENVIRONMENTS.md)
+- [docs/RELEASE_ANDROID.md](./docs/RELEASE_ANDROID.md)
+- [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
 
 ### Development
 

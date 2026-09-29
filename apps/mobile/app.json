@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "ERP-SC",
+    "slug": "erp-sc",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.erpsc.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "splash": {
+        "backgroundColor": "#FFFFFF",
+        "resizeMode": "contain"
+      }
+    },
+    "extra": {
+      "apiBaseUrl": "http://10.0.2.2:4000/api/v1"
+    }
+  }
+}

@@ -18,6 +18,8 @@
     "paths": {
       "@erp/types": ["packages/types/src"],
       "@erp/types/*": ["packages/types/src/*"],
+      "@erp/shared-types": ["packages/shared-types/src"],
+      "@erp/shared-types/*": ["packages/shared-types/src/*"],
       "@erp/validation": ["packages/validation/src"],
       "@erp/validation/*": ["packages/validation/src/*"],
       "@erp/ui": ["packages/ui/src"],

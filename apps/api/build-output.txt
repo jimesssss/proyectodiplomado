@@ -1,0 +1,96 @@
+npm warn Unknown project config "{". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config " ["node", "node-addons"]" ("customExportConditions": ["node", "node-addons"]). This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "}". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @erp/api@0.0.1 build
+> tsc
+
+src/app.ts(7,24): error TS6059: File 'C:/Proyecto/packages/config/src/index.ts' is not under 'rootDir' 'C:/Proyecto/apps/api/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@erp/config' from file 'C:/Proyecto/apps/api/src/app.ts'
+    Imported via '@erp/config' from file 'C:/Proyecto/apps/api/src/core/security/logger.ts'
+    Imported via '@erp/config' from file 'C:/Proyecto/apps/api/src/server.ts'
+    Imported via '@erp/config' from file 'C:/Proyecto/apps/api/src/core/database/connection.ts'
+    Imported via '@erp/config' from file 'C:/Proyecto/apps/api/src/core/security/auth.ts'
+src/core/audit/auditLog.ts(44,15): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/core/auth/jwt.ts(1,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. 'C:/Proyecto/node_modules/.pnpm/jsonwebtoken@9.0.3/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+src/core/auth/password.ts(1,30): error TS2307: Cannot find module '@node-rs/argon2' or its corresponding type declarations.
+src/core/auth/require-permission.ts(2,10): error TS2305: Module '"@erp/permissions"' has no exported member 'PERMISSION_CATALOG_VERSION'.
+src/core/auth/require-permission.ts(2,43): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/core/events/EventBus.ts(24,22): error TS2322: Type 'EventHandler<T>' is not assignable to type 'EventHandler<unknown>'.
+  Type 'unknown' is not assignable to type 'T'.
+    'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+src/core/events/EventBus.ts(29,41): error TS2322: Type 'EventHandler<T>' is not assignable to type 'EventHandler<unknown>'.
+  Type 'unknown' is not assignable to type 'T'.
+    'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+src/core/http/crud-router.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/core/http/crud-router.ts(8,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/core/http/envelope.ts(1,64): error TS2307: Cannot find module '@erp/shared-types' or its corresponding type declarations.
+src/core/http/error-handler.ts(2,43): error TS2307: Cannot find module '@erp/shared-types' or its corresponding type declarations.
+src/core/middleware/errorHandler.ts(5,52): error TS6059: File 'C:/Proyecto/packages/utils/src/index.ts' is not under 'rootDir' 'C:/Proyecto/apps/api/src'. 'rootDir' is expected to contain all source files.
+src/core/middleware/errorHandler.ts(6,33): error TS6059: File 'C:/Proyecto/packages/types/src/index.ts' is not under 'rootDir' 'C:/Proyecto/apps/api/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@erp/types' from file 'C:/Proyecto/apps/api/src/core/middleware/errorHandler.ts'
+    Imported via '@erp/types' from file 'C:/Proyecto/apps/api/src/core/audit/auditLog.ts'
+    Imported via '@erp/types' from file 'C:/Proyecto/apps/api/src/core/permissions/permissionChecker.ts'
+    Imported via '@erp/types' from file 'C:/Proyecto/apps/api/src/core/security/auth.ts'
+src/core/security/auth.ts(5,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. 'C:/Proyecto/node_modules/.pnpm/jsonwebtoken@9.0.3/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+src/modules/accounting/presentation/routes/accounting-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/accounting/presentation/routes/accounting-routes.ts(3,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/ai/application/tool-registry.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/audit/application/audit-service.ts(1,48): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/audit/domain/entities/audit-entry.ts(5,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/crm/application/search-service.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/crm/presentation/routes/search-routes.ts(1,10): error TS2305: Module '"@erp/permissions"' has no exported member 'PERMISSION_CATALOG_VERSION'.
+src/modules/identity/application/auth-service.ts(2,10): error TS2305: Module '"@erp/permissions"' has no exported member 'PERMISSION_CATALOG_VERSION'.
+src/modules/identity/application/auth-service.ts(2,44): error TS6059: File 'C:/Proyecto/packages/permissions/src/index.ts' is not under 'rootDir' 'C:/Proyecto/apps/api/src'. 'rootDir' is expected to contain all source files.
+  The file is in the program because:
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/identity/application/auth-service.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/identity/infrastructure/repositories/identity-repository.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/identity/domain/entities/role.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/identity/application/rbac-service.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/identity/domain/rules/rbac-rules.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/core/auth/require-permission.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/core/http/crud-router.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/crm/presentation/routes/search-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/crm/application/search-service.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/sales/presentation/routes/sale-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/purchasing/presentation/routes/purchase-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/inventory/presentation/routes/inventory-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/accounting/presentation/routes/accounting-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/treasury/presentation/routes/treasury-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/workflow/presentation/routes/workflow-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/reporting/presentation/routes/report-routes.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/reporting/domain/entities/report.ts'
+    Imported via '@erp/permissions' from file 'C:/Proyecto/apps/api/src/modules/ai/application/tool-registry.ts'
+src/modules/identity/application/auth-service.ts(3,29): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/identity/application/rbac-service.ts(2,3): error TS2724: '"@erp/permissions"' has no exported member named 'ALL_PERMISSIONS'. Did you mean 'ROLE_PERMISSIONS'?
+src/modules/identity/application/rbac-service.ts(3,3): error TS2724: '"@erp/permissions"' has no exported member named 'BUILTIN_ROLE_PERMISSIONS'. Did you mean 'ROLE_PERMISSIONS'?
+src/modules/identity/application/rbac-service.ts(4,3): error TS2724: '"@erp/permissions"' has no exported member named 'PERMISSIONS'. Did you mean 'hasPermission'?
+src/modules/identity/application/rbac-service.ts(5,3): error TS2305: Module '"@erp/permissions"' has no exported member 'PERMISSION_CATALOG_VERSION'.
+src/modules/identity/application/rbac-service.ts(6,3): error TS2305: Module '"@erp/permissions"' has no exported member 'isBuiltinRole'.
+src/modules/identity/application/rbac-service.ts(7,8): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/identity/domain/entities/role.ts(4,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/identity/domain/rules/rbac-rules.ts(5,10): error TS2305: Module '"@erp/permissions"' has no exported member 'isBuiltinRole'.
+src/modules/identity/domain/rules/rbac-rules.ts(5,25): error TS2724: '"@erp/permissions"' has no exported member named 'isPermission'. Did you mean 'hasPermission'?
+src/modules/identity/domain/rules/rbac-rules.ts(5,44): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/identity/infrastructure/repositories/identity-repository.ts(5,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/identity/presentation/routes/auth-routes.ts(4,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/identity/presentation/routes/role-routes.ts(7,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/identity/presentation/routes/user-routes.ts(7,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/inventory/presentation/routes/inventory-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/inventory/presentation/routes/inventory-routes.ts(3,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/organization/presentation/routes/org-routes.ts(10,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/purchasing/presentation/routes/purchase-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/reporting/domain/entities/report.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/reporting/presentation/routes/report-routes.ts(1,10): error TS2305: Module '"@erp/permissions"' has no exported member 'PERMISSION_CATALOG_VERSION'.
+src/modules/reporting/presentation/routes/report-routes.ts(3,51): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/sales/presentation/routes/sale-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/sales/presentation/routes/sale-routes.ts(3,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/tenancy/presentation/routes/tenant-routes.ts(4,47): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/treasury/presentation/routes/treasury-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/treasury/presentation/routes/treasury-routes.ts(3,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
+src/modules/workflow/presentation/routes/workflow-routes.ts(1,15): error TS2724: '"@erp/permissions"' has no exported member named 'Permission'. Did you mean 'hasPermission'?
+src/modules/workflow/presentation/routes/workflow-routes.ts(3,34): error TS2306: File 'C:/Proyecto/apps/api/src/core/audit/audit.ts' is not a module.
