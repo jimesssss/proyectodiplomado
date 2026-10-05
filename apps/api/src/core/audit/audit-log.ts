@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model, type Types } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model, type Types } from 'mongoose';
 
 /**
  * Colección `auditLogs` (ADR-006): append-only.
@@ -27,7 +28,7 @@ export interface AuditLogDoc {
 }
 
 function getModel(): Model<AuditLogDoc> {
-  const existing = models.AuditLog as Model<AuditLogDoc> | undefined;
+  const existing = mongoose.models.AuditLog as Model<AuditLogDoc> | undefined;
   if (existing !== undefined) {
     return existing;
   }

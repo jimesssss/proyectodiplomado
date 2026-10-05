@@ -13,6 +13,11 @@ export interface UserDoc {
   displayName: string;
   roles: string[];
   status: 'active' | 'disabled';
+  emailVerifiedAt?: Date | null;
+  emailVerificationTokenHash?: string | null;
+  emailVerificationExpiresAt?: Date | null;
+  passwordResetTokenHash?: string | null;
+  passwordResetExpiresAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

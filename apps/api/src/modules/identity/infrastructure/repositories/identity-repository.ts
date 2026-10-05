@@ -29,6 +29,11 @@ function toUser(doc: UserDoc): User {
     displayName: doc.displayName,
     roles: doc.roles,
     status: doc.status,
+    emailVerifiedAt: doc.emailVerifiedAt ?? null,
+    emailVerificationTokenHash: doc.emailVerificationTokenHash ?? null,
+    emailVerificationExpiresAt: doc.emailVerificationExpiresAt ?? null,
+    passwordResetTokenHash: doc.passwordResetTokenHash ?? null,
+    passwordResetExpiresAt: doc.passwordResetExpiresAt ?? null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -64,6 +69,10 @@ export async function createUser(input: {
   passwordHash: string;
   displayName: string;
   roles?: readonly string[];
+  status?: 'active' | 'disabled';
+  emailVerifiedAt?: Date | null;
+  emailVerificationTokenHash?: string | null;
+  emailVerificationExpiresAt?: Date | null;
 }): Promise<User> {
   try {
     const doc = await UserModel.create({
@@ -72,6 +81,14 @@ export async function createUser(input: {
       passwordHash: input.passwordHash,
       displayName: input.displayName,
       roles: [...(input.roles ?? [])],
+      ...(input.status !== undefined ? { status: input.status } : {}),
+      ...(input.emailVerifiedAt !== undefined ? { emailVerifiedAt: input.emailVerifiedAt } : {}),
+      ...(input.emailVerificationTokenHash !== undefined
+        ? { emailVerificationTokenHash: input.emailVerificationTokenHash }
+        : {}),
+      ...(input.emailVerificationExpiresAt !== undefined
+        ? { emailVerificationExpiresAt: input.emailVerificationExpiresAt }
+        : {}),
     });
     return toUser(doc.toObject() as unknown as UserDoc);
   } catch (error) {
@@ -88,8 +105,90 @@ export async function createUser(input: {
   }
 }
 
+export async function updateVerificationToken(
+  userId: string,
+  input: { tokenHash: string; expiresAt: Date },
+): Promise<void> {
+  await UserModel.updateOne(
+    { _id: new Types.ObjectId(userId) },
+    {
+      $set: {
+        emailVerificationTokenHash: input.tokenHash,
+        emailVerificationExpiresAt: input.expiresAt,
+      },
+    },
+  );
+}
+
+export async function findUserByVerificationToken(token: string): Promise<User | null> {
+  const hash = createHash('sha256').update(token).digest('hex');
+  const doc = await UserModel.findOne({ emailVerificationTokenHash: hash }).lean();
+  return doc === null ? null : toUser(doc as unknown as UserDoc);
+}
+
+export async function clearEmailVerificationToken(userId: string): Promise<void> {
+  await UserModel.updateOne(
+    { _id: new Types.ObjectId(userId) },
+    { $set: { emailVerificationTokenHash: null, emailVerificationExpiresAt: null } },
+  );
+}
+
+export async function activateUserAfterVerification(userId: string): Promise<User | null> {
+  const doc = await UserModel.findOneAndUpdate(
+    { _id: new Types.ObjectId(userId) },
+    {
+      $set: {
+        status: 'active',
+        emailVerifiedAt: new Date(),
+        emailVerificationTokenHash: null,
+        emailVerificationExpiresAt: null,
+      },
+    },
+    { returnDocument: 'after' },
+  ).lean();
+  return doc === null ? null : toUser(doc as unknown as UserDoc);
+}
+
 export async function updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
   await UserModel.updateOne({ _id: new Types.ObjectId(userId) }, { $set: { passwordHash } });
+}
+
+export async function updatePasswordResetToken(
+  userId: string,
+  input: { tokenHash: string; expiresAt: Date },
+): Promise<void> {
+  await UserModel.updateOne(
+    { _id: new Types.ObjectId(userId) },
+    {
+      $set: {
+        passwordResetTokenHash: input.tokenHash,
+        passwordResetExpiresAt: input.expiresAt,
+      },
+    },
+  );
+}
+
+export async function consumePasswordResetToken(input: {
+  tokenHash: string;
+  passwordHash: string;
+  now: Date;
+}): Promise<User | null> {
+  const doc = await UserModel.findOneAndUpdate(
+    {
+      passwordResetTokenHash: input.tokenHash,
+      passwordResetExpiresAt: { $gt: input.now },
+      status: 'active',
+    },
+    {
+      $set: {
+        passwordHash: input.passwordHash,
+        passwordResetTokenHash: null,
+        passwordResetExpiresAt: null,
+      },
+    },
+    { returnDocument: 'after' },
+  ).lean();
+  return doc === null ? null : toUser(doc as unknown as UserDoc);
 }
 
 export async function getUserPasswordHash(userId: string): Promise<string | null> {

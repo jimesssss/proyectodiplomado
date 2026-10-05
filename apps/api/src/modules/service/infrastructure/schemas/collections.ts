@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { TICKET_PRIORITIES, TICKET_STATUSES } from '../../domain/entities/ticket.js';
 import { DESCRIPTION_MAX, RESOLUTION_MAX, SUBJECT_MAX } from '../../domain/rules/ticket-rules.js';
 import type { TicketDoc } from './types.js';
@@ -37,7 +38,7 @@ ticketSchema.index({ tenantId: 1, archived: 1, createdAt: -1 });
 ticketSchema.index({ tenantId: 1, assigneeId: 1, createdAt: -1 });
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

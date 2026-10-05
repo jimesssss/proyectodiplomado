@@ -25,13 +25,18 @@ export {
 export {
   changePassword,
   createSessionChecker,
+  forgotPassword,
   getProfile,
   login,
   logout,
   refresh,
+  register,
+  resetPassword,
+  resendVerification,
   revokeTenantSessions,
   type AuthDeps,
   type AuthTokens,
+  verifyEmail,
 } from './application/auth-service.js';
 export { hashPassword, verifyPassword } from '../../core/auth/password.js';
 export { validatePasswordPolicy } from './domain/rules/auth-rules.js';

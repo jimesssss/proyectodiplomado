@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { SALE_KINDS } from '../../domain/entities/sale-document.js';
 import type { SaleDoc } from './types.js';
 
@@ -57,7 +58,7 @@ saleSchema.index({ tenantId: 1, kind: 1, customerId: 1, createdAt: -1 });
 saleSchema.index({ tenantId: 1, kind: 1, orderId: 1 });
 
 function getModel(): Model<SaleDoc> {
-  const existing = models[SALES_COLLECTION] as Model<SaleDoc> | undefined;
+  const existing = mongoose.models[SALES_COLLECTION] as Model<SaleDoc> | undefined;
   if (existing !== undefined) {
     return existing;
   }

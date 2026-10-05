@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { EMPLOYEE_STATUSES } from '../../domain/entities/employee.js';
 import {
   DEPARTMENT_MAX,
@@ -92,7 +93,7 @@ salarySchema.index({ tenantId: 1, period: 1, createdAt: -1 });
 salarySchema.index({ tenantId: 1, archived: 1, createdAt: -1 });
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model, type SchemaDefinition } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model, type SchemaDefinition } from 'mongoose';
 import { ACTIVITY_TYPES } from '../../domain/entities/activity.js';
 import { CUSTOMER_TYPES } from '../../domain/entities/customer.js';
 import { LEAD_SOURCES, LEAD_STATUSES } from '../../domain/entities/lead.js';
@@ -19,7 +20,7 @@ import type { ActivityDoc, ContactDoc, CustomerDoc, LeadDoc, OpportunityDoc } fr
  */
 
 function getModel<T>(name: string, schema: Schema): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   return existing ?? model<T>(name, schema as Schema<T>);
 }
 

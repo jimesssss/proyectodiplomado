@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { MOVEMENT_TYPES } from '../../domain/entities/stock.js';
 import type { CountDoc, MovementDoc, ProductDoc, StockDoc, TransferDoc } from './types.js';
 
@@ -121,7 +122,7 @@ countSchema.index({ tenantId: 1, createdAt: -1 });
 countSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
 
 function getModel<T>(collection: string, schema: Schema<T>): Model<T> {
-  const existing = models[collection] as Model<T> | undefined;
+  const existing = mongoose.models[collection] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

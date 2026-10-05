@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import type { LoginAttemptDoc, RefreshTokenDoc, RoleDoc, SessionDoc, UserDoc } from './types.js';
 
 /**
@@ -10,7 +11,7 @@ import type { LoginAttemptDoc, RefreshTokenDoc, RoleDoc, SessionDoc, UserDoc } f
  */
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   return existing ?? model<T>(name, schema);
 }
 
@@ -22,6 +23,11 @@ const userSchema = new Schema<UserDoc>(
     displayName: { type: String, required: true },
     roles: { type: [String], default: [] },
     status: { type: String, enum: ['active', 'disabled'], default: 'active' },
+    emailVerifiedAt: { type: Date, default: null },
+    emailVerificationTokenHash: { type: String, default: null },
+    emailVerificationExpiresAt: { type: Date, default: null },
+    passwordResetTokenHash: { type: String, default: null },
+    passwordResetExpiresAt: { type: Date, default: null },
   },
   { timestamps: true, collection: 'users' },
 );

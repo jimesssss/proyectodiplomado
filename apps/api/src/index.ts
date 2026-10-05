@@ -123,7 +123,7 @@ async function bootstrap(): Promise<void> {
     ],
   });
 
-  const server = app.listen(env.port, () => {
+  const server = app.listen(env.port, '0.0.0.0', () => {
     logger.info({ port: env.port, nodeEnv: env.nodeEnv }, 'api listening');
   });
 

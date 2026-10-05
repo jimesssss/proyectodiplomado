@@ -11,6 +11,11 @@ export interface User {
   readonly displayName: string;
   readonly roles: readonly string[];
   readonly status: UserStatus;
+  readonly emailVerifiedAt?: Date | null;
+  readonly emailVerificationTokenHash?: string | null;
+  readonly emailVerificationExpiresAt?: Date | null;
+  readonly passwordResetTokenHash?: string | null;
+  readonly passwordResetExpiresAt?: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }

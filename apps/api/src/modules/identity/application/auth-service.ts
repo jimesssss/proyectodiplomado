@@ -5,6 +5,15 @@ import type { JwtService } from '../../../core/auth/jwt.js';
 import { hashPassword, verifyPassword } from '../../../core/auth/password.js';
 import type { SessionChecker } from '../../../core/auth/middleware.js';
 import {
+  buildVerificationEmailHtml,
+  buildVerificationEmailText,
+  buildVerificationUrl,
+  buildWelcomeEmailHtml,
+  buildWelcomeEmailText,
+  hashVerificationToken,
+  sendResendEmail,
+} from '../../../core/email/resend.js';
+import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
@@ -21,6 +30,7 @@ import {
 } from '../domain/rules/auth-rules.js';
 import * as repo from '../infrastructure/repositories/identity-repository.js';
 import { resolvePermissions } from './rbac-service.js';
+export { forgotPassword, resetPassword } from './password-reset-service.js';
 
 export interface AuthTokens {
   readonly accessToken: string;
@@ -54,6 +64,133 @@ export interface RefreshContext {
   readonly requestId: string;
   readonly ip?: string;
   readonly userAgent?: string;
+}
+
+export interface RegisterInput {
+  readonly displayName: string;
+  readonly email: string;
+  readonly password: string;
+}
+
+export interface RegisterResult {
+  readonly user: PublicUser;
+  readonly emailVerificationRequired: boolean;
+}
+
+async function sendVerificationEmailForUser(user: User, token: string): Promise<void> {
+  const verifyUrl = buildVerificationUrl(token);
+  try {
+    await sendResendEmail({
+      to: user.email,
+      subject: 'Verifica tu cuenta de ERP-SC',
+      html: buildVerificationEmailHtml(user.displayName, verifyUrl),
+      text: buildVerificationEmailText(user.displayName, verifyUrl),
+    });
+  } catch {
+    // La verificación sigue siendo válida; el envío de correo puede fallar sin
+    // romper la creación del usuario ni el login existente.
+  }
+}
+
+async function sendWelcomeEmailForUser(user: User): Promise<void> {
+  try {
+    await sendResendEmail({
+      to: user.email,
+      subject: 'Bienvenido a ERP-SC',
+      html: buildWelcomeEmailHtml(user.displayName),
+      text: buildWelcomeEmailText(user.displayName),
+    });
+  } catch {
+    // No romper el flujo de verificación por un problema de correo.
+  }
+}
+
+export async function register(input: RegisterInput): Promise<RegisterResult> {
+  const displayName = input.displayName.trim();
+  const email = input.email.toLowerCase().trim();
+
+  if (displayName.length < 2 || displayName.length > 80) {
+    throw new ValidationError('Display name must be between 2 and 80 characters');
+  }
+
+  const policy = validatePasswordPolicy(input.password);
+  if (!policy.valid) {
+    throw new ValidationError('Password does not meet policy', { issues: policy.issues });
+  }
+
+  const existing = await repo.findUserByEmail(email);
+  if (existing !== null) {
+    throw new ConflictError('Email already in use');
+  }
+
+  const verificationToken = randomBytes(32).toString('base64url');
+  const tenantId = randomBytes(12).toString('hex');
+  const verificationHash = hashVerificationToken(verificationToken);
+
+  const created = await repo.createUser({
+    email,
+    tenantId,
+    passwordHash: await hashPassword(input.password),
+    displayName,
+    roles: ['owner'],
+    status: 'disabled',
+    emailVerifiedAt: null,
+    emailVerificationTokenHash: verificationHash,
+    emailVerificationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+  });
+
+  await sendVerificationEmailForUser(created, verificationToken);
+
+  return {
+    user: toPublicUser(created),
+    emailVerificationRequired: true,
+  };
+}
+
+export async function resendVerification(email: string): Promise<{ resent: boolean; alreadyVerified: boolean }> {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await repo.findUserByEmail(normalizedEmail);
+  if (user === null) {
+    return { resent: false, alreadyVerified: false };
+  }
+
+  if (user.status === 'active' && user.emailVerifiedAt !== null) {
+    return { resent: false, alreadyVerified: true };
+  }
+
+  const verificationToken = randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await repo.updateVerificationToken(user.id, {
+    tokenHash: hashVerificationToken(verificationToken),
+    expiresAt,
+  });
+  await sendVerificationEmailForUser(user, verificationToken);
+  return { resent: true, alreadyVerified: false };
+}
+
+export async function verifyEmail(token: string): Promise<PublicUser> {
+  const cleanToken = token.trim();
+  if (cleanToken.length === 0) {
+    throw new ValidationError('Verification token is required');
+  }
+
+  const exactUser = await repo.findUserByVerificationToken(cleanToken);
+  if (exactUser === null) {
+    throw new NotFoundError('Verification token is invalid or expired');
+  }
+
+  if (exactUser.emailVerificationExpiresAt === null || exactUser.emailVerificationExpiresAt.getTime() < Date.now()) {
+    await repo.clearEmailVerificationToken(exactUser.id);
+    throw new ValidationError('Verification link has expired');
+  }
+
+  const updated = await repo.activateUserAfterVerification(exactUser.id);
+  if (updated === null) {
+    throw new NotFoundError('User not found');
+  }
+
+  await sendWelcomeEmailForUser(updated);
+  return toPublicUser(updated);
 }
 
 /**

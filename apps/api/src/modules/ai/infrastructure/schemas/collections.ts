@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { AI_INTERACTION_STATUSES } from '../../domain/entities/ai-interaction.js';
 import { ERROR_MAX, PROMPT_MAX } from '../../domain/rules/ai-rules.js';
 import type { AiInteractionDoc } from './types.js';
@@ -35,7 +36,7 @@ aiInteractionSchema.index({ tenantId: 1, tool: 1, createdAt: -1 });
 aiInteractionSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { PURCHASE_KINDS } from '../../domain/entities/purchase-document.js';
 import type { PurchaseDoc, SupplierDoc } from './types.js';
 
@@ -88,7 +89,7 @@ supplierSchema.index({ tenantId: 1, createdAt: -1 });
 supplierSchema.index({ tenantId: 1, archived: 1, createdAt: -1 });
 
 function getModel<T>(collection: string, schema: Schema<T>): Model<T> {
-  const existing = models[collection] as Model<T> | undefined;
+  const existing = mongoose.models[collection] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

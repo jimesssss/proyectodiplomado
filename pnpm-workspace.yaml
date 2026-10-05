@@ -3,7 +3,10 @@ packages:
   - "packages/*"
 
 allowBuilds:
-  esbuild: set this to true or false
-  msgpackr-extract: set this to true or false
-shared-workspace-lockfile: true
-symlink-workspace-packages: true
+  esbuild: false
+  mongodb-memory-server: true
+  msgpackr-extract: false
+linkWorkspacePackages: true
+sharedWorkspaceLockfile: true
+
+nodeLinker: hoisted

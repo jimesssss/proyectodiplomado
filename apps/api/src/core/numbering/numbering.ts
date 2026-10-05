@@ -6,7 +6,8 @@
  * La parte pura (`formatNumber`, `buildCounterKey`) vive separada y se testea
  * sin base de datos.
  */
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 
 export const COUNTERS_COLLECTION = 'counters';
 
@@ -16,7 +17,7 @@ interface CounterDoc {
 }
 
 function getModel(): Model<CounterDoc> {
-  const existing = models[COUNTERS_COLLECTION] as Model<CounterDoc> | undefined;
+  const existing = mongoose.models[COUNTERS_COLLECTION] as Model<CounterDoc> | undefined;
   if (existing !== undefined) {
     return existing;
   }

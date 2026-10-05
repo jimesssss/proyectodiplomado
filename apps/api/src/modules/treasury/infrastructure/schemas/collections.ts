@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { CASH_MOVEMENT_SOURCE_TYPES } from '../../domain/entities/cash-movement.js';
 import { TREASURY_ACCOUNT_TYPES } from '../../domain/entities/treasury-account.js';
 import type {
@@ -152,7 +153,7 @@ cashMovementSchema.index({ tenantId: 1, accountId: 1, createdAt: -1 });
 cashMovementSchema.index({ tenantId: 1, sourceType: 1, sourceId: 1 }, { unique: true });
 
 function getModel<T>(collection: string, schema: Schema<T>): Model<T> {
-  const existing = models[collection] as Model<T> | undefined;
+  const existing = mongoose.models[collection] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

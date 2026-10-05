@@ -3,21 +3,26 @@ services:
     name: erp-sc-api
     runtime: node
     plan: free
-    rootDir: apps/api
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm exec tsc --noCheck -p packages/permissions/tsconfig.json && pnpm --filter @erp/api build
+    startCommand: pnpm --filter @erp/api start
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: MONGODB_URI
         sync: false
-      - key: JWT_ACCESS_SECRET
+      - key: JWT_PRIVATE_KEY_B64
         sync: false
-      - key: JWT_REFRESH_SECRET
+      - key: JWT_PUBLIC_KEY_B64
         sync: false
       - key: CORS_ORIGINS
-        value: https://your-web-client.example.com
-      - key: LOG_LEVEL
-        value: info
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: RESEND_FROM_NAME
+        sync: false
+      - key: APP_BASE_URL
+        sync: false

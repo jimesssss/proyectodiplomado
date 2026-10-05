@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model, type SchemaDefinition } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model, type SchemaDefinition } from 'mongoose';
 import { PARENT_FIELD } from '../../domain/entities/org-unit.js';
 import type {
   BranchDoc,
@@ -16,7 +17,7 @@ import type {
  */
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   return existing ?? model<T>(name, schema);
 }
 

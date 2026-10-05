@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model, type SchemaDefinition } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model, type SchemaDefinition } from 'mongoose';
 
 /**
  * Read models CQRS (FASE 15): Reporting SOLO-agrega (`.aggregate()`) sobre
@@ -36,7 +37,7 @@ type ReadDoc = Record<string, unknown>;
 type ReadModel = Model<ReadDoc>;
 
 function getReadModel(name: string, schema: Schema): ReadModel {
-  const existing = models[name] as ReadModel | undefined;
+  const existing = mongoose.models[name] as ReadModel | undefined;
   if (existing !== undefined) {
     return existing;
   }

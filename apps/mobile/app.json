@@ -2,11 +2,15 @@
   "expo": {
     "name": "ERP-SC",
     "slug": "erp-sc",
+    "scheme": "erp-sc",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
+    ],
+    "plugins": [
+      "expo-router"
     ],
     "android": {
       "package": "com.erpsc.app",

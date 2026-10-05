@@ -27,6 +27,10 @@ const envSchema = z
     REFRESH_TOKEN_TTL: z.coerce.number().int().min(3600).default(2_592_000),
     JWT_PRIVATE_KEY_B64: z.string().optional(),
     JWT_PUBLIC_KEY_B64: z.string().optional(),
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_FROM_EMAIL: z.string().email().optional(),
+    RESEND_FROM_NAME: z.string().min(1).max(120).optional(),
+    APP_BASE_URL: z.string().url().optional(),
   })
   .superRefine((env, ctx) => {
     const hasPrivate = env.JWT_PRIVATE_KEY_B64 !== undefined && env.JWT_PRIVATE_KEY_B64 !== '';
@@ -62,6 +66,10 @@ export interface Env {
   readonly refreshTokenTtl: number;
   readonly jwtPrivateKeyB64?: string;
   readonly jwtPublicKeyB64?: string;
+  readonly resendApiKey?: string;
+  readonly resendFromEmail?: string;
+  readonly resendFromName?: string;
+  readonly appBaseUrl?: string;
 }
 
 function toEnv(parsed: z.infer<typeof envSchema>): Env {
@@ -80,6 +88,18 @@ function toEnv(parsed: z.infer<typeof envSchema>): Env {
       : {}),
     ...(parsed.JWT_PUBLIC_KEY_B64 !== undefined && parsed.JWT_PUBLIC_KEY_B64 !== ''
       ? { jwtPublicKeyB64: parsed.JWT_PUBLIC_KEY_B64 }
+      : {}),
+    ...(parsed.RESEND_API_KEY !== undefined && parsed.RESEND_API_KEY !== ''
+      ? { resendApiKey: parsed.RESEND_API_KEY }
+      : {}),
+    ...(parsed.RESEND_FROM_EMAIL !== undefined && parsed.RESEND_FROM_EMAIL !== ''
+      ? { resendFromEmail: parsed.RESEND_FROM_EMAIL }
+      : {}),
+    ...(parsed.RESEND_FROM_NAME !== undefined && parsed.RESEND_FROM_NAME !== ''
+      ? { resendFromName: parsed.RESEND_FROM_NAME }
+      : {}),
+    ...(parsed.APP_BASE_URL !== undefined && parsed.APP_BASE_URL !== ''
+      ? { appBaseUrl: parsed.APP_BASE_URL }
       : {}),
   };
 }

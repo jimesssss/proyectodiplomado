@@ -1,5 +1,28 @@
 import { z } from 'zod';
 
+export const registerBodySchema = z.object({
+  displayName: z.string().trim().min(2).max(80),
+  email: z.string().trim().email().max(254),
+  password: z.string().min(1).max(128),
+});
+
+export const verifyEmailBodySchema = z.object({
+  token: z.string().min(1).max(512),
+});
+
+export const resendVerificationBodySchema = z.object({
+  email: z.string().trim().email().max(254),
+});
+
+export const forgotPasswordBodySchema = z.object({
+  email: z.string().trim().email().max(254),
+});
+
+export const resetPasswordBodySchema = z.object({
+  token: z.string().min(1).max(512),
+  newPassword: z.string().min(1).max(128),
+});
+
 export const loginBodySchema = z.object({
   email: z.string().min(3).max(254).email(),
   password: z.string().min(1).max(128),

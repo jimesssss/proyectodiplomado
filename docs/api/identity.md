@@ -45,6 +45,24 @@ Requiere `Authorization: Bearer`. Body: `{ "currentPassword", "newPassword" }`
 - `409` si la nueva es igual a la actual.
 - Revoca **todas** las sesiones excepto la actual.
 
+## POST /api/v1/auth/forgot-password
+
+Pública. Body: `{ "email": "user@empresa.com" }`
+
+- Normaliza el email y envía un enlace de recuperación mediante Resend si la cuenta existe y está activa.
+- Siempre devuelve `200` con el mismo mensaje genérico, sin revelar si la cuenta existe.
+- El token aleatorio solo se almacena como SHA-256 y expira en una hora.
+
+## POST /api/v1/auth/reset-password
+
+Pública. Body: `{ "token": "…", "newPassword": "…" }`
+
+- Aplica la política existente: mínimo 12 caracteres, mayúscula, minúscula y dígito.
+- El token debe existir y no haber expirado ni sido utilizado.
+- Al consumirse, actualiza la contraseña con Argon2id y elimina el token y su expiración.
+- Revoca todas las sesiones y refresh tokens anteriores.
+- `200 { passwordReset: true }` al completar; `400 VALIDATION_ERROR` para contraseña no válida o token inválido/expirado/usado.
+
 ## GET /api/v1/auth/me
 
 Requiere `Authorization: Bearer`. `200` → perfil público (sin hash). `401` sin token, con token inválido o sesión revocada.

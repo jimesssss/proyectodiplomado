@@ -70,3 +70,10 @@ android/**/generated/
 # OS
 .DS_Store
 Thumbs.db
+
+# Expo generated files
+.expo/
+
+# Backup files
+*.bak
+*.backup

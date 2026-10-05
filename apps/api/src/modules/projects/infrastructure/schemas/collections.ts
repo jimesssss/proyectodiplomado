@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { PROJECT_STATUSES } from '../../domain/entities/project.js';
 import { TASK_PRIORITIES, TASK_STATUSES } from '../../domain/entities/task.js';
 import type { ProjectDoc, TaskDoc } from './types.js';
@@ -62,7 +63,7 @@ taskSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
 taskSchema.index({ tenantId: 1, archived: 1, createdAt: -1 });
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }

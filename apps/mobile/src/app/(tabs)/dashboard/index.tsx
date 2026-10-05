@@ -1,0 +1,378 @@
+/**
+ * Dashboard — Pantalla principal
+ *
+ * Muestra resumen de ventas, productos top y ventas recientes.
+ * Diseñado para una dulcería con jerarquía visual clara.
+ */
+import React, { useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { colors, spacing, typography, radii } from '../../../theme';
+import { useAuthStore } from '../../../stores/authStore';
+import { useDashboardStore } from '../../../stores/dashboardStore';
+
+export default function DashboardScreen() {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+  const { salesSummary, topProducts, recentSales, isLoading, refresh } =
+    useDashboardStore();
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/welcome');
+  };
+
+  const formatCurrency = (value: number) => {
+    return `$${value.toFixed(2)}`;
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.greeting}>Hola, {user?.name || 'Usuario'}</Text>
+          <Text style={styles.date}>
+            {new Date().toLocaleDateString('es-ES', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </Text>
+        </View>
+        <Pressable onPress={handleLogout} style={styles.logoutButton}>
+          <Ionicons name="log-out-outline" size={24} color={colors.neutral[600]} />
+        </Pressable>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refresh} />
+        }
+      >
+        {/* Resumen de ventas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Resumen de Ventas</Text>
+          <View style={styles.summaryGrid}>
+            <View style={[styles.summaryCard, styles.cardToday]}>
+              <Text style={styles.summaryLabel}>Hoy</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(salesSummary.today)}
+              </Text>
+            </View>
+            <View style={[styles.summaryCard, styles.cardWeek]}>
+              <Text style={styles.summaryLabel}>Semana</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(salesSummary.week)}
+              </Text>
+            </View>
+            <View style={[styles.summaryCard, styles.cardMonth]}>
+              <Text style={styles.summaryLabel}>Mes</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(salesSummary.month)}
+              </Text>
+            </View>
+            <View style={[styles.summaryCard, styles.cardYear]}>
+              <Text style={styles.summaryLabel}>Año</Text>
+              <Text style={styles.summaryValue}>
+                {formatCurrency(salesSummary.year)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Productos top */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Productos Más Vendidos</Text>
+          <View style={styles.card}>
+            {topProducts.map((product, index) => (
+              <View
+                key={product.id}
+                style={[
+                  styles.productRow,
+                  index < topProducts.length - 1 && styles.productRowBorder,
+                ]}
+              >
+                <View style={styles.productRank}>
+                  <Text style={styles.productRankText}>{index + 1}</Text>
+                </View>
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>{product.name}</Text>
+                  <Text style={styles.productQuantity}>
+                    {product.quantity} unidades
+                  </Text>
+                </View>
+                <Text style={styles.productRevenue}>
+                  {formatCurrency(product.revenue)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Ventas recientes */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ventas Recientes</Text>
+          <View style={styles.card}>
+            {recentSales.map((sale, index) => (
+              <View
+                key={sale.id}
+                style={[
+                  styles.saleRow,
+                  index < recentSales.length - 1 && styles.saleRowBorder,
+                ]}
+              >
+                <View style={styles.saleInfo}>
+                  <Text style={styles.saleCustomer}>{sale.customer}</Text>
+                  <Text style={styles.saleDate}>{sale.date}</Text>
+                </View>
+                <View style={styles.saleRight}>
+                  <Text style={styles.saleTotal}>
+                    {formatCurrency(sale.total)}
+                  </Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      sale.status === 'completed' && styles.statusCompleted,
+                      sale.status === 'pending' && styles.statusPending,
+                      sale.status === 'cancelled' && styles.statusCancelled,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        sale.status === 'completed' && styles.statusTextCompleted,
+                        sale.status === 'pending' && styles.statusTextPending,
+                        sale.status === 'cancelled' && styles.statusTextCancelled,
+                      ]}
+                    >
+                      {sale.status === 'completed'
+                        ? 'Completada'
+                        : sale.status === 'pending'
+                        ? 'Pendiente'
+                        : 'Cancelada'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Espacio inferior */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[200],
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
+    color: colors.neutral[800],
+  },
+  date: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[500],
+    marginTop: 2,
+  },
+  logoutButton: {
+    padding: spacing.sm,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  section: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
+    color: colors.neutral[800],
+    marginBottom: spacing.md,
+  },
+  summaryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+  },
+  summaryCard: {
+    width: '48%',
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    marginHorizontal: '1%',
+    marginBottom: spacing.sm,
+  },
+  cardToday: {
+    backgroundColor: colors.primary[50],
+  },
+  cardWeek: {
+    backgroundColor: colors.accent[50],
+  },
+  cardMonth: {
+    backgroundColor: '#FEF3C7',
+  },
+  cardYear: {
+    backgroundColor: '#D1FAE5',
+  },
+  summaryLabel: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[600],
+    marginBottom: spacing.xs,
+  },
+  summaryValue: {
+    fontSize: typography.size.xl,
+    fontWeight: typography.weight.bold,
+    color: colors.neutral[800],
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    ...{
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+  },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  productRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  productRank: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    backgroundColor: colors.primary[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  productRankText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    color: colors.primary[700],
+  },
+  productInfo: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
+    color: colors.neutral[800],
+  },
+  productQuantity: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[500],
+    marginTop: 2,
+  },
+  productRevenue: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: colors.neutral[800],
+  },
+  saleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  saleRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  saleInfo: {
+    flex: 1,
+  },
+  saleCustomer: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
+    color: colors.neutral[800],
+  },
+  saleDate: {
+    fontSize: typography.size.sm,
+    color: colors.neutral[500],
+    marginTop: 2,
+  },
+  saleRight: {
+    alignItems: 'flex-end',
+  },
+  saleTotal: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: colors.neutral[800],
+    marginBottom: spacing.xs,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.sm,
+  },
+  statusCompleted: {
+    backgroundColor: '#D1FAE5',
+  },
+  statusPending: {
+    backgroundColor: '#FEF3C7',
+  },
+  statusCancelled: {
+    backgroundColor: '#FEE2E2',
+  },
+  statusText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+  },
+  statusTextCompleted: {
+    color: '#065F46',
+  },
+  statusTextPending: {
+    color: '#92400E',
+  },
+  statusTextCancelled: {
+    color: '#991B1B',
+  },
+  bottomSpacer: {
+    height: spacing.xxl,
+  },
+});

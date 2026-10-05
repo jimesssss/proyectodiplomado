@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import type { TenantDoc } from './types.js';
 
 /**
@@ -8,7 +9,7 @@ import type { TenantDoc } from './types.js';
  */
 
 function getModel<T>(name: string, schema: Schema<T>): Model<T> {
-  const existing = models[name] as Model<T> | undefined;
+  const existing = mongoose.models[name] as Model<T> | undefined;
   return existing ?? model<T>(name, schema);
 }
 

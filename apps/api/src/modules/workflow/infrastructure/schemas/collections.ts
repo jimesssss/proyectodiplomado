@@ -1,4 +1,5 @@
-import { Schema, model, models, type Model } from 'mongoose';
+import mongoose from 'mongoose';
+import { Schema, model, type Model } from 'mongoose';
 import { APPROVAL_STATUSES } from '../../domain/entities/approval.js';
 import { INSTANCE_STATES } from '../../domain/entities/workflow-instance.js';
 import {
@@ -113,7 +114,7 @@ approvalSchema.index(
 );
 
 function getModel<T>(collection: string, schema: Schema<T>): Model<T> {
-  const existing = models[collection] as Model<T> | undefined;
+  const existing = mongoose.models[collection] as Model<T> | undefined;
   if (existing !== undefined) {
     return existing;
   }
