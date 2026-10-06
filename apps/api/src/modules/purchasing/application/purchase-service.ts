@@ -1,3 +1,4 @@
+import { atomic } from '../../../core/db/transaction.js';
 import { nextDocumentNumber } from '../../../core/numbering/numbering.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../../core/errors/app-error.js';
 import {
@@ -230,7 +231,11 @@ const BUSINESS_FIELDS = new Set([
   'warehouseId',
 ]);
 
-export async function updatePurchase(
+export async function updatePurchase(tenantId:string,kind:PurchaseKind,id:string,input:PatchPurchaseInput):Promise<PublicPurchaseDocument> {
+  if(kind==='goods.receipt'&&input.status==='posted') return atomic(()=>updatePurchaseInternal(tenantId,kind,id,input),false);
+  return updatePurchaseInternal(tenantId,kind,id,input);
+}
+async function updatePurchaseInternal(
   tenantId: string,
   kind: PurchaseKind,
   id: string,
@@ -325,7 +330,7 @@ export async function updatePurchase(
   if (Object.keys(set).length === 0) {
     throw new ValidationError('No valid fields to update');
   }
-  const updated = await purchaseRepo.update(tenantId, kind, id, set);
+  const updated = await purchaseRepo.update(tenantId, kind, id, set, current.status);
   if (updated === null) {
     throw new NotFoundError();
   }

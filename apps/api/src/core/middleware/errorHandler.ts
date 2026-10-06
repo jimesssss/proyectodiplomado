@@ -6,13 +6,11 @@ import { generateRequestId, formatTimestamp } from '@erp/utils';
 import { IRequestContext } from '@erp/types';
 import logger from '../security/logger';
 
-declare global {
-  namespace Express {
+declare module 'express-serve-static-core' {
     interface Request {
       requestId: string;
       context?: IRequestContext;
     }
-  }
 }
 
 /**
@@ -41,9 +39,9 @@ export function errorHandlerMiddleware(
   let message = 'Internal server error';
 
   // Handle custom AppError
-  if ('statusCode' in error && 'code' in error) {
-    statusCode = (error as any).statusCode;
-    code = (error as any).code;
+  if ('statusCode' in error && typeof error.statusCode === 'number' && 'code' in error && typeof error.code === 'string') {
+    statusCode = error.statusCode;
+    code = error.code;
     message = error.message;
   }
 

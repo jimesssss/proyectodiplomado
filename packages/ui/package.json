@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {

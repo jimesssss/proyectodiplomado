@@ -1,10 +1,6 @@
-/**
- * Customers Store — Zustand
- *
- * Datos mock para el módulo de clientes.
- */
 import { create } from 'zustand';
-
+import { businessApi, type ApiParty } from '../services/business-api';
+import { useAuthStore } from './authStore';
 export interface Customer {
   id: string;
   name: string;
@@ -16,91 +12,40 @@ export interface Customer {
   status: 'active' | 'inactive';
 }
 
+
+function mapCustomer(c: ApiParty): Customer { return { id: c.id, name: c.name, phone: c.phone ?? '', email: c.email ?? '', status: c.archived ? 'inactive' : 'active', totalPurchases: 0, totalSpent: 0 }; }
 interface CustomersState {
-  customers: Customer[];
-  isLoading: boolean;
-
-  getCustomerById: (id: string) => Customer | undefined;
-  addCustomer: (customer: Omit<Customer, 'id'>) => void;
-  updateCustomer: (id: string, customer: Partial<Customer>) => void;
+  customers: Customer[]; isLoading: boolean; error: string | null;
+  load(): Promise<void>; getCustomerById(id: string): Customer | undefined;
+  addCustomer(input: Omit<Customer, 'id'> & { code?: string }): Promise<boolean>;
+  updateCustomer(id: string, input: Partial<Customer>): Promise<boolean>;
 }
-
-const MOCK_CUSTOMERS: Customer[] = [
-  {
-    id: '1',
-    name: 'Juan Pérez',
-    phone: '555-111-2222',
-    email: 'juan.perez@email.com',
-    totalPurchases: 15,
-    totalSpent: 25000,
-    lastPurchase: '2026-09-29',
-    status: 'active',
+export const useCustomersStore = create<CustomersState>((set,get)=>({
+  customers: [], isLoading: false, error: null,
+  load: async () => {
+    set({ isLoading: true, error: null });
+    try { const data=await businessApi.listCustomers(); set({ customers: data.map(mapCustomer) }); }
+    catch(error) { set({ error: error instanceof Error ? error.message : 'No se pudo completar la operación.', customers: [] }); } finally { set({ isLoading: false }); }
   },
-  {
-    id: '2',
-    name: 'María García',
-    phone: '555-333-4444',
-    email: 'maria.garcia@email.com',
-    totalPurchases: 8,
-    totalSpent: 12000,
-    lastPurchase: '2026-09-28',
-    status: 'active',
+  getCustomerById: id => get().customers.find(c=>c.id===id),
+  addCustomer: async input => {
+    if(!useAuthStore.getState().can('customer:create')) { set({ error: 'No tienes permiso para crear clientes.' }); return false; }
+    set({ isLoading: true, error: null });
+    try {
+      const c=await businessApi.create<ApiParty>('/customers', { code: input.code?.trim() || 'CLI-' + Date.now(), name: input.name.trim(), type: 'person',
+        ...(input.phone.trim() ? { phone: input.phone.trim() } : {}), ...(input.email.trim() ? { email: input.email.trim() } : {}) });
+      set({ customers: [...get().customers,mapCustomer(c)] }); return true;
+    } catch(error) { set({ error: error instanceof Error ? error.message : 'No se pudo completar la operación.' }); return false; } finally { set({ isLoading:false }); }
   },
-  {
-    id: '3',
-    name: 'Carlos López',
-    phone: '555-555-6666',
-    email: 'carlos.lopez@email.com',
-    totalPurchases: 22,
-    totalSpent: 45000,
-    lastPurchase: '2026-09-27',
-    status: 'active',
-  },
-  {
-    id: '4',
-    name: 'Ana Martínez',
-    phone: '555-777-8888',
-    email: 'ana.martinez@email.com',
-    totalPurchases: 3,
-    totalSpent: 3500,
-    lastPurchase: '2026-09-20',
-    status: 'inactive',
-  },
-  {
-    id: '5',
-    name: 'Roberto Sánchez',
-    phone: '555-999-0000',
-    email: 'roberto.sanchez@email.com',
-    totalPurchases: 12,
-    totalSpent: 18000,
-    lastPurchase: '2026-09-25',
-    status: 'active',
-  },
-];
-
-export const useCustomersStore = create<CustomersState>((set, get) => ({
-  customers: MOCK_CUSTOMERS,
-  isLoading: false,
-
-  getCustomerById: (id: string) => {
-    return get().customers.find((c) => c.id === id);
-  },
-
-  addCustomer: (customer: Omit<Customer, 'id'>) => {
-    const newCustomer: Customer = {
-      ...customer,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      customers: [...state.customers, newCustomer],
-    }));
-  },
-
-  updateCustomer: (id: string, updates: Partial<Customer>) => {
-    set((state) => ({
-      customers: state.customers.map((c) =>
-        c.id === id ? { ...c, ...updates } : c
-      ),
-    }));
+  updateCustomer: async (id,input) => {
+    if(!useAuthStore.getState().can('customer:update')) { set({ error: 'No tienes permiso para editar clientes.' }); return false; }
+    try {
+      const c=await businessApi.update<ApiParty>('/customers/'+id, {
+        ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+        ...(input.email !== undefined ? { email: input.email.trim() || null } : {}),
+        ...(input.phone !== undefined ? { phone: input.phone.trim() || null } : {}),
+        ...(input.status !== undefined ? { archived: input.status === 'inactive' } : {}) });
+      set({ customers: get().customers.map(x=>x.id===id?mapCustomer(c):x), error:null }); return true;
+    } catch(error) { set({ error: error instanceof Error ? error.message : 'No se pudo completar la operación.' }); return false; }
   },
 }));

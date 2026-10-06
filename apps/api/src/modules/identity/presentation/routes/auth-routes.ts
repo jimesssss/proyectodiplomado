@@ -1,3 +1,7 @@
+import { z as schema } from 'zod';
+import { updateUserInTenant } from '../../infrastructure/repositories/identity-repository.js';
+import { toPublicUser } from '../../domain/entities/user.js';
+import { NotFoundError } from '../../../../core/errors/app-error.js';
 import { Router } from 'express';
 import type { RequestHandler } from 'express';
 import type { z } from 'zod';
@@ -185,6 +189,13 @@ export function createAuthRouter(deps: AuthRouterDeps): Router {
     },
   );
 
+  router.patch('/me', auth, validate({ body: schema.strictObject({ displayName: schema.string().trim().min(1).max(120) }) }), async (req,res) => {
+    const user = req.user!;
+    const updated = await updateUserInTenant(user.tenantId, user.userId, { displayName: (req.body as {displayName:string}).displayName });
+    if (!updated) throw new NotFoundError();
+    await auditFromRequest(req, { action:'auth.profile.update', entityType:'user', entityId:user.userId, newValue:{displayName:updated.displayName} });
+    res.status(200).json(successResponse(req.requestId,toPublicUser(updated)));
+  });
   router.get('/me', auth, async (req, res) => {
     const user = req.user;
     if (user === undefined) {

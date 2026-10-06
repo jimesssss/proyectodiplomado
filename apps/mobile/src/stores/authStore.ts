@@ -1,98 +1,100 @@
-/**
- * Auth Store — estado de autenticación de la aplicación.
- * Los tokens se mantienen en memoria; el almacenamiento persistente de sesión
- * queda fuera de este alcance.
- */
 import { create } from 'zustand';
-import { loginWithApi, registerWithApi } from '../services/auth-api'
+import * as SecureStore from 'expo-secure-store';
+import { AuthApiError, loginWithApi, registerWithApi, refreshWithApi, type LoginResponse } from '../services/auth-api';
+import { apiRequest, ApiError, configureApiSession } from '../services/api-client';
 
-interface AuthState {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  } | null;
-
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (input: {
-    displayName: string;
-    email: string;
-    password: string;
-  }) => Promise<boolean>;
-  logout: () => void;
-  clearError: () => void;
+const SESSION_KEY = 'erpsc.refresh-token';
+let storageQueue = Promise.resolve();
+let generation = 0;
+let refreshPromise: Promise<void> | null = null;
+function persist(token: string | null): Promise<void> {
+  storageQueue = storageQueue.catch(() => undefined).then(async () => {
+    if (!(await SecureStore.isAvailableAsync())) return;
+    if (token === null) await SecureStore.deleteItemAsync(SESSION_KEY);
+    else await SecureStore.setItemAsync(SESSION_KEY, token);
+  });
+  return storageQueue;
 }
-
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-  accessToken: null,
-  refreshToken: null,
-  user: null,
-
-  login: async (email: string, password: string) => {
+interface AuthState {
+  isAuthenticated: boolean; isLoading: boolean; isHydrated: boolean; error: string | null;
+  accessToken: string | null; refreshToken: string | null; permissions: readonly string[];
+  user: { id: string; email: string; name: string; roles: readonly string[]; tenantId: string } | null;
+  login(email: string, password: string): Promise<boolean>;
+  register(input: { displayName: string; email: string; password: string }): Promise<boolean>;
+  hydrate(): Promise<void>; refreshSession(): Promise<void>; logout(): Promise<void>; expire(): void;
+  clearError(): void; can(permission: string): boolean;
+}
+function stateFor(result: LoginResponse) {
+  return { isAuthenticated: true, accessToken: result.accessToken, refreshToken: result.refreshToken,
+    permissions: result.user.permissions ?? [],
+    user: { id: result.user.id, email: result.user.email, name: result.user.displayName,
+      roles: result.user.roles, tenantId: result.user.tenantId } };
+}
+export const useAuthStore = create<AuthState>((set, get) => ({
+  isAuthenticated: false, isLoading: false, isHydrated: false, error: null,
+  accessToken: null, refreshToken: null, permissions: [], user: null,
+  login: async (email, password) => {
+    const attempt = ++generation;
     set({ isLoading: true, error: null });
     try {
       const result = await loginWithApi(email, password);
-      set({
-        isAuthenticated: true,
-        isLoading: false,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          name: result.user.displayName,
-        },
-      });
-      return true;
+      if (attempt !== generation) return false;
+      await persist(result.refreshToken);
+      if (attempt !== generation) return false;
+      set({ ...stateFor(result), isLoading: false, isHydrated: true }); return true;
     } catch (error) {
-      set({
-        isLoading: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'No se pudo iniciar sesión. Inténtalo nuevamente.',
-      });
+      if (attempt === generation) set({ isLoading: false, error: error instanceof Error ? error.message : 'No se pudo iniciar sesión.' });
       return false;
     }
   },
-
-  register: async (input) => {
+  register: async input => {
     set({ isLoading: true, error: null });
+    try { await registerWithApi(input); set({ isLoading: false }); return true; }
+    catch (error) { set({ isLoading: false, error: error instanceof Error ? error.message : 'No se pudo crear la cuenta.' }); return false; }
+  },
+  hydrate: async () => {
+    if (get().isHydrated || get().isLoading) return;
+    set({ isLoading: true });
     try {
-      await registerWithApi(input);
-      set({ isLoading: false, error: null });
-      return true;
-    } catch (error) {
-      set({
-        isLoading: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : 'No se pudo crear la cuenta. Inténtalo nuevamente.',
-      });
-      return false;
-    }
+      if (await SecureStore.isAvailableAsync()) {
+        const token = await SecureStore.getItemAsync(SESSION_KEY);
+        if (token) { set({ refreshToken: token }); await get().refreshSession(); }
+      }
+    } catch (error) { set({ error: error instanceof Error ? error.message : 'No se pudo restaurar la sesión.' }); }
+    finally { set({ isLoading: false, isHydrated: true }); }
   },
-
-  logout: () => {
-    set({
-      isAuthenticated: false,
-      accessToken: null,
-      refreshToken: null,
-      user: null,
-      error: null,
-    });
+  refreshSession: () => {
+    if (refreshPromise) return refreshPromise;
+    const attempt = generation;
+    const token = get().refreshToken;
+    if (!token) { get().expire(); return Promise.reject(new ApiError('UNAUTHENTICATED', 'Inicia sesión nuevamente.', 401)); }
+    refreshPromise = (async () => {
+      try {
+        const result = await refreshWithApi(token);
+        if (attempt !== generation) throw new ApiError('UNAUTHENTICATED', 'La sesión se cerró.', 401);
+        await persist(result.refreshToken);
+        if (attempt !== generation) throw new ApiError('UNAUTHENTICATED', 'La sesión se cerró.', 401);
+        set(stateFor(result));
+      } catch (error) {
+        if ((error instanceof ApiError || error instanceof AuthApiError) && (error.status === 401 || error.status === 403)) get().expire();
+        throw error;
+      } finally { refreshPromise = null; }
+    })();
+    return refreshPromise;
   },
-
-  clearError: () => {
-    set({ error: null });
+  expire: () => {
+    generation++;
+    set({ isAuthenticated: false, isLoading: false, accessToken: null, refreshToken: null, user: null, permissions: [] });
+    void persist(null).catch(() => set({ error: 'No se pudo borrar la sesión guardada.' }));
   },
+  logout: async () => {
+    try { if (get().accessToken) await apiRequest('/auth/logout', { method: 'POST', retry: false }); }
+    catch (error) { set({ error: error instanceof Error ? error.message : 'No se pudo revocar la sesión remota.' }); }
+    finally { get().expire(); await storageQueue.catch(() => undefined); }
+  },
+  clearError: () => set({ error: null }),
+  can: permission => get().permissions.includes(permission),
 }));
+configureApiSession({ token: () => useAuthStore.getState().accessToken,
+  identity:()=>useAuthStore.getState().user?.id??null,
+  refresh: () => useAuthStore.getState().refreshSession(), expire: () => useAuthStore.getState().expire() });

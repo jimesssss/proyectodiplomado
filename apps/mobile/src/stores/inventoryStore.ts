@@ -1,9 +1,20 @@
 /**
  * Inventory Store — Zustand
  *
- * Datos mock para el módulo de inventario.
+ * Saldos y movimientos proceden del ledger de inventario de la API.
  */
 import { create } from 'zustand';
+import {
+  createMovement as createMovementWithApi,
+  getMovement as getMovementFromApi,
+  InventoryApiError,
+  listMovements,
+  listStock,
+  type ApiMovementType,
+  type ApiStockBalance,
+  type CreateApiMovement,
+} from '../services/inventory-api';
+import { useProductStore, type Product } from './productStore';
 
 export interface InventoryMovement {
   id: string;
@@ -13,101 +24,204 @@ export interface InventoryMovement {
   quantity: number;
   reason: string;
   date: string;
-  user: string;
 }
 
 export interface InventorySummary {
   totalProducts: number;
   lowStock: number;
   outOfStock: number;
-  estimatedValue: number;
+  estimatedValue: number | null;
 }
 
 interface InventoryState {
   movements: InventoryMovement[];
+  stockBalances: ApiStockBalance[];
   summary: InventorySummary;
   isLoading: boolean;
+  stockLoading: boolean;
+  movementsLoading: boolean;
+  error: string | null;
+  stockError: string | null;
+  movementsError: string | null;
 
   getMovementsByProduct: (productId: string) => InventoryMovement[];
-  addMovement: (movement: Omit<InventoryMovement, 'id'>) => void;
+  getStockForProduct: (productId: string) => number;
+  loadStock: () => Promise<void>;
+  loadMovements: () => Promise<void>;
+  loadMovementById: (id: string) => Promise<InventoryMovement | null>;
+  addMovement: (movement: CreateApiMovement) => Promise<InventoryMovement | null>;
+  refreshSummary: (products: readonly Product[]) => void;
+  refreshMovementNames: (products: readonly Product[]) => void;
+  clearError: () => void;
 }
 
-const MOCK_MOVEMENTS: InventoryMovement[] = [
-  {
-    id: '1',
-    productId: '1',
-    productName: 'Laptop HP 15',
-    type: 'entry',
-    quantity: 10,
-    reason: 'Compra a proveedor',
-    date: '2026-09-28',
-    user: 'Admin',
-  },
-  {
-    id: '2',
-    productId: '2',
-    productName: 'Mouse Logitech',
-    type: 'exit',
-    quantity: 5,
-    reason: 'Venta #001',
-    date: '2026-09-28',
-    user: 'Cajero',
-  },
-  {
-    id: '3',
-    productId: '3',
-    productName: 'Teclado Mecánico',
-    type: 'adjustment',
-    quantity: -2,
-    reason: 'Ajuste por daño',
-    date: '2026-09-27',
-    user: 'Admin',
-  },
-  {
-    id: '4',
-    productId: '4',
-    productName: 'Monitor Samsung 24"',
-    type: 'exit',
-    quantity: 3,
-    reason: 'Venta #002',
-    date: '2026-09-27',
-    user: 'Cajero',
-  },
-  {
-    id: '5',
-    productId: '5',
-    productName: 'Cable HDMI 2m',
-    type: 'entry',
-    quantity: 50,
-    reason: 'Compra a proveedor',
-    date: '2026-09-26',
-    user: 'Admin',
-  },
-];
-
-const MOCK_SUMMARY: InventorySummary = {
-  totalProducts: 6,
-  lowStock: 1,
-  outOfStock: 1,
-  estimatedValue: 485000,
+const EMPTY_SUMMARY: InventorySummary = {
+  totalProducts: 0,
+  lowStock: 0,
+  outOfStock: 0,
+  estimatedValue: null,
 };
 
-export const useInventoryStore = create<InventoryState>((set, get) => ({
-  movements: MOCK_MOVEMENTS,
-  summary: MOCK_SUMMARY,
-  isLoading: false,
+function inventoryErrorMessage(error: unknown): string {
+  return error instanceof InventoryApiError
+    ? error.message
+    : error instanceof Error
+      ? error.message
+      : 'No se pudo completar la operación de inventario.';
+}
 
-  getMovementsByProduct: (productId: string) => {
-    return get().movements.filter((m) => m.productId === productId);
+function toMovement(
+  movement: {
+    readonly id: string;
+    readonly productId: string;
+    readonly type: ApiMovementType;
+    readonly qty: number;
+    readonly reason: string | null;
+    readonly createdAt: string;
+  },
+  products: readonly Product[],
+): InventoryMovement {
+  const productName =
+    products.find((product) => product.id === movement.productId)?.name ?? movement.productId;
+  const type =
+    movement.type === 'count_adjustment'
+      ? 'adjustment'
+      : movement.type === 'manual_out' ||
+          movement.type === 'transfer_out' ||
+          movement.type === 'production_out'
+        ? 'exit'
+        : 'entry';
+  return {
+    id: movement.id,
+    productId: movement.productId,
+    productName,
+    type,
+    quantity: Math.abs(movement.qty),
+    reason: movement.reason ?? '',
+    date: movement.createdAt.slice(0, 10),
+  };
+}
+
+function sumProductStock(
+  balances: readonly ApiStockBalance[],
+  productId: string,
+): number {
+  return balances.reduce(
+    (total, balance) => total + (balance.productId === productId ? balance.qty : 0),
+    0,
+  );
+}
+
+export const useInventoryStore = create<InventoryState>((set, get) => ({
+  movements: [],
+  stockBalances: [],
+  summary: EMPTY_SUMMARY,
+  isLoading: false,
+  stockLoading: false,
+  movementsLoading: false,
+  error: null,
+  stockError: null,
+  movementsError: null,
+
+  getMovementsByProduct: (productId) =>
+    get().movements.filter((movement) => movement.productId === productId),
+
+  getStockForProduct: (productId) => sumProductStock(get().stockBalances, productId),
+
+  loadStock: async () => {
+    set({ stockLoading: true, stockError: null });
+    try {
+      const stockBalances = await listStock();
+      set({ stockBalances: [...stockBalances], stockLoading: false });
+      useProductStore.getState().setStockBalances(stockBalances);
+      get().refreshSummary(useProductStore.getState().products);
+    } catch (error) {
+      set({ stockLoading: false, stockError: inventoryErrorMessage(error) });
+    }
   },
 
-  addMovement: (movement: Omit<InventoryMovement, 'id'>) => {
-    const newMovement: InventoryMovement = {
-      ...movement,
-      id: Date.now().toString(),
-    };
+  loadMovements: async () => {
+    set({ movementsLoading: true, movementsError: null });
+    try {
+      const products = useProductStore.getState().products;
+      const apiMovements = await listMovements();
+      set({
+        movements: apiMovements.map((movement) => toMovement(movement, products)),
+        movementsLoading: false,
+      });
+    } catch (error) {
+      set({ movementsLoading: false, movementsError: inventoryErrorMessage(error) });
+    }
+  },
+
+  loadMovementById: async (id) => {
+    set({ error: null });
+    try {
+      const movement = await getMovementFromApi(id);
+      const mapped = toMovement(movement, useProductStore.getState().products);
+      set((state) => ({
+        movements: [
+          mapped,
+          ...state.movements.filter((existing) => existing.id !== mapped.id),
+        ],
+      }));
+      return mapped;
+    } catch (error) {
+      set({ error: inventoryErrorMessage(error) });
+      return null;
+    }
+  },
+
+  addMovement: async (input) => {
+    set({ isLoading: true, error: null });
+    try {
+      const movement = await createMovementWithApi(input);
+      const mapped = toMovement(movement, useProductStore.getState().products);
+      set((state) => ({
+        movements: [
+          mapped,
+          ...state.movements.filter((existing) => existing.id !== mapped.id),
+        ],
+        isLoading: false,
+      }));
+      await Promise.all([get().loadStock(), get().loadMovements()]);
+      return mapped;
+    } catch (error) {
+      set({ isLoading: false, error: inventoryErrorMessage(error) });
+      return null;
+    }
+  },
+
+  refreshSummary: (products) => {
+    const activeProducts = products.filter((product) => product.status === 'active');
+    const balances = get().stockBalances;
+    set({
+      summary: {
+        totalProducts: activeProducts.length,
+        lowStock: activeProducts.filter((product) => {
+          const quantity = sumProductStock(balances, product.id);
+          return product.minStockDefined !== false && quantity > 0 && quantity <= product.minStock;
+        }).length,
+        outOfStock: activeProducts.filter(
+          (product) => sumProductStock(balances, product.id) === 0,
+        ).length,
+        estimatedValue: null,
+      },
+    });
+  },
+
+  refreshMovementNames: (products) => {
     set((state) => ({
-      movements: [newMovement, ...state.movements],
+      movements: state.movements.map((movement) => ({
+        ...movement,
+        productName:
+          products.find((product) => product.id === movement.productId)?.name ??
+          movement.productId,
+      })),
     }));
+  },
+
+  clearError: () => {
+    set({ error: null, stockError: null, movementsError: null });
   },
 }));

@@ -1,8 +1,8 @@
-/**
- * Index — Redirige a la pantalla de bienvenida.
- */
 import { Redirect } from 'expo-router';
-
+import { ActivityIndicator } from 'react-native';
+import { useAuthStore } from '../stores/authStore';
 export default function Index() {
-  return <Redirect href="/welcome" />;
+  const { isHydrated, isAuthenticated } = useAuthStore();
+  if (!isHydrated) return <ActivityIndicator />;
+  return <Redirect href={isAuthenticated ? '/(tabs)/dashboard' : '/welcome'} />;
 }

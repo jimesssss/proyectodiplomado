@@ -1,3 +1,9 @@
+import { useEffect } from 'react';
+import { businessApi, type ApiParty, type ApiAccount } from '../../../services/business-api';
+import { listWarehouses, type ApiOrgUnit } from '../../../services/organization-api';
+import { createPosOrder, completePosOrder, COMPLETE_ORDER_PERMISSIONS } from '../../../services/pos-api';
+import { useAuthStore } from '../../../stores/authStore';
+import { useInventoryStore } from '../../../stores/inventoryStore';
 /**
  * POS — Punto de Venta
  *
@@ -15,6 +21,7 @@ import {
   Pressable,
   TextInput,
   Modal,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,16 +38,39 @@ export default function POSScreen() {
 
   const {
     cart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
+    addToCart: addToCartInStore,
+    removeFromCart: removeFromCartInStore,
+    updateQuantity: updateQuantityInStore,
     clearCart,
     getCartTotal,
     getCartCount,
   } = usePOSStore();
 
   const { products: storeProducts } = useProductStore();
-  const { addSale } = useSalesStore();
+  const [customers,setCustomers]=useState<ApiParty[]>([]);
+  const [warehouses,setWarehouses]=useState<ApiOrgUnit[]>([]);
+  const [accounts,setAccounts]=useState<ApiAccount[]>([]);
+  const [customerId,setCustomerId]=useState('');
+  const [warehouseId,setWarehouseId]=useState('');
+  const [accountId,setAccountId]=useState('');
+  const [submitting,setSubmitting]=useState(false);
+  const pendingOrderId=useRef<string|null>(null);
+  const submitLock=useRef(false);
+  const blocked=()=>{if(pendingOrderId.current||submitLock.current){Alert.alert('Pedido pendiente','Confirma el resultado del pedido antes de cambiar el carrito.');return true;}return false;};
+  const addToCart=(product:Product)=>{if(!blocked())addToCartInStore(product);};
+  const removeFromCart=(id:string)=>{if(!blocked())removeFromCartInStore(id);};
+  const updateQuantity=(id:string,quantity:number)=>{if(!blocked())updateQuantityInStore(id,quantity);};
+  const stockBalances=useInventoryStore(state=>state.stockBalances);
+  useEffect(()=>{
+    void (async()=>{
+      try {
+        await useProductStore.getState().loadProducts();
+        await useInventoryStore.getState().loadStock();
+        const [people,storage,money]=await Promise.all([businessApi.listCustomers(),listWarehouses(),businessApi.listAccounts()]);
+        setCustomers(people.filter(c=>!c.archived));setWarehouses(storage.filter(w=>w.status==='active'));setAccounts(money.filter(a=>!a.archived&&a.currency==='MXN'));
+      }catch(error){Alert.alert('No se pudo cargar POS',error instanceof Error?error.message:'Inténtalo nuevamente.');}
+    })();
+  },[]);
 
   // Convertir productos del productStore al formato del POS
   const products: Product[] = storeProducts
@@ -49,7 +79,7 @@ export default function POSScreen() {
       id: product.id,
       name: product.name,
       price: product.salePrice,
-      stock: product.stock,
+      stock: warehouseId ? stockBalances.filter(b=>b.productId===product.id&&b.warehouseId===warehouseId).reduce((sum,b)=>sum+b.qty,0) : product.stock,
       category: product.category,
     }));
 
@@ -136,58 +166,29 @@ export default function POSScreen() {
     updateQuantity(productId, currentQuantity - 1);
   };
 
-  // Confirmar y registrar venta
-  const handleCompleteSale = () => {
-    if (cart.length === 0) {
-      return;
-    }
-
-    const now = new Date();
-
-    const date = [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, '0'),
-      String(now.getDate()).padStart(2, '0'),
-    ].join('-');
-
-    const time = [
-      String(now.getHours()).padStart(2, '0'),
-      String(now.getMinutes()).padStart(2, '0'),
-    ].join(':');
-
-    const folio = `V-${Date.now()
-      .toString()
-      .slice(-6)}`;
-
-    // Registrar la venta en salesStore
-    addSale({
-      folio,
-      date,
-      time,
-      customer: 'Público general',
-      total: finalTotal,
-      discount: discountValue,
-      paymentMethod: selectedPayment,
-      status: 'completed',
-
-      items: cart.map((item) => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        quantity: item.quantity,
-        price: item.product.price,
-      })),
-    });
-
-    setSaleResult({
-      folio,
-      total: finalTotal,
-      date: now.toLocaleString('es-MX'),
-    });
-
-    clearCart();
-    setShowCart(false);
-    setShowPayment(false);
-    setShowResult(true);
+  // Retain the same order on a failed response, so an uncertain result cannot charge twice.
+  const handleCompleteSale = async () => {
+    if(submitLock.current||!cart.length)return;
+    if(!customerId||!warehouseId||!accountId){Alert.alert('Datos requeridos','Selecciona cliente, almacén y cuenta de cobro.');return;}
+    if(!COMPLETE_ORDER_PERMISSIONS.every(p=>useAuthStore.getState().can(p))){Alert.alert('Sin permiso','Tu usuario no tiene todos los permisos del flujo de venta.');return;}
+    const account=accounts.find(a=>a.id===accountId);
+    if(!account||account.type!==(selectedPayment==='cash'?'cash':'bank')){Alert.alert('Cuenta requerida','Selecciona una cuenta compatible con el método de pago.');return;}
+    if(discountValue>cartTotal){Alert.alert('Descuento inválido','El descuento no puede superar el subtotal.');return;}
+    submitLock.current=true;setSubmitting(true);
+    try {
+      if(!pendingOrderId.current) {
+        const pct=cartTotal>0?discountValue/cartTotal*100:0;
+        const order=await createPosOrder(customerId,cart.map(item=>({productId:item.product.id,description:item.product.name,
+          quantity:item.quantity,unitPrice:item.product.price,taxRate:0,discountPct:pct})),selectedPayment);
+        pendingOrderId.current=order.id;
+      }
+      const invoice=await completePosOrder(pendingOrderId.current,warehouseId,accountId);
+      setSaleResult({folio:invoice.number,total:invoice.total,date:new Date(invoice.issueDate).toLocaleString('es-MX')});
+      pendingOrderId.current=null;clearCart();setShowCart(false);setShowPayment(false);setShowResult(true);
+      await useProductStore.getState().loadProducts();await useInventoryStore.getState().loadStock();await useSalesStore.getState().load();
+    }catch(error){Alert.alert('No se pudo confirmar', (error instanceof Error?error.message:'Inténtalo nuevamente.')+
+      (pendingOrderId.current?' El pedido se conserva; vuelve a confirmar para consultar su resultado.':''));}
+    finally{setSubmitting(false);submitLock.current=false;}
   };
 
   // Preparar nueva venta
@@ -459,6 +460,7 @@ export default function POSScreen() {
                     style={styles.discountInput}
                     placeholder="0.00"
                     placeholderTextColor={colors.neutral[400]}
+                    editable={!pendingOrderId.current&&!submitting}
                     value={discount}
                     onChangeText={setDiscount}
                     keyboardType="decimal-pad"
@@ -521,6 +523,12 @@ export default function POSScreen() {
               Total a pagar: {formatCurrency(finalTotal)}
             </Text>
 
+            <Text style={styles.paymentMethodText}>Cliente</Text>
+            <ScrollView horizontal>{customers.map(c=><Pressable key={c.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,customerId===c.id&&styles.paymentMethodActive]} onPress={()=>setCustomerId(c.id)}><Text>{c.name}</Text></Pressable>)}</ScrollView>
+            <Text style={styles.paymentMethodText}>Almacén</Text>
+            <ScrollView horizontal>{warehouses.map(w=><Pressable key={w.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,warehouseId===w.id&&styles.paymentMethodActive]} onPress={()=>setWarehouseId(w.id)}><Text>{w.name}</Text></Pressable>)}</ScrollView>
+            <Text style={styles.paymentMethodText}>Cuenta de cobro (MXN)</Text>
+            <ScrollView horizontal>{accounts.filter(a=>a.type===(selectedPayment==='cash'?'cash':'bank')).map(a=><Pressable key={a.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,accountId===a.id&&styles.paymentMethodActive]} onPress={()=>setAccountId(a.id)}><Text>{a.name}</Text></Pressable>)}</ScrollView>
             <View style={styles.paymentMethods}>
               <Pressable
                 style={[
@@ -612,10 +620,11 @@ export default function POSScreen() {
 
             <Pressable
               style={styles.confirmButton}
+              disabled={submitting}
               onPress={handleCompleteSale}
             >
               <Text style={styles.confirmButtonText}>
-                Confirmar Venta
+                {submitting ? 'Confirmando…' : 'Confirmar Venta'}
               </Text>
             </Pressable>
           </View>

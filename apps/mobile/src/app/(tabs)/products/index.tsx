@@ -3,19 +3,37 @@
  *
  * Muestra todos los productos con buscador y filtros por categoría.
  */
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../components';
 import { colors, spacing, typography, radii } from '../../../theme';
 import { useProductStore } from '../../../stores/productStore';
+import { useInventoryStore } from '../../../stores/inventoryStore';
 
 export default function ProductsScreen() {
   const router = useRouter();
-  const { products, categories } = useProductStore();
+  const { products, categories, isLoading, error, loadProducts } = useProductStore();
+  const {
+    stockLoading,
+    stockError,
+    loadStock,
+    getStockForProduct,
+  } = useInventoryStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const stockAvailable = !stockLoading && stockError === null;
+
+  useEffect(() => {
+    const load = async () => {
+      await Promise.all([loadProducts(), loadStock()]);
+      useProductStore.getState().setStockBalances(
+        useInventoryStore.getState().stockBalances,
+      );
+    };
+    void load();
+  }, [loadProducts, loadStock]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -99,19 +117,35 @@ export default function ProductsScreen() {
       </ScrollView>
 
       {/* Lista de productos */}
-      {filteredProducts.length === 0 ? (
+      {error && products.length === 0 ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="No se pudieron cargar los productos"
+          description={error}
+        />
+      ) : isLoading && products.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      ) : filteredProducts.length === 0 ? (
         <EmptyState
           icon="cube-outline"
           title="No se encontraron productos"
-          description="Intenta con otros términos de búsqueda o filtros"
+          description={error ?? 'Intenta con otros términos de búsqueda o filtros'}
         />
       ) : (
         <ScrollView
           style={styles.listContainer}
           showsVerticalScrollIndicator={false}
         >
+          {(error || (stockError && !stockLoading)) && (
+            <Text style={styles.loadError}>{error ?? stockError}</Text>
+          )}
           {filteredProducts.map((product) => {
-            const stockStatus = getStockStatus(product.stock, product.minStock);
+            const stock = getStockForProduct(product.id);
+            const stockStatus = stockAvailable
+              ? getStockStatus(stock, product.minStock)
+              : { label: 'Existencia no disponible', status: 'neutral' as const };
             return (
               <Pressable
                 key={product.id}
@@ -127,7 +161,9 @@ export default function ProductsScreen() {
                   <Text style={styles.productCategory}>{product.category}</Text>
                   <View style={styles.productFooter}>
                     <Text style={styles.productPrice}>
-                      ${product.salePrice.toFixed(2)}
+                      {product.salePriceDefined === false
+                        ? 'Sin precio'
+                        : `$${product.salePrice.toFixed(2)}`}
                     </Text>
                     <StatusBadge status={stockStatus.status} label={stockStatus.label} />
                   </View>
@@ -136,10 +172,10 @@ export default function ProductsScreen() {
                   <Text style={styles.stockLabel}>Existencia</Text>
                   <Text style={[
                     styles.stockValue,
-                    product.stock === 0 && styles.stockValueError,
-                    product.stock > 0 && product.stock <= product.minStock && styles.stockValueWarning,
+                    stockAvailable && stock === 0 && styles.stockValueError,
+                    stockAvailable && stock > 0 && product.minStockDefined !== false && stock <= product.minStock && styles.stockValueWarning,
                   ]}>
-                    {product.stock}
+                    {stockAvailable ? stock : '—'}
                   </Text>
                 </View>
               </Pressable>
@@ -280,5 +316,15 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: spacing.xxl,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadError: {
+    color: colors.error,
+    fontSize: typography.size.sm,
+    marginVertical: spacing.sm,
   },
 });

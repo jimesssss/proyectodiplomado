@@ -51,6 +51,7 @@ export interface PurchaseRepo {
     kind: PurchaseKind,
     id: string,
     set: Record<string, unknown>,
+    expectedStatus?: PurchaseStatus,
   ): Promise<PurchaseDocument | null>;
 }
 
@@ -193,13 +194,13 @@ export const purchaseRepo: PurchaseRepo = {
     };
   },
 
-  async update(tenantId, kind, id, set) {
+  async update(tenantId, kind, id, set, expectedStatus) {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
     const doc = await purchaseModel
       .findOneAndUpdate(
-        { _id: new Types.ObjectId(id), tenantId, kind },
+        { _id: new Types.ObjectId(id), tenantId, kind, ...(expectedStatus ? {status:expectedStatus}: {}) },
         { $set: set as Record<string, never> },
         { returnDocument: 'after' },
       )

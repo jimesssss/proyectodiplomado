@@ -15,19 +15,19 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ScreenContainer } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
-import { useUsersStore } from '../../../../stores/usersStore';
+import { useAuthStore } from '../../../../stores/authStore';
+import { apiRequest } from '../../../../services/api-client';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { getUserById, updateUser } = useUsersStore();
+  const currentUser = useAuthStore(state => state.user);
 
-  // Por ahora usamos el administrador como usuario actual.
-  const currentUser = getUserById('1');
+
 
   const [name, setName] = useState(currentUser?.name ?? '');
-  const [email, setEmail] = useState(currentUser?.email ?? '');
+  const [email] = useState(currentUser?.email ?? '');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanName = name.trim();
     const cleanEmail = email.trim();
 
@@ -49,10 +49,10 @@ export default function ProfileScreen() {
       return;
     }
 
-    updateUser('1', {
-      name: cleanName,
-      email: cleanEmail,
-    });
+    try {
+      await apiRequest('/auth/me', {method:'PATCH',body:{displayName:cleanName}});
+      useAuthStore.setState(state=>({user:state.user?{...state.user,name:cleanName}:null}));
+    } catch(error) { Alert.alert('No se pudo guardar',error instanceof Error?error.message:'Inténtalo nuevamente.'); return; }
 
     Alert.alert(
       'Perfil actualizado',
@@ -143,7 +143,7 @@ export default function ProfileScreen() {
             </Text>
 
             <Text style={styles.profileRole}>
-              Administrador
+              {currentUser.roles.join(', ')}
             </Text>
           </View>
 
@@ -184,7 +184,7 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.input}
                 value={email}
-                onChangeText={setEmail}
+                editable={false}
                 placeholder="correo@ejemplo.com"
                 placeholderTextColor={colors.neutral[400]}
                 keyboardType="email-address"

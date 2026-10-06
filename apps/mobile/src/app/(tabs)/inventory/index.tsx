@@ -3,24 +3,71 @@
  *
  * Muestra resumen de inventario, productos con stock bajo y movimientos recientes.
  */
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ScreenContainer, StatCard, SectionHeader, StatusBadge } from '../../../components';
+import { ScreenContainer, StatCard, SectionHeader, StatusBadge, EmptyState } from '../../../components';
 import { colors, spacing, typography, radii } from '../../../theme';
 import { useInventoryStore } from '../../../stores/inventoryStore';
 import { useProductStore } from '../../../stores/productStore';
+import { useAuthStore } from '../../../stores/authStore';
 
 export default function InventoryScreen() {
   const router = useRouter();
-  const { summary, movements } = useInventoryStore();
-  const { products } = useProductStore();
+  const {
+    summary,
+    movements,
+    stockLoading,
+    movementsLoading,
+    stockError,
+    movementsError,
+    loadStock,
+    loadMovements,
+    getStockForProduct,
+    refreshSummary,
+    refreshMovementNames,
+  } = useInventoryStore();
+  const {
+    products,
+    isLoading: productsLoading,
+    error: productsError,
+    loadProducts,
+  } = useProductStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const lowStockProducts = products.filter((p) => p.stock > 0 && p.stock <= p.minStock);
-  const outOfStockProducts = products.filter((p) => p.stock === 0);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const load = async () => {
+      await Promise.all([loadProducts(), loadStock(), loadMovements()]);
+      const loadedProducts = useProductStore.getState().products;
+      refreshSummary(loadedProducts);
+      refreshMovementNames(loadedProducts);
+    };
+    void load();
+  }, [
+    isAuthenticated,
+    loadProducts,
+    loadStock,
+    loadMovements,
+    refreshSummary,
+    refreshMovementNames,
+  ]);
 
-  const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
+  const lowStockProducts = products.filter((product) => {
+    const stock = getStockForProduct(product.id);
+    return product.minStockDefined !== false && stock > 0 && stock <= product.minStock;
+  });
+  const outOfStockProducts = products.filter(
+    (product) => getStockForProduct(product.id) === 0,
+  );
+  const loading = productsLoading || stockLoading || movementsLoading;
+  const loadError = isAuthenticated
+    ? productsError ?? stockError ?? movementsError
+    : 'Inicia sesión para consultar el inventario.';
+
+  const formatCurrency = (value: number | null) =>
+    value === null ? 'Pendiente' : `$${value.toFixed(2)}`;
 
   return (
     <ScreenContainer>
@@ -36,6 +83,14 @@ export default function InventoryScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator />
+          </View>
+        )}
+        {loadError && (
+          <Text style={styles.loadError}>{loadError}</Text>
+        )}
         {/* Resumen */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resumen de Inventario</Text>
@@ -47,13 +102,13 @@ export default function InventoryScreen() {
             />
             <StatCard
               label="Stock Bajo"
-              value={summary.lowStock.toString()}
+              value={stockError ? '—' : summary.lowStock.toString()}
               backgroundColor="#FEF3C7"
               valueColor="#92400E"
             />
             <StatCard
               label="Agotados"
-              value={summary.outOfStock.toString()}
+              value={stockError ? '—' : summary.outOfStock.toString()}
               backgroundColor="#FEE2E2"
               valueColor="#991B1B"
             />
@@ -73,7 +128,19 @@ export default function InventoryScreen() {
             actionText="Ver todos"
             onAction={() => {}}
           />
-          {lowStockProducts.length === 0 ? (
+          {stockError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudo cargar el stock"
+              description={stockError}
+            />
+          ) : productsError && products.length === 0 ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudieron cargar los productos"
+              description={productsError}
+            />
+          ) : lowStockProducts.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No hay productos con stock bajo</Text>
             </View>
@@ -89,7 +156,7 @@ export default function InventoryScreen() {
                   <Text style={styles.productSku}>SKU: {product.sku}</Text>
                 </View>
                 <View style={styles.stockInfo}>
-                  <Text style={styles.stockValue}>{product.stock}</Text>
+                  <Text style={styles.stockValue}>{getStockForProduct(product.id)}</Text>
                   <Text style={styles.stockLabel}>de {product.minStock} mín.</Text>
                 </View>
                 <StatusBadge status="warning" label="Stock bajo" />
@@ -105,7 +172,19 @@ export default function InventoryScreen() {
             actionText="Ver todos"
             onAction={() => {}}
           />
-          {outOfStockProducts.length === 0 ? (
+          {stockError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudo cargar el stock"
+              description={stockError}
+            />
+          ) : productsError && products.length === 0 ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudieron cargar los productos"
+              description={productsError}
+            />
+          ) : outOfStockProducts.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No hay productos agotados</Text>
             </View>
@@ -173,6 +252,19 @@ export default function InventoryScreen() {
               </View>
             </View>
           ))}
+          {!movementsLoading && movementsError && (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="No se pudieron cargar los movimientos"
+              description={movementsError}
+            />
+          )}
+          {!movementsLoading && !movementsError && movements.length === 0 && (
+            <EmptyState
+              icon="swap-horizontal-outline"
+              title="No hay movimientos registrados"
+            />
+          )}
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -317,5 +409,15 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: spacing.xxl,
+  },
+  loadingContainer: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  loadError: {
+    color: colors.error,
+    fontSize: typography.size.sm,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
   },
 });

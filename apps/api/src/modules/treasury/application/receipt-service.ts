@@ -1,3 +1,4 @@
+import { atomic } from '../../../core/db/transaction.js';
 import {
   ConflictError,
   DomainError,
@@ -134,7 +135,11 @@ export async function getReceipt(tenantId: string, id: string): Promise<PublicRe
   return toPublicReceipt(receipt);
 }
 
-export async function updateReceipt(
+export async function updateReceipt(tenantId:string,id:string,input:PatchReceiptInput):Promise<PublicReceipt> {
+  if(input.status==='posted')return atomic(()=>updateReceiptInternal(tenantId,id,input),false);
+  return updateReceiptInternal(tenantId,id,input);
+}
+async function updateReceiptInternal(
   tenantId: string,
   id: string,
   input: PatchReceiptInput,

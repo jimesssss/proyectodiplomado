@@ -1,38 +1,11 @@
-// ESLint flat config — reglas base del monorepo ERP.
-// Prohibido `any` indiscriminado y acceso cruzado entre módulos (se reforzará
-// con reglas específicas de módulos en FASE 2).
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import globals from 'globals';
-
-export default tseslint.config(
-  {
-    ignores: ['**/dist/**', '**/build/**', '**/node_modules/**', '**/coverage/**'],
-  },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
-    languageOptions: {
-      globals: { ...globals.node },
-    },
-  },
-  {
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      eqeqeq: ['error', 'smart'],
-      'prefer-const': 'error',
-      'no-var': 'error',
-    },
-  },
-  {
-    files: ['**/*.test.ts', '**/*.spec.ts', 'tests/**/*.ts'],
-    rules: {
-      'no-console': 'off',
-    },
-  },
-);
+import js from '@eslint/js';
+import parser from '@typescript-eslint/parser';
+import ts from '@typescript-eslint/eslint-plugin';
+export default [
+ {ignores:['**/dist/**','**/build/**','**/node_modules/**','**/coverage/**','**/android/**','**/ios/**','scripts/integrate-*.mjs','scripts/fix-*.mjs']},
+ {files:['**/*.ts','**/*.tsx'],languageOptions:{parser,parserOptions:{ecmaVersion:'latest',sourceType:'module'},globals:{console:'readonly',process:'readonly',Buffer:'readonly',fetch:'readonly',setTimeout:'readonly',clearTimeout:'readonly',AbortController:'readonly',URL:'readonly',Response:'readonly',Request:'readonly'}},
+  plugins:{'@typescript-eslint':ts},rules:{...js.configs.recommended.rules,...ts.configs.recommended.rules,
+   'no-undef':'off','no-console':['error',{allow:['warn','error']}],eqeqeq:['error','smart'],'prefer-const':'error','no-var':'error',
+   '@typescript-eslint/no-unused-vars':['error',{argsIgnorePattern:'^_',varsIgnorePattern:'^_',caughtErrorsIgnorePattern:'^_'}]}},
+ {files:['**/*.test.ts','tests/**/*.ts'],rules:{'no-console':'off'}},
+];

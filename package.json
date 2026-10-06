@@ -9,18 +9,19 @@
     "pnpm": ">=8.0.0"
   },
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx --ignore-path .gitignore",
-    "lint:fix": "eslint . --ext .ts,.tsx --ignore-path .gitignore --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,json,md}\" --ignore-path .gitignore",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest",
+    "typecheck": "node scripts/typecheck-workspaces.mjs",
+    "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "build": "pnpm -r run build",
     "dev": "pnpm -r run dev",
     "clean": "pnpm -r run clean && rm -rf node_modules",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "seed:demo": "node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.base.json scripts/seed-demo-data.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

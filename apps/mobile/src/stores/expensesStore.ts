@@ -1,89 +1,31 @@
-/**
- * Expenses Store — Zustand
- *
- * Datos mock para el módulo de gastos.
- */
-import { create } from 'zustand';
-
+import {create} from 'zustand';
+import {listAccounts,listPayments,saveMoney,paymentPatch} from '../services/treasury-api';
+import {type ApiAccount,type ApiMoney} from '../services/business-api';
+import {useAuthStore} from './authStore';
 export interface Expense {
   id: string;
   concept: string;
   category: string;
   date: string;
   amount: number;
-  paymentMethod: 'cash' | 'card' | 'transfer';
+  paymentMethod: 'cash' | 'card' | 'transfer' | 'unknown';
+  accountId?:string;
   status: 'paid' | 'pending';
 }
 
-interface ExpensesState {
-  expenses: Expense[];
-  isLoading: boolean;
-  totalExpenses: number;
 
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
-}
-
-const MOCK_EXPENSES: Expense[] = [
-  {
-    id: '1',
-    concept: 'Papelería y oficina',
-    category: 'Oficina',
-    date: '2026-09-29',
-    amount: 200,
-    paymentMethod: 'cash',
-    status: 'paid',
-  },
-  {
-    id: '2',
-    concept: 'Recibo de luz',
-    category: 'Servicios',
-    date: '2026-09-28',
-    amount: 850,
-    paymentMethod: 'transfer',
-    status: 'paid',
-  },
-  {
-    id: '3',
-    concept: 'Agua embotellada',
-    category: 'Oficina',
-    date: '2026-09-27',
-    amount: 120,
-    paymentMethod: 'cash',
-    status: 'paid',
-  },
-  {
-    id: '4',
-    concept: 'Mantenimiento equipo',
-    category: 'Mantenimiento',
-    date: '2026-09-26',
-    amount: 1500,
-    paymentMethod: 'card',
-    status: 'pending',
-  },
-  {
-    id: '5',
-    concept: 'Gasolina',
-    category: 'Transporte',
-    date: '2026-09-25',
-    amount: 400,
-    paymentMethod: 'cash',
-    status: 'paid',
-  },
-];
-
-export const useExpensesStore = create<ExpensesState>((set, get) => ({
-  expenses: MOCK_EXPENSES,
-  isLoading: false,
-  totalExpenses: MOCK_EXPENSES.reduce((sum, e) => sum + e.amount, 0),
-
-  addExpense: (expense: Omit<Expense, 'id'>) => {
-    const newExpense: Expense = {
-      ...expense,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      expenses: [newExpense, ...state.expenses],
-      totalExpenses: state.totalExpenses + expense.amount,
-    }));
-  },
+function mapExpense(p:ApiMoney):Expense{return {id:p.id,concept:p.notes??p.number,category:p.reference??'',date:p.date.slice(0,10),amount:p.amount,paymentMethod:'unknown',status:p.status==='posted'?'paid':'pending',accountId:p.accountId};}
+interface ExpensesState{expenses:Expense[];accounts:ApiAccount[];isLoading:boolean;error:string|null;totalExpenses:number;load():Promise<void>;
+ addExpense(input:Omit<Expense,'id'>&{accountId:string}):Promise<boolean>;updateExpense(id:string,input:{amount?:number;notes?:string;reference?:string}):Promise<boolean>;cancelExpense(id:string):Promise<boolean>;}
+export const useExpensesStore=create<ExpensesState>((set,get)=>({expenses:[],accounts:[],isLoading:false,error:null,totalExpenses:0,
+ load:async()=>{set({isLoading:true,error:null});try{const accounts=await listAccounts();const payments=await listPayments();const valid=payments.filter(p=>p.status!=='cancelled');
+  set({accounts,expenses:valid.map(mapExpense),totalExpenses:valid.filter(p=>p.status==='posted'&&accounts.find(a=>a.id===p.accountId)?.currency==='MXN').reduce((sum,p)=>sum+p.amount,0)});
+ }catch(error){set({error:error instanceof Error?error.message:'No se pudieron cargar gastos.',expenses:[]});}finally{set({isLoading:false});}},
+ addExpense:async input=>{if(!useAuthStore.getState().can('payment:create')||(input.status==='paid'&&!useAuthStore.getState().can('payment:update'))){set({error:'No tienes permiso para registrar este pago.'});return false;}
+  set({isLoading:true,error:null});try{
+   await saveMoney('payments',{accountId:input.accountId,amount:input.amount,date:input.date,notes:input.concept,reference:input.category},input.status==='paid');
+   await get().load();return true;
+  }catch(error){set({error:error instanceof Error?error.message:'No se pudo guardar el gasto. Revisa pagos pendientes antes de reintentar.'});return false;}finally{set({isLoading:false});}},
+ updateExpense:async(id,input)=>{try{await paymentPatch(id,input);await get().load();return true;}catch(error){set({error:error instanceof Error?error.message:'No se pudo editar.'});return false;}},
+ cancelExpense:async id=>{try{await paymentPatch(id,{status:'cancelled'});await get().load();return true;}catch(error){set({error:error instanceof Error?error.message:'No se pudo anular.'});return false;}},
 }));

@@ -43,7 +43,7 @@ const calculateDashboardData = () => {
   const { sales } = useSalesStore.getState();
 
   const completedSales = sales.filter(
-    (sale) => sale.status === 'completed'
+    (sale) => sale.status === 'completed' && sale.currency === 'MXN'
   );
 
   const now = new Date();
@@ -173,6 +173,7 @@ export const useDashboardStore =
     refresh: async () => {
       set({ isLoading: true });
 
+      await useSalesStore.getState().load();
       const data = calculateDashboardData();
 
       set({

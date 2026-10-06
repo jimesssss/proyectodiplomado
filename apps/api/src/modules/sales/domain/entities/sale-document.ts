@@ -80,6 +80,7 @@ export const SALE_PATCH_STATUSES: Record<SaleKind, readonly SaleStatus[]> = {
 };
 
 export interface SaleLine {
+  readonly productId?: string | null;
   readonly description: string;
   readonly quantity: number;
   readonly unitPrice: number;
@@ -100,6 +101,7 @@ export interface SaleDocument {
   /** Secuencial por tenant+tipo+año (`QT-2026-000001`), inmutable. */
   readonly number: string;
   readonly customerId: string;
+  readonly warehouseId?: string | null;
   readonly status: SaleStatus;
   /** ISO-4217 en mayúsculas (default `USD`). */
   readonly currency: string;
@@ -127,6 +129,7 @@ export interface PublicSaleDocument {
   readonly kind: SaleKind;
   readonly number: string;
   readonly customerId: string;
+  readonly warehouseId?: string | null;
   readonly status: SaleStatus;
   readonly currency: string;
   readonly issueDate: Date;
@@ -151,6 +154,7 @@ export function toPublicSaleDocument(doc: SaleDocument): PublicSaleDocument {
     kind: doc.kind,
     number: doc.number,
     customerId: doc.customerId,
+    warehouseId: doc.warehouseId ?? null,
     status: doc.status,
     currency: doc.currency,
     issueDate: doc.issueDate,

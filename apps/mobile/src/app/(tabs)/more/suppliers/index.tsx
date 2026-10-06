@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Proveedores — Lista de proveedores
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useSuppliersStore } from '../../../../stores/suppliersStore';
 
 export default function SuppliersScreen() {
+  useModuleRefresh(useSuppliersStore.getState().load, () => useSuppliersStore.getState().error);
   const router = useRouter();
   const { suppliers } = useSuppliersStore();
   const [searchQuery, setSearchQuery] = useState('');

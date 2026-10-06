@@ -16,7 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { ScreenContainer, SectionHeader } from '../../../../components';
+import { ListItem, ScreenContainer, SectionHeader } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useSettingsStore } from '../../../../stores/settingsStore';
 
@@ -111,6 +111,34 @@ export default function SettingsScreen() {
               <Text style={styles.detailValue}>{branch.address}</Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Estructura organizativa" />
+          <ListItem
+            title="Organizaciones"
+            subtitle="Consultar y crear organizaciones del tenant"
+            leftIcon="business-outline"
+            onPress={() => router.push('/more/settings/organizations')}
+          />
+          <ListItem
+            title="Empresas"
+            subtitle="Consultar y crear empresas de ERP-SC"
+            leftIcon="business"
+            onPress={() => router.push('/more/settings/companies')}
+          />
+          <ListItem
+            title="Sucursales"
+            subtitle="Consultar y crear sucursales de la empresa"
+            leftIcon="business-outline"
+            onPress={() => router.push('/more/settings/branches')}
+          />
+          <ListItem
+            title="Almacenes"
+            subtitle="Consultar y crear almacenes del tenant"
+            leftIcon="file-tray-stacked-outline"
+            onPress={() => router.push('/more/settings/warehouses')}
+          />
         </View>
 
         {/* Datos Fiscales */}

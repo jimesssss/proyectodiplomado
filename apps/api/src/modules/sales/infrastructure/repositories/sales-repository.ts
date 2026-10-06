@@ -46,6 +46,7 @@ export interface SaleRepo {
     kind: SaleKind,
     id: string,
     set: Record<string, unknown>,
+    expectedStatus?: SaleStatus,
   ): Promise<SaleDocument | null>;
 }
 
@@ -82,6 +83,7 @@ function optionalRef(value: Types.ObjectId | string | null | undefined): string 
 
 function mapSale(doc: SaleDoc): SaleDocument {
   const lines: SaleLine[] = (doc.lines ?? []).map((line) => ({
+    productId: optionalRef(line.productId),
     description: line.description,
     quantity: line.quantity,
     unitPrice: line.unitPrice,
@@ -97,6 +99,7 @@ function mapSale(doc: SaleDoc): SaleDocument {
     kind: doc.kind,
     number: doc.number,
     customerId: doc.customerId.toString(),
+    warehouseId: optionalRef(doc.warehouseId),
     status: doc.status,
     currency: doc.currency,
     issueDate: doc.issueDate,
@@ -158,13 +161,13 @@ export const saleRepo: SaleRepo = {
     };
   },
 
-  async update(tenantId, kind, id, set) {
+  async update(tenantId, kind, id, set, expectedStatus) {
     if (!Types.ObjectId.isValid(id)) {
       return null;
     }
     const doc = await model
       .findOneAndUpdate(
-        { _id: new Types.ObjectId(id), tenantId, kind },
+        { _id: new Types.ObjectId(id), tenantId, kind, ...(expectedStatus ? {status:expectedStatus}: {}) },
         { $set: set as Record<string, never> },
         { returnDocument: 'after' },
       )

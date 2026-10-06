@@ -1,3 +1,8 @@
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
+import { usePurchasesStore } from '../../../../stores/purchasesStore';
+import { useSuppliersStore } from '../../../../stores/suppliersStore';
+import { useProductStore } from '../../../../stores/productStore';
 /**
  * Nueva Compra — Formulario visual
  *
@@ -8,7 +13,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, FormInput, PrimaryButton, SecondaryButton } from '../../../../components';
-import { colors, spacing, typography, radii } from '../../../../theme';
+import { colors, spacing, typography } from '../../../../theme';
 
 export default function NewPurchaseScreen() {
   const router = useRouter();
@@ -18,9 +23,18 @@ export default function NewPurchaseScreen() {
     notes: '',
   });
 
-  const handleSubmit = () => {
-    // Mock: guardar compra
-    router.back();
+  const suppliers=useSuppliersStore(state=>state.suppliers);
+  const products=useProductStore(state=>state.products);
+  const [productId,setProductId]=useState('');const [quantity,setQuantity]=useState('1');const [cost,setCost]=useState('');
+  const [saving,setSaving]=useState(false);
+  useEffect(()=>{void useSuppliersStore.getState().load();void useProductStore.getState().loadProducts();},[]);
+  const handleSubmit = async () => {
+    const supplier=suppliers.find(x=>x.id===formData.supplier);const product=products.find(x=>x.id===productId);
+    const qty=Number(quantity),price=Number(cost);
+    if(!supplier||!product||!Number.isFinite(qty)||qty<=0||!cost.trim()||!Number.isFinite(price)||price<0){Alert.alert('Datos inválidos','Selecciona proveedor y producto, cantidad positiva y costo válido.');return;}
+    if(saving)return;setSaving(true);
+    const saved=await usePurchasesStore.getState().createOrder({supplierId:supplier.id,notes:formData.notes,lines:[{description:product.name,quantity:qty,unitPrice:price,taxRate:0,discountPct:0}]});
+    setSaving(false);if(saved)router.back();else Alert.alert('No se pudo guardar',usePurchasesStore.getState().error??'Inténtalo nuevamente.');
   };
 
   return (
@@ -36,9 +50,16 @@ export default function NewPurchaseScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
+          <Text>Selecciona proveedor</Text>
+          <ScrollView horizontal>{suppliers.filter(s=>s.status==='active').map(s=><Pressable key={s.id} onPress={()=>setFormData({...formData,supplier:s.id})}><Text style={{padding:12,color:formData.supplier===s.id?colors.primary[600]:colors.neutral[700]}}>{s.name}</Text></Pressable>)}</ScrollView>
+          <Text>Producto</Text>
+          <ScrollView horizontal>{products.filter(p=>p.status==='active').map(p=><Pressable key={p.id} onPress={()=>{setProductId(p.id);setCost(String(p.purchasePrice));}}><Text style={{padding:12,color:productId===p.id?colors.primary[600]:colors.neutral[700]}}>{p.name}</Text></Pressable>)}</ScrollView>
+          <FormInput label="Cantidad" value={quantity} onChangeText={setQuantity} keyboardType="decimal-pad" />
+          <FormInput label="Costo unitario" value={cost} onChangeText={setCost} keyboardType="decimal-pad" />
           <FormInput
             label="Proveedor"
-            value={formData.supplier}
+            value={suppliers.find(s=>s.id===formData.supplier)?.name??''}
+            editable={false}
             onChangeText={(text) => setFormData({ ...formData, supplier: text })}
             placeholder="Seleccionar proveedor"
             required
@@ -68,6 +89,7 @@ export default function NewPurchaseScreen() {
             />
             <PrimaryButton
               title="Guardar"
+              loading={saving}
               onPress={handleSubmit}
               style={styles.saveButton}
             />

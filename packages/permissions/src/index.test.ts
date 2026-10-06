@@ -64,22 +64,27 @@ describe('catálogo de permisos', () => {
 });
 
 describe('roles embutidos', () => {
-  it('owner NO recibe permisos de plataforma; super_admin sí', () => {
+  it('owner NO recibe permisos de plataforma salvo auditoría del tenant; super_admin sí', () => {
     expect(isBuiltinRole('owner')).toBe(true);
     expect(isBuiltinRole('super_admin')).toBe(true);
     expect(isBuiltinRole('vendedor')).toBe(false);
 
     for (const platformPermission of PLATFORM_PERMISSIONS) {
+      if (platformPermission === 'audit:read') {
+        expect(BUILTIN_ROLE_PERMISSIONS.owner).toContain(platformPermission);
+        continue;
+      }
       expect(BUILTIN_ROLE_PERMISSIONS.owner).not.toContain(platformPermission);
       expect(BUILTIN_ROLE_PERMISSIONS.super_admin).toContain(platformPermission);
     }
     expect(BUILTIN_ROLES).toHaveLength(2);
   });
 
-  it('owner tiene todos los permisos de negocio', () => {
+  it('owner tiene todos los permisos de negocio y acceso a auditoría del tenant', () => {
     expect(BUILTIN_ROLE_PERMISSIONS.owner).toContain('org:write');
     expect(BUILTIN_ROLE_PERMISSIONS.owner).toContain('user:create');
     expect(BUILTIN_ROLE_PERMISSIONS.owner).toContain('tenant:update');
+    expect(BUILTIN_ROLE_PERMISSIONS.owner).toContain('audit:read');
     expect(BUILTIN_ROLE_PERMISSIONS.owner.length).toBeGreaterThan(
       ALL_PERMISSIONS.length - PLATFORM_PERMISSIONS.length - 1,
     );

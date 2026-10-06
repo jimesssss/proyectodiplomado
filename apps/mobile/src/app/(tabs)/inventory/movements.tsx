@@ -3,21 +3,40 @@
  *
  * Muestra todos los movimientos de inventario con filtros.
  */
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState } from '../../../components';
 import { colors, spacing, typography, radii } from '../../../theme';
 import { useInventoryStore } from '../../../stores/inventoryStore';
+import { useProductStore } from '../../../stores/productStore';
 
 type MovementFilter = 'all' | 'entry' | 'exit' | 'adjustment';
 
 export default function InventoryMovementsScreen() {
   const router = useRouter();
-  const { movements } = useInventoryStore();
+  const {
+    movements,
+    movementsLoading,
+    movementsError,
+    loadMovements,
+    refreshMovementNames,
+  } = useInventoryStore();
+  const {
+    loadProducts,
+    error: productsError,
+  } = useProductStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<MovementFilter>('all');
+
+  useEffect(() => {
+    const load = async () => {
+      await Promise.all([loadProducts(), loadMovements()]);
+      refreshMovementNames(useProductStore.getState().products);
+    };
+    void load();
+  }, [loadProducts, loadMovements, refreshMovementNames]);
 
   const filteredMovements = useMemo(() => {
     return movements.filter((movement) => {
@@ -87,17 +106,31 @@ export default function InventoryMovementsScreen() {
       </ScrollView>
 
       {/* Lista de movimientos */}
-      {filteredMovements.length === 0 ? (
+      {productsError && (
+        <Text style={styles.loadError}>{productsError}</Text>
+      )}
+      {movementsLoading && movements.length === 0 ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator />
+        </View>
+      ) : movementsError && movements.length === 0 ? (
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="No se pudieron cargar los movimientos"
+          description={movementsError}
+        />
+      ) : filteredMovements.length === 0 ? (
         <EmptyState
           icon="swap-horizontal-outline"
-          title="No se encontraron movimientos"
-          description="Intenta con otros términos de búsqueda o filtros"
+          title={movementsError ? 'No se encontraron movimientos' : 'No hay movimientos registrados'}
+          description={movementsError ?? 'Intenta con otros términos de búsqueda o filtros'}
         />
       ) : (
         <ScrollView
           style={styles.listContainer}
           showsVerticalScrollIndicator={false}
         >
+          {movementsError && <Text style={styles.loadError}>{movementsError}</Text>}
           {filteredMovements.map((movement) => (
             <View key={movement.id} style={styles.movementCard}>
               <View style={styles.movementHeader}>
@@ -260,5 +293,15 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: spacing.xxl,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadError: {
+    color: colors.error,
+    fontSize: typography.size.sm,
+    marginVertical: spacing.sm,
   },
 });

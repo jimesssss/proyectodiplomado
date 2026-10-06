@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Nuevo Gasto — Registro de gasto
  */
@@ -27,7 +28,9 @@ type ExpenseStatus = 'paid' | 'pending';
 
 export default function NewExpenseScreen() {
   const router = useRouter();
-  const { addExpense } = useExpensesStore();
+  const { addExpense,accounts } = useExpensesStore();
+  const [accountId,setAccountId]=useState('');
+  useModuleRefresh(useExpensesStore.getState().load,()=>useExpensesStore.getState().error);
   const { addLog } = useAuditStore();
 
   const [concept, setConcept] = useState('');
@@ -41,7 +44,7 @@ export default function NewExpenseScreen() {
   const [status, setStatus] =
     useState<ExpenseStatus>('paid');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanConcept = concept.trim();
     const cleanCategory = category.trim();
     const cleanDate = date.trim();
@@ -86,7 +89,9 @@ export default function NewExpenseScreen() {
       return;
     }
 
-    addExpense({
+    if(!accountId){Alert.alert('Cuenta requerida','Selecciona la cuenta desde la que se paga.');return;}
+    const saved=await addExpense({
+      accountId,
       concept: cleanConcept,
       category: cleanCategory,
       date: cleanDate,
@@ -95,6 +100,7 @@ export default function NewExpenseScreen() {
       status,
     });
 
+    if(!saved){Alert.alert('No se pudo guardar',useExpensesStore.getState().error??'Inténtalo nuevamente.');return;}
     addLog({
       user: 'Admin',
       action: 'Gasto registrado',
@@ -130,6 +136,8 @@ export default function NewExpenseScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <Text>Cuenta de pago (MXN)</Text>
+          <ScrollView horizontal>{accounts.filter(a=>a.currency==='MXN'&&a.type===(paymentMethod==='cash'?'cash':'bank')).map(a=><Pressable key={a.id} onPress={()=>setAccountId(a.id)}><Text style={{padding:12,color:accountId===a.id?colors.primary[600]:colors.neutral[700]}}>{a.name}</Text></Pressable>)}</ScrollView>
           <View style={styles.intro}>
             <View style={styles.iconContainer}>
               <Ionicons

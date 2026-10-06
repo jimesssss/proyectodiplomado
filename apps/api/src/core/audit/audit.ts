@@ -17,6 +17,7 @@ export interface AuditQuery {
   readonly limit?: number;
   readonly action?: string;
   readonly entityType?: string;
+  readonly entityId?: string;
   readonly tenantId?: string;
 }
 
@@ -56,7 +57,7 @@ interface AuditCreateInput {
 }
 
 function normalizeMetadata(input: { readonly reason?: string; readonly ip?: string; readonly userAgent?: string }): AuditRecord['metadata'] {
-  const metadata: AuditRecord['metadata'] = {};
+  const metadata: {reason?:string;ip?:string;userAgent?:string} = {};
   if (input.reason !== undefined) metadata.reason = input.reason;
   if (input.ip !== undefined) metadata.ip = input.ip;
   if (input.userAgent !== undefined) metadata.userAgent = input.userAgent;
@@ -130,6 +131,7 @@ export async function listAuditLogs(
 
   if (query.action !== undefined) filter.action = query.action;
   if (query.entityType !== undefined) filter.entityType = query.entityType;
+  if (query.entityId !== undefined) filter.entityId = query.entityId;
 
   const [total, docs] = await Promise.all([
     AuditLogModel.countDocuments(filter),

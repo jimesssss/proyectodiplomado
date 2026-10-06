@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Gastos — Lista de gastos
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useExpensesStore } from '../../../../stores/expensesStore';
 
 export default function ExpensesScreen() {
+  useModuleRefresh(useExpensesStore.getState().load,()=>useExpensesStore.getState().error);
   const router = useRouter();
   const { expenses, totalExpenses } = useExpensesStore();
   const [searchQuery, setSearchQuery] = useState('');

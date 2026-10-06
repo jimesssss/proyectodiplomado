@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Venta Detalle — Ver detalle de venta
  *
@@ -79,6 +80,7 @@ const getPaymentMethodLabel = (method: string) => {
 ========================================================= */
 
 export default function SaleDetailScreen() {
+  useModuleRefresh(useSalesStore.getState().load, () => useSalesStore.getState().error);
   const router = useRouter();
 
   const { id } = useLocalSearchParams<{

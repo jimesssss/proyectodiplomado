@@ -76,6 +76,8 @@ export default function LoginScreen() {
             Ingresa tus credenciales para continuar
           </Text>
 
+          <Pressable onPress={()=>router.push('/forgot-password')}><Text style={styles.subtitle}>Olvidé mi contraseña</Text></Pressable>
+          <Pressable onPress={()=>router.push('/resend-verification')}><Text style={styles.subtitle}>Reenviar verificación de correo</Text></Pressable>
           {/* Formulario */}
           <View style={styles.formContainer}>
             {/* Email */}

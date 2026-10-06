@@ -25,7 +25,7 @@ export const Input: React.FC<InputProps> = ({
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[styles.input, Boolean(error) && styles.inputError]}
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}

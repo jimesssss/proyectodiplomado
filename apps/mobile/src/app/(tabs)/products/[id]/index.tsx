@@ -3,18 +3,42 @@
  *
  * Muestra toda la información de un producto.
  */
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge, SecondaryButton } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useProductStore } from '../../../../stores/productStore';
+import { useInventoryStore } from '../../../../stores/inventoryStore';
 
 export default function ProductDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getProductById } = useProductStore();
+  const {
+    getProductById,
+    loadProductById,
+    isLoading,
+    error,
+  } = useProductStore();
+  const {
+    loadStock,
+    getStockForProduct,
+    stockLoading,
+    stockError,
+  } = useInventoryStore();
+
+  useEffect(() => {
+    if (typeof id === 'string' && id.length > 0) {
+      const load = async () => {
+        await Promise.all([loadProductById(id), loadStock()]);
+        useProductStore.getState().setStockBalances(
+          useInventoryStore.getState().stockBalances,
+        );
+      };
+      void load();
+    }
+  }, [id, loadProductById, loadStock]);
 
   const product = getProductById(id || '');
 
@@ -22,25 +46,42 @@ export default function ProductDetailScreen() {
     return (
       <ScreenContainer>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
-          <Text style={styles.errorText}>Producto no encontrado</Text>
-          <SecondaryButton
-            title="Volver"
-            onPress={() => router.back()}
-            style={styles.backButton}
-          />
+          {isLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              <Ionicons name="alert-circle-outline" size={64} color={colors.error} />
+              <Text style={styles.errorText}>
+                {error ?? 'Producto no encontrado'}
+              </Text>
+              <SecondaryButton
+                title="Volver"
+                onPress={() => router.back()}
+                style={styles.backButton}
+              />
+            </>
+          )}
         </View>
       </ScreenContainer>
     );
   }
 
-  const getStockStatus = (stock: number, minStock: number) => {
-    if (stock === 0) return { label: 'Agotado', status: 'error' as const };
-    if (stock <= minStock) return { label: 'Stock bajo', status: 'warning' as const };
+  const stock = getStockForProduct(product.id);
+  const stockAvailable = !stockLoading && stockError === null;
+  const getStockStatus = (currentStock: number, minStock: number, minStockDefined?: boolean) => {
+    if (minStockDefined === false) {
+      return currentStock === 0
+        ? { label: 'Agotado', status: 'error' as const }
+        : { label: 'En stock', status: 'success' as const };
+    }
+    if (currentStock === 0) return { label: 'Agotado', status: 'error' as const };
+    if (currentStock <= minStock) return { label: 'Stock bajo', status: 'warning' as const };
     return { label: 'En stock', status: 'success' as const };
   };
 
-  const stockStatus = getStockStatus(product.stock, product.minStock);
+  const stockStatus = stockAvailable
+    ? getStockStatus(stock, product.minStock, product.minStockDefined)
+    : { label: 'Existencia no disponible', status: 'neutral' as const };
 
   return (
     <ScreenContainer>
@@ -72,7 +113,7 @@ export default function ProductDetailScreen() {
           <View style={styles.statusRow}>
             <StatusBadge
               status={product.status === 'active' ? 'success' : 'neutral'}
-              label={product.status === 'active' ? 'Activo' : 'Inactivo'}
+              label={product.status === 'active' ? 'Activo' : 'Archivado'}
             />
             <StatusBadge status={stockStatus.status} label={stockStatus.label} />
           </View>
@@ -87,11 +128,11 @@ export default function ProductDetailScreen() {
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Código de barras</Text>
-            <Text style={styles.detailValue}>{product.barcode}</Text>
+            <Text style={styles.detailValue}>{product.barcode || 'Pendiente de soporte en backend'}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Categoría</Text>
-            <Text style={styles.detailValue}>{product.category}</Text>
+            <Text style={styles.detailValue}>{product.category || 'Pendiente de soporte en backend'}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Unidad</Text>
@@ -105,19 +146,27 @@ export default function ProductDetailScreen() {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Precio de compra</Text>
             <Text style={styles.detailValue}>
-              ${product.purchasePrice.toFixed(2)}
+              {product.purchasePriceDefined === false
+                ? 'No definido'
+                : `$${product.purchasePrice.toFixed(2)}`}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Precio de venta</Text>
             <Text style={[styles.detailValue, styles.priceHighlight]}>
-              ${product.salePrice.toFixed(2)}
+              {product.salePriceDefined === false
+                ? 'No definido'
+                : `$${product.salePrice.toFixed(2)}`}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Margen de ganancia</Text>
             <Text style={[styles.detailValue, styles.profitHighlight]}>
-              {(((product.salePrice - product.purchasePrice) / product.purchasePrice) * 100).toFixed(1)}%
+              {product.purchasePriceDefined === false ||
+              product.salePriceDefined === false ||
+              product.purchasePrice === 0
+                ? 'No definido'
+                : `${(((product.salePrice - product.purchasePrice) / product.purchasePrice) * 100).toFixed(1)}%`}
             </Text>
           </View>
         </View>
@@ -125,20 +174,23 @@ export default function ProductDetailScreen() {
         {/* Inventario */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Inventario</Text>
+          {stockError && <Text style={styles.errorText}>{stockError}</Text>}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Existencia actual</Text>
             <Text style={[
               styles.detailValue,
-              product.stock === 0 && styles.stockError,
-              product.stock > 0 && product.stock <= product.minStock && styles.stockWarning,
+              stockAvailable && stock === 0 && styles.stockError,
+              stockAvailable && stock > 0 && product.minStockDefined !== false && stock <= product.minStock && styles.stockWarning,
             ]}>
-              {product.stock} {product.unit}
+              {stockLoading ? 'Cargando…' : stockAvailable ? `${stock} ${product.unit}` : '—'}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Stock mínimo</Text>
             <Text style={styles.detailValue}>
-              {product.minStock} {product.unit}
+              {product.minStockDefined === false
+                ? 'No definido'
+                : `${product.minStock} ${product.unit}`}
             </Text>
           </View>
         </View>

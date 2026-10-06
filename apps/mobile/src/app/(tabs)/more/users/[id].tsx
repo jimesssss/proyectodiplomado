@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 import React from 'react';
 import {
   View,
@@ -14,13 +15,14 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useUsersStore } from '../../../../stores/usersStore';
 
 export default function UserDetailScreen() {
+  useModuleRefresh(useUsersStore.getState().load, () => useUsersStore.getState().error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getUserById } = useUsersStore();
 
   const user = getUserById(id || '');
 
-  const roleLabels = {
+  const roleLabels: Record<string, string> = {
     admin: 'Administrador',
     manager: 'Gerente',
     cashier: 'Cajero',
@@ -162,7 +164,7 @@ export default function UserDetailScreen() {
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>Rol</Text>
               <Text style={styles.infoValue}>
-                {roleLabels[user.role]}
+                {(roleLabels[user.role] ?? user.role)}
               </Text>
             </View>
           </View>

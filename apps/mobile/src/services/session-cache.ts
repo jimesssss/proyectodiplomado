@@ -1,0 +1,30 @@
+import { useProductStore } from '../stores/productStore';
+import { useInventoryStore } from '../stores/inventoryStore';
+import { useCustomersStore } from '../stores/customersStore';
+import { useSuppliersStore } from '../stores/suppliersStore';
+import { useSalesStore } from '../stores/salesStore';
+import { usePurchasesStore } from '../stores/purchasesStore';
+import { useUsersStore } from '../stores/usersStore';
+import { useReportsStore } from '../stores/reportsStore';
+import { useDashboardStore } from '../stores/dashboardStore';
+import { useCashRegisterStore } from '../stores/cashRegisterStore';
+import { useExpensesStore } from '../stores/expensesStore';
+import { useAuditStore } from '../stores/auditStore';
+import { usePOSStore } from '../stores/posStore';
+import { clearPendingMoney } from './treasury-api';
+export function clearSessionData(): void {
+  useProductStore.setState(useProductStore.getInitialState());
+  useInventoryStore.setState(useInventoryStore.getInitialState());
+  useCustomersStore.setState(useCustomersStore.getInitialState());
+  useSuppliersStore.setState(useSuppliersStore.getInitialState());
+  useSalesStore.setState(useSalesStore.getInitialState());
+  usePurchasesStore.setState(usePurchasesStore.getInitialState());
+  useUsersStore.setState(useUsersStore.getInitialState());
+  useReportsStore.setState(useReportsStore.getInitialState());
+  useDashboardStore.setState(useDashboardStore.getInitialState());
+  useCashRegisterStore.setState(useCashRegisterStore.getInitialState());
+  useExpensesStore.setState(useExpensesStore.getInitialState());
+  useAuditStore.setState(useAuditStore.getInitialState());
+  usePOSStore.setState(usePOSStore.getInitialState());
+  clearPendingMoney();
+}

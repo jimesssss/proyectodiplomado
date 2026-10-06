@@ -27,7 +27,7 @@ export function FormInput({
         {required && <Text style={styles.required}> *</Text>}
       </Text>
       <TextInput
-        style={[styles.input, error && styles.inputError, style]}
+        style={[styles.input, error ? styles.inputError : undefined, style]}
         placeholderTextColor={colors.neutral[400]}
         {...props}
       />

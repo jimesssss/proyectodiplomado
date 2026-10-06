@@ -1,3 +1,4 @@
+import { atomic } from '../../../core/db/transaction.js';
 import { ConflictError, DomainError, NotFoundError } from '../../../core/errors/app-error.js';
 import { getOrgUnit } from '../../../modules/organization/index.js';
 import {
@@ -87,7 +88,11 @@ export interface RecordMovementInput {
  * movimiento con el saldo resultante. Una salida insuficiente → 422 ANTES de
  * tocar nada. Compartido por manuales, transferencias, conteos y recepciones.
  */
-export async function recordMovement(input: RecordMovementInput): Promise<PublicStockMovement> {
+export async function recordMovement(input:RecordMovementInput):Promise<PublicStockMovement> {
+  if(!Number.isFinite(input.delta)||input.delta===0) throw new DomainError('Movement quantity must be finite and nonzero');
+  return atomic(()=>recordMovementInternal(input),false);
+}
+async function recordMovementInternal(input: RecordMovementInput): Promise<PublicStockMovement> {
   const qtyAfter = await stockRepo.applyDelta(
     input.tenantId,
     input.productId,

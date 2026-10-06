@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Compras — Lista de compras
  *
@@ -8,12 +9,13 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../../components';
-import { colors, spacing, typography, radii } from '../../../../theme';
+import { colors } from '../../../../theme';
 import { usePurchasesStore } from '../../../../stores/purchasesStore';
 
 type StatusFilter = 'all' | 'pending' | 'received' | 'cancelled';
 
 export default function PurchasesScreen() {
+  useModuleRefresh(usePurchasesStore.getState().load, () => usePurchasesStore.getState().error);
   const router = useRouter();
   const { purchases } = usePurchasesStore();
   const [searchQuery, setSearchQuery] = useState('');

@@ -14,6 +14,7 @@ export interface SaleDoc {
   /** Secuencial `PREFIX-YYYY-000001` por tenant+tipo+año, inmutable. */
   number: string;
   customerId: Types.ObjectId;
+  warehouseId?: Types.ObjectId | null;
   status: SaleStatus;
   currency: string;
   issueDate: Date;

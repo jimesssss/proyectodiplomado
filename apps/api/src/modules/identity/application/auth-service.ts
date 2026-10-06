@@ -154,7 +154,7 @@ export async function resendVerification(email: string): Promise<{ resent: boole
     return { resent: false, alreadyVerified: false };
   }
 
-  if (user.status === 'active' && user.emailVerifiedAt !== null) {
+  if (user.emailVerifiedAt != null) {
     return { resent: false, alreadyVerified: true };
   }
 
@@ -179,14 +179,26 @@ export async function verifyEmail(token: string): Promise<PublicUser> {
     throw new NotFoundError('Verification token is invalid or expired');
   }
 
-  if (exactUser.emailVerificationExpiresAt === null || exactUser.emailVerificationExpiresAt.getTime() < Date.now()) {
-    await repo.clearEmailVerificationToken(exactUser.id);
+  if (exactUser.emailVerifiedAt != null) {
+    if (exactUser.status !== 'active') throw new ForbiddenError('Account disabled');
+    return toPublicUser(exactUser);
+  }
+
+  if (exactUser.emailVerificationExpiresAt == null || exactUser.emailVerificationExpiresAt.getTime() < Date.now()) {
+    await repo.clearEmailVerificationToken(exactUser.id, hashVerificationToken(cleanToken));
     throw new ValidationError('Verification link has expired');
   }
 
-  const updated = await repo.activateUserAfterVerification(exactUser.id);
+  const updated = await repo.activateUserAfterVerification(exactUser.id, hashVerificationToken(cleanToken));
   if (updated === null) {
-    throw new NotFoundError('User not found');
+    // Another request may have consumed this token. A replaced/expired token
+    // must never activate the account or undo an administrative suspension.
+    const current = await repo.findUserByVerificationToken(cleanToken);
+    if (current?.emailVerifiedAt != null) {
+      if (current.status !== 'active') throw new ForbiddenError('Account disabled');
+      return toPublicUser(current);
+    }
+    throw new NotFoundError('Verification token is invalid or expired');
   }
 
   await sendWelcomeEmailForUser(updated);
@@ -348,7 +360,7 @@ export async function login(deps: AuthDeps, input: LoginInput): Promise<AuthToke
     userAgent: input.userAgent,
   });
 
-  return { accessToken, refreshToken, expiresIn: deps.accessTokenTtl, user: toPublicUser(user) };
+  return { accessToken, refreshToken, expiresIn: deps.accessTokenTtl, user: { ...toPublicUser(user), permissions } };
 }
 
 /**
@@ -434,7 +446,7 @@ export async function refresh(
     accessToken,
     refreshToken: newRefresh,
     expiresIn: deps.accessTokenTtl,
-    user: toPublicUser(user),
+    user: { ...toPublicUser(user), permissions },
   };
 }
 

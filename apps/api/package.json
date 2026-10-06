@@ -6,12 +6,12 @@
   "main": "dist/apps/api/src/index.js",
   "types": "dist/apps/api/src/index.d.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "node ../../node_modules/typescript/bin/tsc --noCheck",
+    "dev": "tsx watch src/index.ts",
+    "build": "node ../../node_modules/typescript/bin/tsc",
     "start": "node dist/apps/api/src/index.js",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },

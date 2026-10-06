@@ -19,7 +19,7 @@ export function formatTimestamp(): string {
 /**
  * Hash a password (placeholder - use bcryptjs in actual implementation)
  */
-export async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(_password: string): Promise<string> {
   // This will be imported from bcryptjs in the API
   throw new Error('hashPassword should be called with bcryptjs');
 }
@@ -27,7 +27,7 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * Verify a password (placeholder)
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(_password: string, _hash: string): Promise<boolean> {
   // This will be imported from bcryptjs in the API
   throw new Error('verifyPassword should be called with bcryptjs');
 }

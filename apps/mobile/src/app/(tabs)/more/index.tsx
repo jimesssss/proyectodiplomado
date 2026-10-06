@@ -1,3 +1,4 @@
+import {useAuthStore} from '../../../stores/authStore';
 /**
  * Menú "Más" — Acceso a módulos secundarios
  *
@@ -139,6 +140,8 @@ const MODULES: ModuleSection[] = [
 
 export default function MoreScreen() {
   const router = useRouter();
+  const permissions=useAuthStore(state=>state.permissions);
+  const required:Record<string,string>={sales:'sales.invoice:read',purchases:'purchase.order:read',cash:'bank.account:read',expenses:'payment:read',customers:'customer:read',suppliers:'supplier:read',reports:'report:read',users:'user:read',audit:'audit:read'};
 
   return (
     <ScreenContainer>
@@ -193,14 +196,14 @@ export default function MoreScreen() {
             </View>
 
             <View style={styles.grid}>
-              {section.items.map((item) => (
+              {section.items.filter(item=>!required[item.id]||permissions.includes(required[item.id]!)).map((item) => (
                 <Pressable
                   key={item.id}
                   style={({ pressed }) => [
                     styles.moduleCard,
                     pressed && styles.moduleCardPressed,
                   ]}
-                  onPress={() => router.push(item.route as any)}
+                  onPress={() => router.push(item.route as Parameters<typeof router.push>[0])}
                 >
                   <View
                     style={[

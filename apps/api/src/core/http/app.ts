@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express, { type Express, type Router } from 'express';
+import express, { type Express, type Router, type RequestHandler } from 'express';
 import helmet from 'helmet';
 import type { Env } from '../config/env.js';
 import type { Logger } from '../logging/logger.js';
@@ -8,6 +8,19 @@ import { notFoundHandler } from './not-found.js';
 import { requestIdMiddleware } from './request-id.js';
 import { requestLogger } from './request-logger.js';
 import { healthRouter } from './routes/health.js';
+
+interface RouterLayer { handle: RequestHandler; route?: { stack: RouterLayer[] }; }
+function wrapAsyncHandler(handler: RequestHandler): RequestHandler {
+  if (handler.constructor.name !== 'AsyncFunction') return handler;
+  return (req, res, next) => { Promise.resolve(handler(req, res, next)).catch(next); };
+}
+function wrapRouterHandlers(router: Router): void {
+  const stack = (router as unknown as { stack: RouterLayer[] }).stack ?? [];
+  for (const layer of stack) {
+    if (layer.route) for (const routeLayer of layer.route.stack) routeLayer.handle = wrapAsyncHandler(routeLayer.handle);
+    else if (typeof layer.handle === 'function') layer.handle = wrapAsyncHandler(layer.handle);
+  }
+}
 
 export interface AppRoute {
   readonly path: string;
@@ -37,8 +50,10 @@ export function createApp({ logger, env, routes = [] }: CreateAppOptions): Expre
   app.use(requestIdMiddleware);
   app.use(requestLogger(logger));
 
+  wrapRouterHandlers(healthRouter);
   app.use('/api/v1/health', healthRouter);
   for (const route of routes) {
+    wrapRouterHandlers(route.router);
     app.use(route.path, route.router);
   }
 

@@ -1,10 +1,6 @@
-/**
- * Suppliers Store — Zustand
- *
- * Datos mock para el módulo de proveedores.
- */
 import { create } from 'zustand';
-
+import { businessApi, type ApiParty } from '../services/business-api';
+import { useAuthStore } from './authStore';
 export interface Supplier {
   id: string;
   name: string;
@@ -16,81 +12,32 @@ export interface Supplier {
   rfc?: string;
 }
 
-interface SuppliersState {
-  suppliers: Supplier[];
-  isLoading: boolean;
 
-  getSupplierById: (id: string) => Supplier | undefined;
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => void;
-  updateSupplier: (id: string, supplier: Partial<Supplier>) => void;
-}
-
-const MOCK_SUPPLIERS: Supplier[] = [
-  {
-    id: '1',
-    name: 'Tech Supplies SA',
-    company: 'Tech Supplies SA de CV',
-    phone: '555-123-4567',
-    email: 'ventas@techsupplies.com',
-    status: 'active',
-    address: 'Av. Reforma 123, CDMX',
-    rfc: 'TSU123456ABC',
+function mapSupplier(c: ApiParty): Supplier { return { id:c.id, name:c.name, company:c.name, phone:c.phone??'', email:c.email??'', status:c.archived?'inactive':'active', address:c.address?.street??'', rfc:c.taxId??'' }; }
+interface SuppliersState { suppliers: Supplier[]; isLoading:boolean; error:string|null; load():Promise<void>;
+  getSupplierById(id:string):Supplier|undefined; addSupplier(input:Omit<Supplier,'id'> & {code?:string}):Promise<boolean>;
+  updateSupplier(id:string,input:Partial<Supplier>):Promise<boolean>; }
+export const useSuppliersStore=create<SuppliersState>((set,get)=>({
+  suppliers:[],isLoading:false,error:null,
+  getSupplierById:id=>get().suppliers.find(s=>s.id===id),
+  load:async()=>{ set({isLoading:true,error:null}); try { set({suppliers:(await businessApi.listSuppliers()).map(mapSupplier)}); }
+    catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.',suppliers:[]});}finally{set({isLoading:false});} },
+  addSupplier:async input=>{
+    if(!useAuthStore.getState().can('supplier:create')){set({error:'No tienes permiso para crear proveedores.'});return false;}
+    try { const c=await businessApi.create<ApiParty>('/suppliers',{code:input.code?.trim()||'PRO-'+Date.now(),name:input.name.trim(),
+      ...(input.email.trim()?{email:input.email.trim()}:{}),...(input.phone.trim()?{phone:input.phone.trim()}:{}),
+      ...(input.rfc?.trim()?{taxId:input.rfc.trim()}:{}),...(input.address?.trim()?{address:{street:input.address.trim()}}:{})});
+      set({suppliers:[...get().suppliers,mapSupplier(c)],error:null});return true;
+    }catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.'});return false;}
   },
-  {
-    id: '2',
-    name: 'Accesorios MX',
-    company: 'Accesorios Mexicanos SA',
-    phone: '555-987-6543',
-    email: 'contacto@accesoriosmx.com',
-    status: 'active',
-    address: 'Calle 5 de Mayo 456, Guadalajara',
-    rfc: 'AMX789012DEF',
-  },
-  {
-    id: '3',
-    name: 'Electro Parts',
-    company: 'Electro Parts Internacional',
-    phone: '555-456-7890',
-    email: 'info@electroparts.com',
-    status: 'active',
-    address: 'Blvd. Díaz Ordaz 789, Monterrey',
-    rfc: 'EPI345678GHI',
-  },
-  {
-    id: '4',
-    name: 'Distribuidora Central',
-    company: 'Distribuidora Central SA',
-    phone: '555-234-5678',
-    email: 'ventas@distcentral.com',
-    status: 'inactive',
-    address: 'Av. Insurgentes 321, CDMX',
-    rfc: 'DCI901234JKL',
-  },
-];
-
-export const useSuppliersStore = create<SuppliersState>((set, get) => ({
-  suppliers: MOCK_SUPPLIERS,
-  isLoading: false,
-
-  getSupplierById: (id: string) => {
-    return get().suppliers.find((s) => s.id === id);
-  },
-
-  addSupplier: (supplier: Omit<Supplier, 'id'>) => {
-    const newSupplier: Supplier = {
-      ...supplier,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      suppliers: [...state.suppliers, newSupplier],
-    }));
-  },
-
-  updateSupplier: (id: string, updates: Partial<Supplier>) => {
-    set((state) => ({
-      suppliers: state.suppliers.map((s) =>
-        s.id === id ? { ...s, ...updates } : s
-      ),
-    }));
+  updateSupplier:async(id,input)=>{
+    if(!useAuthStore.getState().can('supplier:update')){set({error:'No tienes permiso para editar proveedores.'});return false;}
+    try { const c=await businessApi.update<ApiParty>('/suppliers/'+id,{
+      ...(input.name!==undefined?{name:input.name.trim()}:{}),...(input.email!==undefined?{email:input.email.trim()||null}:{}),
+      ...(input.phone!==undefined?{phone:input.phone.trim()||null}:{}),...(input.rfc!==undefined?{taxId:input.rfc.trim()||null}:{}),
+      ...(input.address!==undefined?{address:input.address.trim()?{street:input.address.trim()}:null}:{}),
+      ...(input.status!==undefined?{archived:input.status==='inactive'}:{})});
+      set({suppliers:get().suppliers.map(s=>s.id===id?mapSupplier(c):s),error:null});return true;
+    }catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.'});return false;}
   },
 }));

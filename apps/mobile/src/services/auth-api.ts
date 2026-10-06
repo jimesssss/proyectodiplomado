@@ -1,15 +1,5 @@
-import Constants from 'expo-constants';
+import { apiRequest, ApiError } from './api-client';
 
-interface ApiErrorBody {
-  readonly code?: string;
-  readonly message?: string;
-}
-
-interface ApiEnvelope<T> {
-  readonly success?: boolean;
-  readonly data?: T | null;
-  readonly error?: ApiErrorBody | null;
-}
 
 export interface AuthUser {
   readonly id: string;
@@ -17,6 +7,7 @@ export interface AuthUser {
   readonly tenantId: string;
   readonly displayName: string;
   readonly roles: readonly string[];
+  readonly permissions?: readonly string[];
   readonly status: string;
 }
 
@@ -31,21 +22,11 @@ export class AuthApiError extends Error {
   constructor(
     readonly code: string,
     message: string,
+    readonly status: number | null = null,
   ) {
     super(message);
     this.name = 'AuthApiError';
   }
-}
-
-function getApiBaseUrl(): string {
-  const configuredUrl: unknown = Constants.expoConfig?.extra?.apiBaseUrl;
-  if (typeof configuredUrl !== 'string' || configuredUrl.trim().length === 0) {
-    throw new AuthApiError(
-      'API_CONFIGURATION_ERROR',
-      'La dirección del servicio no está configurada.',
-    );
-  }
-  return configuredUrl.replace(/\/+$/, '');
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -74,36 +55,15 @@ function mapApiError(code: string, message: string): string {
 }
 
 async function post<T>(path: string, body: Record<string, string>): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${getApiBaseUrl()}/auth/${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new AuthApiError(
-      'NETWORK_ERROR',
-      'No se pudo conectar con ERP-SC. Comprueba tu conexión e inténtalo de nuevo.',
-    );
+  try { return (await apiRequest<T>('/auth/' + path, { method: 'POST', body, public: true })).data; }
+  catch (error) {
+    if (error instanceof ApiError) {
+      const message = error.code === 'NETWORK_ERROR' ? 'No se pudo conectar con ERP-SC. Comprueba tu conexión e inténtalo de nuevo.' :
+        mapApiError(error.code, error.message);
+      throw new AuthApiError(error.code, message, error.status);
+    }
+    throw error;
   }
-
-  let envelope: ApiEnvelope<T>;
-  try {
-    envelope = (await response.json()) as ApiEnvelope<T>;
-  } catch {
-    throw new AuthApiError('INVALID_RESPONSE', 'El servicio devolvió una respuesta no válida.');
-  }
-
-  if (!response.ok || envelope.success !== true || envelope.data === null || envelope.data === undefined) {
-    const error = envelope.error;
-    throw new AuthApiError(
-      error?.code ?? `HTTP_${response.status}`,
-      mapApiError(error?.code ?? '', error?.message ?? ''),
-    );
-  }
-
-  return envelope.data;
 }
 
 export async function loginWithApi(email: string, password: string): Promise<LoginResponse> {
@@ -135,6 +95,7 @@ export async function loginWithApi(email: string, password: string): Promise<Log
       tenantId: data.user.tenantId,
       displayName: data.user.displayName,
       roles: data.user.roles,
+      permissions: Array.isArray(data.user.permissions) ? data.user.permissions.filter((p: unknown): p is string => typeof p === 'string') : [],
       status: data.user.status,
     },
   };
@@ -150,4 +111,15 @@ export async function registerWithApi(input: {
     email: input.email.trim().toLowerCase(),
     password: input.password,
   });
+}
+
+export async function refreshWithApi(refreshToken: string): Promise<LoginResponse> {
+  return (await apiRequest<LoginResponse>('/auth/refresh', { method: 'POST', body: { refreshToken }, public: true })).data;
+}
+export async function verifyEmailWithApi(token: string): Promise<void> { await post('verify-email', { token }); }
+export async function resendVerificationWithApi(email: string): Promise<void> { await post('resend-verification', { email: email.trim().toLowerCase() }); }
+export async function forgotPasswordWithApi(email: string): Promise<void> { await post('forgot-password', { email: email.trim().toLowerCase() }); }
+export async function resetPasswordWithApi(token: string, newPassword: string): Promise<void> { await post('reset-password', { token, newPassword }); }
+export async function changePasswordWithApi(currentPassword: string, newPassword: string): Promise<void> {
+  await apiRequest('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
 }

@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Usuarios — Lista de usuarios
  *
@@ -19,6 +20,7 @@ const ROLES: Record<string, { label: string; status: 'success' | 'warning' | 'er
 };
 
 export default function UsersScreen() {
+  useModuleRefresh(useUsersStore.getState().load, () => useUsersStore.getState().error);
   const router = useRouter();
   const { users } = useUsersStore();
   const [searchQuery, setSearchQuery] = useState('');

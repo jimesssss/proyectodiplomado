@@ -1,10 +1,7 @@
-/**
- * Cash Register Store — Zustand
- *
- * Datos mock para el módulo de caja.
- */
-import { create } from 'zustand';
-
+import {create} from 'zustand';
+import {listAccounts,listAccountMovements,saveMoney} from '../services/treasury-api';
+import {type ApiAccount} from '../services/business-api';
+import {useAuthStore} from './authStore';
 export interface CashMovement {
   id: string;
   type: 'entry' | 'exit';
@@ -24,140 +21,27 @@ export interface CashRegister {
   movements: CashMovement[];
 }
 
-interface CashRegisterState {
-  cashRegister: CashRegister;
-  isLoading: boolean;
 
-  openCashRegister: (initialBalance: number) => void;
-  closeCashRegister: () => void;
-  addEntry: (amount: number, reason: string) => void;
-  addExit: (amount: number, reason: string) => void;
-}
-
-const MOCK_CASH_REGISTER: CashRegister = {
-  isOpen: true,
-  initialBalance: 1000,
-  cashSales: 1600,
-  entries: 500,
-  exits: 200,
-  currentBalance: 2900,
-  movements: [
-    {
-      id: '1',
-      type: 'entry',
-      amount: 1000,
-      reason: 'Apertura de caja',
-      date: '2026-09-29 08:00',
-      user: 'Admin',
-    },
-    {
-      id: '2',
-      type: 'entry',
-      amount: 1250,
-      reason: 'Venta VTA-0001',
-      date: '2026-09-29 10:30',
-      user: 'Cajero',
-    },
-    {
-      id: '3',
-      type: 'exit',
-      amount: 200,
-      reason: 'Gasto de papelería',
-      date: '2026-09-29 11:00',
-      user: 'Admin',
-    },
-    {
-      id: '4',
-      type: 'entry',
-      amount: 350,
-      reason: 'Venta VTA-0002',
-      date: '2026-09-29 12:15',
-      user: 'Cajero',
-    },
-    {
-      id: '5',
-      type: 'entry',
-      amount: 500,
-      reason: 'Entrada manual',
-      date: '2026-09-29 14:00',
-      user: 'Admin',
-    },
-  ],
-};
-
-export const useCashRegisterStore = create<CashRegisterState>((set, get) => ({
-  cashRegister: MOCK_CASH_REGISTER,
-  isLoading: false,
-
-  openCashRegister: (initialBalance: number) => {
-    set({
-      cashRegister: {
-        isOpen: true,
-        initialBalance,
-        cashSales: 0,
-        entries: 0,
-        exits: 0,
-        currentBalance: initialBalance,
-        movements: [
-          {
-            id: Date.now().toString(),
-            type: 'entry',
-            amount: initialBalance,
-            reason: 'Apertura de caja',
-            date: new Date().toLocaleString('es-ES'),
-            user: 'Admin',
-          },
-        ],
-      },
-    });
-  },
-
-  closeCashRegister: () => {
-    set((state) => ({
-      cashRegister: {
-        ...state.cashRegister,
-        isOpen: false,
-      },
-    }));
-  },
-
-  addEntry: (amount: number, reason: string) => {
-    const { cashRegister } = get();
-    const newMovement: CashMovement = {
-      id: Date.now().toString(),
-      type: 'entry',
-      amount,
-      reason,
-      date: new Date().toLocaleString('es-ES'),
-      user: 'Admin',
-    };
-    set({
-      cashRegister: {
-        ...cashRegister,
-        entries: cashRegister.entries + amount,
-        currentBalance: cashRegister.currentBalance + amount,
-        movements: [newMovement, ...cashRegister.movements],
-      },
-    });
-  },
-
-  addExit: (amount: number, reason: string) => {
-    const { cashRegister } = get();
-    const newMovement: CashMovement = {
-      id: Date.now().toString(),
-      type: 'exit',
-      amount,
-      reason,
-      date: new Date().toLocaleString('es-ES'),
-      user: 'Admin',
-    };
-    set({
-      cashRegister: {
-        ...cashRegister,
-        exits: cashRegister.exits + amount,
-        currentBalance: cashRegister.currentBalance - amount,
-        movements: [newMovement, ...cashRegister.movements],
-      },
-    });
-  },
+const EMPTY:CashRegister={isOpen:false,initialBalance:0,cashSales:0,entries:0,exits:0,currentBalance:0,movements:[]};
+interface CashRegisterState{cashRegister:CashRegister;accounts:ApiAccount[];accountId:string|null;isLoading:boolean;error:string|null;
+ load():Promise<void>;selectAccount(id:string):Promise<void>;openCashRegister(initialBalance:number):Promise<boolean>;closeCashRegister():Promise<boolean>;
+ addEntry(amount:number,reason:string):Promise<boolean>;addExit(amount:number,reason:string):Promise<boolean>;}
+export const useCashRegisterStore=create<CashRegisterState>((set,get)=>({cashRegister:EMPTY,accounts:[],accountId:null,isLoading:false,error:null,
+ load:async()=>{set({isLoading:true,error:null});try{const accounts=(await listAccounts()).filter(a=>a.type==='cash'&&a.currency==='MXN');
+  set({accounts});const id=get().accountId??accounts[0]?.id;if(id)await get().selectAccount(id);else set({cashRegister:EMPTY});
+ }catch(error){set({error:error instanceof Error?error.message:'No se pudo cargar caja.',cashRegister:EMPTY});}finally{set({isLoading:false});}},
+ selectAccount:async id=>{set({isLoading:true,error:null});try{const account=get().accounts.find(a=>a.id===id);if(!account)throw Error('Selecciona una cuenta real de caja.');
+  const rows=await listAccountMovements(id);const entries=rows.filter(m=>m.amount>0&&m.sourceType!=='opening').reduce((sum,m)=>sum+m.amount,0);
+  const exits=rows.filter(m=>m.amount<0).reduce((sum,m)=>sum-m.amount,0);
+  set({accountId:id,cashRegister:{isOpen:!account.archived,initialBalance:account.openingBalance,cashSales:entries,entries,exits,currentBalance:account.balance,
+   movements:rows.map(m=>({id:m.id,type:m.amount>0?'entry':'exit',amount:Math.abs(m.amount),reason:m.reason,date:m.createdAt,user:''}))}});
+ }catch(error){set({error:error instanceof Error?error.message:'No se pudo cargar el historial.'});}finally{set({isLoading:false});}},
+ openCashRegister:async()=>{set({error:'El backend administra cuentas de tesorería. Aún no existe un contrato para apertura de turnos de caja.'});return false;},
+ closeCashRegister:async()=>{set({error:'El backend aún no define cierre y arqueo de turnos de caja. No se ha modificado el saldo.'});return false;},
+ addEntry:async(amount,reason)=>{if(!get().accountId)return false;if(!useAuthStore.getState().can('receipt:create')||!useAuthStore.getState().can('receipt:update')){set({error:'No tienes permiso para registrar cobros.'});return false;}
+  try{await saveMoney('receipts',{accountId:get().accountId!,amount,notes:reason},true);await get().load();return true;}
+  catch(error){set({error:error instanceof Error?error.message:'No se pudo registrar la entrada.'});return false;}},
+ addExit:async(amount,reason)=>{if(!get().accountId)return false;if(!useAuthStore.getState().can('payment:create')||!useAuthStore.getState().can('payment:update')){set({error:'No tienes permiso para registrar pagos.'});return false;}
+  try{await saveMoney('payments',{accountId:get().accountId!,amount,notes:reason},true);await get().load();return true;}
+  catch(error){set({error:error instanceof Error?error.message:'No se pudo registrar la salida.'});return false;}},
 }));

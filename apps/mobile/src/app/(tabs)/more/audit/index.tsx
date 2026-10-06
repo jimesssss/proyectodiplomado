@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Auditoría — Módulo de Auditoría
  *
@@ -14,6 +15,7 @@ import { useAuditStore } from '../../../../stores/auditStore';
 type ModuleFilter = 'all' | 'Productos' | 'Ventas' | 'Inventario' | 'Compras' | 'Gastos' | 'Caja' | 'Usuarios';
 
 export default function AuditScreen() {
+  useModuleRefresh(useAuditStore.getState().load, () => useAuditStore.getState().error);
   const router = useRouter();
   const { logs } = useAuditStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,12 +34,6 @@ export default function AuditScreen() {
     });
   }, [logs, searchQuery, moduleFilter]);
 
-  const getActionColor = (action: string) => {
-    if (action.includes('creado') || action.includes('registrada')) return 'success' as const;
-    if (action.includes('modificado') || action.includes('actualizado')) return 'warning' as const;
-    if (action.includes('cancelada') || action.includes('eliminado')) return 'error' as const;
-    return 'info' as const;
-  };
 
   return (
     <ScreenContainer>

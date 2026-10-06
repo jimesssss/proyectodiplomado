@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Proveedor Detalle — Ver detalle de proveedor
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useSuppliersStore } from '../../../../stores/suppliersStore';
 
 export default function SupplierDetailScreen() {
+  useModuleRefresh(useSuppliersStore.getState().load, () => useSuppliersStore.getState().error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getSupplierById } = useSuppliersStore();

@@ -1,3 +1,5 @@
+import { atomic } from '../../../core/db/transaction.js';
+import { assertProductActive, assertWarehouseActive, recordMovement } from '../../inventory/index.js';
 import { nextDocumentNumber } from '../../../core/numbering/numbering.js';
 import { ConflictError, NotFoundError, ValidationError } from '../../../core/errors/app-error.js';
 import { getCustomer, getOpportunity } from '../../crm/index.js';
@@ -33,6 +35,7 @@ import { saleRepo, type SaleListFilter } from '../infrastructure/repositories/sa
 
 export interface CreateSaleInput {
   readonly lines: readonly SaleLineInput[];
+  readonly warehouseId?: string;
   readonly customerId?: string | undefined;
   readonly currency?: string | undefined;
   readonly issueDate?: Date | undefined;
@@ -46,6 +49,7 @@ export interface CreateSaleInput {
 
 export interface PatchSaleInput {
   readonly lines?: readonly SaleLineInput[] | undefined;
+  readonly warehouseId?: string;
   readonly customerId?: string | undefined;
   readonly currency?: string | undefined;
   readonly issueDate?: Date | undefined;
@@ -137,7 +141,9 @@ export async function createSale(
     throw new ValidationError('validUntil must be after issueDate');
   }
 
-  const lines = normalizeLines(input.lines);
+  const lines = normalizeSaleLines(input.lines);
+  for(const line of lines)if(line.productId)await assertProductActive(tenantId,line.productId);
+  if(input.warehouseId)await assertWarehouseActive(tenantId,input.warehouseId);
   const totals = computeTotals(lines);
   // Numeración atómica por tenant+tipo+año (core/numbering).
   const number = await nextDocumentNumber(tenantId, kind, SALE_PREFIX[kind]);
@@ -146,6 +152,7 @@ export async function createSale(
     kind,
     number,
     customerId,
+    warehouseId: input.warehouseId ?? null,
     status: 'draft',
     currency: input.currency === undefined ? 'USD' : assertCurrency(input.currency),
     issueDate,
@@ -198,6 +205,7 @@ export async function getSale(
 /** Campos de negocio (todo salvo `status` y `archived`): solo en borrador. */
 const BUSINESS_FIELDS = new Set([
   'lines',
+  'warehouseId',
   'customerId',
   'currency',
   'issueDate',
@@ -209,7 +217,14 @@ const BUSINESS_FIELDS = new Set([
   'validUntil',
 ]);
 
-export async function updateSale(
+export async function updateSale(tenantId: string, kind: SaleKind, id: string, input: PatchSaleInput): Promise<PublicSaleDocument> {
+  if (kind === 'sales.delivery' && input.status === 'shipped') {
+    const current = await getSale(tenantId, kind, id);
+    if ((input.lines ?? current.lines).some(line => line.productId)) return atomic(() => updateSaleInternal(tenantId, kind, id, input));
+  }
+  return updateSaleInternal(tenantId, kind, id, input);
+}
+async function updateSaleInternal(
   tenantId: string,
   kind: SaleKind,
   id: string,
@@ -230,12 +245,16 @@ export async function updateSale(
   const set: Record<string, unknown> = {};
 
   if (input.lines !== undefined) {
-    const lines: SaleLine[] = [...normalizeLines(input.lines)];
+    const lines: SaleLine[] = [...normalizeSaleLines(input.lines)];
+    for (const line of lines) if (line.productId) await assertProductActive(tenantId, line.productId);
     const totals = computeTotals(lines);
     set.lines = [...lines];
     set.subtotal = totals.subtotal;
     set.tax = totals.tax;
     set.total = totals.total;
+  }
+  if (input.warehouseId !== undefined) {
+    await assertWarehouseActive(tenantId, input.warehouseId); set.warehouseId = input.warehouseId;
   }
   if (input.customerId !== undefined) {
     await getCustomer(tenantId, input.customerId);
@@ -319,9 +338,19 @@ export async function updateSale(
   if (Object.keys(set).length === 0) {
     throw new ValidationError('No valid fields to update');
   }
-  const updated = await saleRepo.update(tenantId, kind, id, set);
+  const updated = await saleRepo.update(tenantId, kind, id, set, current.status);
   if (updated === null) {
     throw new NotFoundError();
+  }
+  if (kind === 'sales.delivery' && set.status === 'shipped' && updated.lines.some(line => line.productId)) {
+    if (!updated.warehouseId) throw new ValidationError('warehouseId is required for stock delivery');
+    await assertWarehouseActive(tenantId, updated.warehouseId);
+    for (const line of updated.lines) {
+      if (!line.productId) continue;
+      await assertProductActive(tenantId, line.productId);
+      await recordMovement({ tenantId, productId: line.productId, warehouseId: updated.warehouseId,
+        type: 'manual_out', delta: -line.quantity, reason: 'Sales delivery ' + updated.number });
+    }
   }
   return toPublicSaleDocument(updated);
 }
@@ -371,4 +400,8 @@ export async function approveQuote(
     throw new NotFoundError();
   }
   return toPublicSaleDocument(updated);
+}
+
+function normalizeSaleLines(input: readonly SaleLineInput[]): SaleLine[] {
+  return normalizeLines(input).map((line, index) => ({ ...line, productId: input[index]?.productId ?? null }));
 }

@@ -12,6 +12,7 @@ export const SALES_COLLECTION = 'salesDocuments';
 
 const lineSchema = new Schema(
   {
+    productId: { type: Schema.Types.ObjectId, default: null },
     description: { type: String, required: true },
     quantity: { type: Number, required: true },
     unitPrice: { type: Number, required: true },
@@ -30,6 +31,7 @@ const saleSchema = new Schema<SaleDoc>(
     kind: { type: String, required: true, enum: [...SALE_KINDS] },
     number: { type: String, required: true },
     customerId: { type: Schema.Types.ObjectId, required: true },
+    warehouseId: { type: Schema.Types.ObjectId, default: null },
     status: { type: String, required: true },
     currency: { type: String, required: true },
     issueDate: { type: Date, required: true },

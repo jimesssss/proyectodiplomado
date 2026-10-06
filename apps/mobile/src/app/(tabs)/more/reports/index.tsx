@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Reportes — Módulo de Reportes
  *
@@ -12,11 +13,12 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useReportsStore } from '../../../../stores/reportsStore';
 
 export default function ReportsScreen() {
+  useModuleRefresh(useReportsStore.getState().load, () => useReportsStore.getState().error);
   const router = useRouter();
   const { reportCards, salesByDay, topProducts } = useReportsStore();
 
-  const maxValue = Math.max(...salesByDay.map((d) => d.value));
-  const maxProductValue = Math.max(...topProducts.map((p) => p.value));
+  const maxValue = Math.max(1, ...salesByDay.map((d) => d.value));
+  const maxProductValue = Math.max(1, ...topProducts.map((p) => p.value));
 
   const handleReportPress = (reportId: string) => {
   switch (reportId) {
@@ -66,7 +68,7 @@ export default function ReportsScreen() {
               <ModuleCard
                 key={card.id}
                 title={card.title}
-                icon={card.icon as any}
+                icon={card.icon as React.ComponentProps<typeof Ionicons>['name']}
                 onPress={() => handleReportPress(card.id)}
                 description={card.description}
                 style={styles.reportCard}
@@ -77,7 +79,7 @@ export default function ReportsScreen() {
 
         {/* Gráfica de ventas por día */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ventas por Día</Text>
+          <Text style={styles.sectionTitle}>Ventas por Día (MXN)</Text>
           <View style={styles.chartContainer}>
             <View style={styles.chart}>
               {salesByDay.map((item, index) => (

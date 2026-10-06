@@ -2,7 +2,7 @@
  * Basic API test suite
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createApp } from '../app';
+import { createApp } from '../src/app';
 import request from 'supertest';
 
 describe('API - Health & Basic Routes', () => {

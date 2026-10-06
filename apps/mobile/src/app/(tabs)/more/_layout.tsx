@@ -94,6 +94,26 @@ export default function MoreLayout() {
       />
 
       <Stack.Screen
+        name="settings/branches"
+        options={{ title: 'Sucursales' }}
+      />
+
+      <Stack.Screen
+        name="settings/organizations"
+        options={{ title: 'Organizaciones' }}
+      />
+
+      <Stack.Screen
+        name="settings/companies"
+        options={{ title: 'Empresas' }}
+      />
+
+      <Stack.Screen
+        name="settings/warehouses"
+        options={{ title: 'Almacenes' }}
+      />
+
+      <Stack.Screen
         name="settings/profile"
         options={{ title: 'Editar perfil' }}
       />

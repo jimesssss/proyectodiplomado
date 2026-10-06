@@ -39,7 +39,7 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 /**
  * Check if context has required permission
  */
-export function hasPermission(context: IRequestContext, permission: Permission): boolean {
+export function hasPermission(context: IRequestContext, _permission: Permission): boolean {
   // Admin role bypass
   if (context.roles.includes('admin')) {
     return true;

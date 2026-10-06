@@ -3,7 +3,7 @@
  */
 import { createApp } from './app';
 import { config } from '@erp/config';
-import { connectDatabase } from './core/database/connection';
+import { connectDatabase, disconnectDatabase } from './core/database/connection';
 import logger from './core/security/logger';
 
 async function startServer(): Promise<void> {
@@ -25,7 +25,7 @@ async function startServer(): Promise<void> {
       logger.info('SIGTERM signal received: closing HTTP server');
       server.close(async () => {
         logger.info('HTTP server closed');
-        await require('./core/database/connection').disconnectDatabase();
+        await disconnectDatabase();
         process.exit(0);
       });
     });
@@ -34,7 +34,7 @@ async function startServer(): Promise<void> {
       logger.info('SIGINT signal received: closing HTTP server');
       server.close(async () => {
         logger.info('HTTP server closed');
-        await require('./core/database/connection').disconnectDatabase();
+        await disconnectDatabase();
         process.exit(0);
       });
     });

@@ -2,7 +2,7 @@
  * Editar Producto — Formulario de edición
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {
 } from '../../../../theme';
 
 import { useProductStore } from '../../../../stores/productStore';
+import { useInventoryStore } from '../../../../stores/inventoryStore';
 
 export default function EditProductScreen() {
   const router = useRouter();
@@ -36,9 +37,14 @@ export default function EditProductScreen() {
 
   const {
     getProductById,
+    loadProductById,
     updateProduct,
     categories,
+    isLoading,
+    error,
+    clearError,
   } = useProductStore();
+  const { loadStock, stockError } = useInventoryStore();
 
   const product = getProductById(id || '');
 
@@ -47,15 +53,56 @@ export default function EditProductScreen() {
     sku: product?.sku ?? '',
     barcode: product?.barcode ?? '',
     category: product?.category ?? '',
-    purchasePrice: product?.purchasePrice.toString() ?? '',
-    salePrice: product?.salePrice.toString() ?? '',
+    purchasePrice: product?.purchasePriceDefined === false
+      ? ''
+      : product?.purchasePrice.toString() ?? '',
+    salePrice: product?.salePriceDefined === false
+      ? ''
+      : product?.salePrice.toString() ?? '',
     stock: product?.stock.toString() ?? '',
-    minStock: product?.minStock.toString() ?? '',
+    minStock: product?.minStockDefined === false
+      ? ''
+      : product?.minStock.toString() ?? '',
     unit: product?.unit ?? 'Pza',
     description: product?.description ?? '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (typeof id === 'string' && id.length > 0) {
+      const load = async () => {
+        await Promise.all([loadProductById(id), loadStock()]);
+        useProductStore.getState().setStockBalances(
+          useInventoryStore.getState().stockBalances,
+        );
+      };
+      void load();
+    }
+  }, [id, loadProductById, loadStock]);
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name,
+        sku: product.sku,
+        barcode: product.barcode,
+        category: product.category,
+        purchasePrice: product.purchasePriceDefined === false
+          ? ''
+          : product.purchasePrice.toString(),
+        salePrice: product.salePriceDefined === false
+          ? ''
+          : product.salePrice.toString(),
+        stock: product.stock.toString(),
+        minStock: product.minStockDefined === false
+          ? ''
+          : product.minStock.toString(),
+        unit: product.unit,
+        description: product.description,
+      });
+    }
+  }, [product]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -71,10 +118,6 @@ export default function EditProductScreen() {
 
     if (!formData.sku.trim()) {
       newErrors.sku = 'El SKU es requerido';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'La categoría es requerida';
     }
 
     if (
@@ -110,7 +153,7 @@ export default function EditProductScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!product) {
       return;
     }
@@ -119,22 +162,31 @@ export default function EditProductScreen() {
       return;
     }
 
-    updateProduct(product.id, {
+    clearError();
+    const updated = await updateProduct(product.id, {
       name: formData.name.trim(),
-      sku: formData.sku.trim(),
-      barcode: formData.barcode.trim(),
-      category: formData.category,
       purchasePrice: Number(formData.purchasePrice),
       salePrice: Number(formData.salePrice),
-      stock: Number(formData.stock),
       minStock: Number(formData.minStock || '0'),
       unit: formData.unit.trim() || 'Pza',
       description: formData.description.trim(),
     });
 
+    if (updated === null) {
+      return;
+    }
+
+    const pendingFields: string[] = [];
+    if (formData.sku.trim() !== product.sku) pendingFields.push('SKU (el código es inmutable en backend)');
+    if (formData.barcode.trim() !== product.barcode) pendingFields.push('código de barras');
+    if (formData.category.trim() !== product.category) pendingFields.push('categoría');
+    if (Number(formData.stock) !== product.stock) pendingFields.push('existencia (requiere movimiento y almacén)');
+
     Alert.alert(
       'Producto actualizado',
-      'Los cambios se guardaron correctamente.',
+      pendingFields.length > 0
+        ? `Se guardaron los campos compatibles. Pendiente de guardar: ${pendingFields.join(', ')}.`
+        : 'Los cambios se guardaron correctamente.',
       [
         {
           text: 'Aceptar',
@@ -148,20 +200,26 @@ export default function EditProductScreen() {
     return (
       <ScreenContainer>
         <View style={styles.errorContainer}>
-          <Ionicons
-            name="alert-circle-outline"
-            size={64}
-            color={colors.error}
-          />
+          {isLoading ? (
+            <Text style={styles.productNotFoundText}>Cargando producto…</Text>
+          ) : (
+            <>
+              <Ionicons
+                name="alert-circle-outline"
+                size={64}
+                color={colors.error}
+              />
 
-          <Text style={styles.productNotFoundText}>
-            Producto no encontrado
-          </Text>
+              <Text style={styles.productNotFoundText}>
+                {error ?? 'Producto no encontrado'}
+              </Text>
 
-          <SecondaryButton
-            title="Volver"
-            onPress={() => router.back()}
-          />
+              <SecondaryButton
+                title="Volver"
+                onPress={() => router.back()}
+              />
+            </>
+          )}
         </View>
       </ScreenContainer>
     );
@@ -195,6 +253,8 @@ export default function EditProductScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.form}>
+          {error && <Text style={styles.formErrorText}>{error}</Text>}
+          {stockError && <Text style={styles.formErrorText}>{stockError}</Text>}
           <FormInput
             label="Nombre"
             value={formData.name}
@@ -393,6 +453,7 @@ export default function EditProductScreen() {
             <PrimaryButton
               title="Guardar cambios"
               onPress={handleSave}
+              loading={isLoading}
               style={styles.saveButton}
             />
           </View>

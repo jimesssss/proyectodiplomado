@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Ventas — Lista de ventas
  *
@@ -77,7 +78,7 @@ const formatSaleDate = (date: string) => {
   });
 };
 
-const getPaymentMethodLabel = (method: PaymentFilter) => {
+const getPaymentMethodLabel = (method: PaymentFilter | 'unknown') => {
   switch (method) {
     case 'cash':
       return 'Efectivo';
@@ -94,6 +95,7 @@ const getPaymentMethodLabel = (method: PaymentFilter) => {
 };
 
 export default function SalesScreen() {
+  useModuleRefresh(useSalesStore.getState().load, () => useSalesStore.getState().error);
   const router = useRouter();
 
   const {

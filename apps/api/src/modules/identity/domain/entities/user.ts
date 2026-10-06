@@ -22,6 +22,7 @@ export interface User {
 
 /** Representación segura del usuario (jamás el hash de contraseña). */
 export interface PublicUser {
+  readonly permissions?: readonly string[];
   readonly id: string;
   readonly email: string;
   readonly tenantId: string;

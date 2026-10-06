@@ -4,7 +4,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '@erp/config';
-import { IJWTPayload, IRequestContext } from '@erp/types';
+import { IJWTPayload } from '@erp/types';
 import { AuthenticationError } from '../errors/AppError';
 import logger from '../security/logger';
 
@@ -59,11 +59,11 @@ export function createTokens(
   };
 
   const accessToken = jwt.sign(payload, config.JWT_ACCESS_SECRET, {
-    expiresIn: config.JWT_ACCESS_EXPIRY,
+    expiresIn: config.JWT_ACCESS_EXPIRY as NonNullable<jwt.SignOptions['expiresIn']>,
   });
 
   const refreshToken = jwt.sign(payload, config.JWT_REFRESH_SECRET, {
-    expiresIn: config.JWT_REFRESH_EXPIRY,
+    expiresIn: config.JWT_REFRESH_EXPIRY as NonNullable<jwt.SignOptions['expiresIn']>,
   });
 
   return { accessToken, refreshToken };

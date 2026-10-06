@@ -1,3 +1,4 @@
+import { changePasswordWithApi } from '../../../../services/auth-api';
 import React, { useState } from 'react';
 import {
   View,
@@ -27,7 +28,7 @@ export default function ChangePasswordScreen() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert(
         'Campos incompletos',
@@ -36,10 +37,10 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 12 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
       Alert.alert(
         'Contraseña muy corta',
-        'La nueva contraseña debe tener al menos 6 caracteres.'
+        'La nueva contraseña debe tener al menos 12 caracteres, mayúscula, minúscula y número.'
       );
       return;
     }
@@ -60,11 +61,8 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    /*
-     * Actualmente el ERP trabaja con datos mock.
-     * Cuando conectemos la autenticación con la API,
-     * aquí enviaremos la contraseña al backend.
-     */
+    try { await changePasswordWithApi(currentPassword, newPassword); }
+    catch(error) { Alert.alert('No se pudo cambiar',error instanceof Error?error.message:'Inténtalo nuevamente.'); return; }
 
     Alert.alert(
       'Contraseña actualizada',
@@ -195,7 +193,7 @@ export default function ChangePasswordScreen() {
             </View>
 
             <Text style={styles.helperText}>
-              Mínimo 6 caracteres.
+              Mínimo 12 caracteres, mayúscula, minúscula y número.
             </Text>
 
             <Text style={styles.label}>

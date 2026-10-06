@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Compra Detalle — Ver detalle de compra
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { usePurchasesStore } from '../../../../stores/purchasesStore';
 
 export default function PurchaseDetailScreen() {
+  useModuleRefresh(usePurchasesStore.getState().load, () => usePurchasesStore.getState().error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getPurchaseById } = usePurchasesStore();

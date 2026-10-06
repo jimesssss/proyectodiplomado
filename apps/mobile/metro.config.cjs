@@ -13,16 +13,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ];
 
-config.resolver.disableHierarchicalLookup = false;
-
-const routerEntry = path.resolve(workspaceRoot, 'node_modules/expo-router/entry');
-
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName === './node_modules/expo-router/entry') {
-    return context.resolveRequest(context, routerEntry, platform);
-  }
-
-  return context.resolveRequest(context, moduleName, platform);
-};
+config.resolver.disableHierarchicalLookup = true;
 
 module.exports = config;

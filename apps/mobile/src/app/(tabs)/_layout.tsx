@@ -4,11 +4,16 @@
  * Define las pestañas principales: Inicio, POS, Productos, Inventario, Más.
  * Utiliza iconos nativos (TabBarIcon) en lugar de fuentes de iconos.
  */
-import { Tabs } from 'expo-router';
+import { useAuthStore } from '../../stores/authStore';
+import { ActivityIndicator } from 'react-native';
+import { Tabs, Redirect } from 'expo-router';
 import { TabBarIcon } from '../../components';
 import { colors } from '../../theme';
 
 export default function TabLayout() {
+  const { isAuthenticated, isHydrated } = useAuthStore();
+  if (!isHydrated) return <ActivityIndicator />;
+  if (!isAuthenticated) return <Redirect href="/login" />;
   return (
     <Tabs
       screenOptions={{

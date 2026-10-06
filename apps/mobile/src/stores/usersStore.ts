@@ -1,94 +1,34 @@
-/**
- * Users Store — Zustand
- *
- * Datos mock para el módulo de usuarios.
- */
-import { create } from 'zustand';
-
+import {create} from 'zustand';
+import {businessApi,type ApiUser} from '../services/business-api';
+import {apiList} from '../services/api-client';
+import {useAuthStore} from './authStore';
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'cashier' | 'warehouse';
+  role: string;
+  roles?: string[];
   status: 'active' | 'inactive';
   lastLogin?: string;
 }
 
-interface UsersState {
-  users: User[];
-  isLoading: boolean;
 
-  getUserById: (id: string) => User | undefined;
-  addUser: (user: Omit<User, 'id'>) => void;
-  updateUser: (id: string, user: Partial<User>) => void;
-}
-
-const MOCK_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    email: 'admin@erp-sc.com',
-    role: 'admin',
-    status: 'active',
-    lastLogin: '2026-09-29 08:00',
-  },
-  {
-    id: '2',
-    name: 'María Gerente',
-    email: 'maria@erp-sc.com',
-    role: 'manager',
-    status: 'active',
-    lastLogin: '2026-09-29 09:30',
-  },
-  {
-    id: '3',
-    name: 'Juan Cajero',
-    email: 'juan@erp-sc.com',
-    role: 'cashier',
-    status: 'active',
-    lastLogin: '2026-09-29 10:00',
-  },
-  {
-    id: '4',
-    name: 'Carlos Almacén',
-    email: 'carlos@erp-sc.com',
-    role: 'warehouse',
-    status: 'active',
-    lastLogin: '2026-09-28 14:00',
-  },
-  {
-    id: '5',
-    name: 'Ana Inactiva',
-    email: 'ana@erp-sc.com',
-    role: 'cashier',
-    status: 'inactive',
-    lastLogin: '2026-08-15 11:00',
-  },
-];
-
-export const useUsersStore = create<UsersState>((set, get) => ({
-  users: MOCK_USERS,
-  isLoading: false,
-
-  getUserById: (id: string) => {
-    return get().users.find((u) => u.id === id);
-  },
-
-  addUser: (user: Omit<User, 'id'>) => {
-    const newUser: User = {
-      ...user,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      users: [...state.users, newUser],
-    }));
-  },
-
-  updateUser: (id: string, updates: Partial<User>) => {
-    set((state) => ({
-      users: state.users.map((u) =>
-        u.id === id ? { ...u, ...updates } : u
-      ),
-    }));
-  },
+export interface Role { id:string;key:string;name:string;permissions:string[]; }
+function mapUser(u:ApiUser):User{return {id:u.id,name:u.displayName,email:u.email,role:u.roles[0]??'',roles:u.roles,status:u.status==='active'?'active':'inactive'};}
+interface UsersState {users:User[];roles:Role[];isLoading:boolean;error:string|null;load():Promise<void>;loadRoles():Promise<void>;
+ getUserById(id:string):User|undefined;addUser(input:Omit<User,'id'>&{password:string}):Promise<boolean>;
+ updateUser(id:string,input:Partial<User>):Promise<boolean>; }
+export const useUsersStore=create<UsersState>((set,get)=>({users:[],roles:[],isLoading:false,error:null,
+ load:async()=>{set({isLoading:true,error:null});try{set({users:(await businessApi.listUsers()).map(mapUser)});}catch(error){set({users:[],error:error instanceof Error?error.message:'No se pudieron cargar usuarios.'});}finally{set({isLoading:false});}},
+ loadRoles:async()=>{try{set({roles:await apiList<Role>('/roles')});}catch(error){set({error:error instanceof Error?error.message:'No se pudieron cargar roles.'});}},
+ getUserById:id=>get().users.find(u=>u.id===id),
+ addUser:async input=>{if(!useAuthStore.getState().can('user:create')){set({error:'No tienes permiso para crear usuarios.'});return false;}
+  try{const u=await businessApi.create<ApiUser>('/users',{displayName:input.name.trim(),email:input.email.trim(),password:input.password,roles:input.roles??[input.role]});set({users:[...get().users,mapUser(u)],error:null});return true;}
+  catch(error){set({error:error instanceof Error?error.message:'No se pudo crear el usuario.'});return false;}},
+ updateUser:async(id,input)=>{if(!useAuthStore.getState().can('user:update')){set({error:'No tienes permiso para editar usuarios.'});return false;}
+  try{const u=await businessApi.update<ApiUser>('/users/'+id,{
+   ...(input.name!==undefined?{displayName:input.name.trim()}:{}),...(input.status!==undefined?{status:input.status==='active'?'active':'disabled'}:{}),
+   ...(input.roles!==undefined?{roles:input.roles}:input.role!==undefined?{roles:[input.role]}:{})});
+   set({users:get().users.map(x=>x.id===id?mapUser(u):x),error:null});return true;}
+  catch(error){set({error:error instanceof Error?error.message:'No se pudo editar el usuario.'});return false;}},
 }));

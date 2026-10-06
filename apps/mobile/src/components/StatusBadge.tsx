@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, radii } from '../theme';
+import { typography, radii } from '../theme';
 
 type StatusType = 'success' | 'warning' | 'error' | 'info' | 'neutral';
 

@@ -4,7 +4,7 @@
  * Formulario para crear un nuevo producto.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Alert, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, FormInput, PrimaryButton, SecondaryButton } from '../../../components';
@@ -13,7 +13,7 @@ import { useProductStore } from '../../../stores/productStore';
 
 export default function NewProductScreen() {
   const router = useRouter();
-  const { addProduct, categories } = useProductStore();
+  const { addProduct, categories, isLoading, error, clearError } = useProductStore();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -35,14 +35,21 @@ export default function NewProductScreen() {
 
     if (!formData.name.trim()) newErrors.name = 'El nombre es requerido';
     if (!formData.sku.trim()) newErrors.sku = 'El SKU es requerido';
-    if (!formData.category) newErrors.category = 'La categoría es requerida';
+    const normalizedSku = formData.sku.trim().toUpperCase().replace(/\s+/g, '-');
+    if (
+      formData.sku.trim() &&
+      !/^[A-Z0-9][A-Z0-9._-]{1,31}$/.test(normalizedSku)
+    ) {
+      newErrors.sku =
+        'El SKU debe tener 2–32 caracteres: letras, números, punto, guion o guion bajo';
+    }
     if (!formData.purchasePrice || parseFloat(formData.purchasePrice) <= 0) {
       newErrors.purchasePrice = 'Precio de compra inválido';
     }
     if (!formData.salePrice || parseFloat(formData.salePrice) <= 0) {
       newErrors.salePrice = 'Precio de venta inválido';
     }
-    if (!formData.stock || parseInt(formData.stock) < 0) {
+    if (formData.stock.trim() === '' || !Number.isFinite(Number(formData.stock)) || Number(formData.stock) < 0) {
       newErrors.stock = 'Existencia inválida';
     }
 
@@ -50,23 +57,39 @@ export default function NewProductScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    addProduct({
+    clearError();
+    const created = await addProduct({
       name: formData.name,
       sku: formData.sku,
       barcode: formData.barcode,
       category: formData.category,
       purchasePrice: parseFloat(formData.purchasePrice),
       salePrice: parseFloat(formData.salePrice),
-      stock: parseInt(formData.stock),
-      minStock: parseInt(formData.minStock) || 0,
+      stock: Number(formData.stock),
+      minStock: Number(formData.minStock) || 0,
       unit: formData.unit,
       description: formData.description,
       status: 'active',
     });
 
+    if (created === null) {
+      return;
+    }
+
+    const pendingFields: string[] = [];
+    if (formData.category.trim()) pendingFields.push('categoría');
+    if (formData.barcode.trim()) pendingFields.push('código de barras');
+    if (pendingFields.length > 0) {
+      Alert.alert(
+        'Producto creado',
+        `Se guardaron los datos compatibles con el backend. Pendiente de guardar: ${pendingFields.join(', ')}.`,
+        [{ text: 'Aceptar', onPress: () => router.back() }],
+      );
+      return;
+    }
     router.back();
   };
 
@@ -83,6 +106,7 @@ export default function NewProductScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
+          {error && <Text style={styles.errorText}>{error}</Text>}
           <FormInput
             label="Nombre"
             value={formData.name}
@@ -218,6 +242,7 @@ export default function NewProductScreen() {
             <PrimaryButton
               title="Guardar"
               onPress={handleSubmit}
+              loading={isLoading}
               style={styles.saveButton}
             />
           </View>

@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Clientes — Lista de clientes
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useCustomersStore } from '../../../../stores/customersStore';
 
 export default function CustomersScreen() {
+  useModuleRefresh(useCustomersStore.getState().load, () => useCustomersStore.getState().error);
   const router = useRouter();
   const { customers } = useCustomersStore();
   const [searchQuery, setSearchQuery] = useState('');

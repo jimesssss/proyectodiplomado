@@ -1,3 +1,4 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Cliente Detalle — Ver detalle de cliente
  *
@@ -12,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useCustomersStore } from '../../../../stores/customersStore';
 
 export default function CustomerDetailScreen() {
+  useModuleRefresh(useCustomersStore.getState().load, () => useCustomersStore.getState().error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCustomerById } = useCustomersStore();

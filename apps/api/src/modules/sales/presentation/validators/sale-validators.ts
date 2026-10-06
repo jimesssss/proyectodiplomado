@@ -24,6 +24,7 @@ const archivedField = z.enum(['true', 'false']).transform((value) => value === '
 
 /** Línea de documento: importes validados; subtotales calculados por el servidor. */
 const saleLineSchema = z.strictObject({
+  productId: objectId.optional(),
   description: z.string().min(1).max(200),
   quantity: z.number().gt(0).max(QUANTITY_MAX),
   unitPrice: z.number().min(0).max(MONEY_MAX),
@@ -54,6 +55,7 @@ export function createSaleBodySchema(kind: SaleKind): z.ZodType {
     issueDate: z.coerce.date().optional(),
     notes: notesField.optional(),
   };
+  if (kind === 'sales.delivery') shape.warehouseId = objectId.optional();
   if (SALE_REQUIRES_CUSTOMER[kind]) {
     shape.customerId = objectId;
   }
@@ -86,6 +88,7 @@ export function patchSaleBodySchema(kind: SaleKind): z.ZodType {
     status: patchStatusField(kind),
     archived: z.boolean().optional(),
   };
+  if (kind === 'sales.delivery') shape.warehouseId = objectId.optional();
   if (SALE_REQUIRES_CUSTOMER[kind]) {
     shape.customerId = objectId.optional();
   }

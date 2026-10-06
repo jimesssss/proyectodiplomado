@@ -18,8 +18,8 @@ export async function listAudit(tenantId: string, query: AuditQuery): Promise<Au
   const result = await listAuditLogs(tenantId, query);
   return {
     items: result.items.map(toPublicAuditEntry),
-    page: query.page,
-    limit: query.limit,
+    page: query.page ?? 1,
+    limit: query.limit ?? 20,
     total: result.total,
   };
 }

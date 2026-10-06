@@ -1,10 +1,5 @@
-/**
- * Sales Store — Zustand
- *
- * Datos mock para el módulo de ventas.
- */
 import { create } from 'zustand';
-
+import { businessApi, type ApiDocument } from '../services/business-api';
 export interface Sale {
   id: string;
   folio: string;
@@ -13,7 +8,9 @@ export interface Sale {
   customer: string;
   total: number;
   discount?: number;
-  paymentMethod: 'cash' | 'card' | 'transfer';
+  paymentMethod: 'cash' | 'card' | 'transfer' | 'unknown';
+  currency?: string;
+  customerId?: string;
   status: 'completed' | 'pending' | 'cancelled';
   items: {
     productId: string;
@@ -29,120 +26,26 @@ export interface SalesSummary {
   averageTicket: number;
 }
 
-interface SalesState {
-  sales: Sale[];
-  summary: SalesSummary;
-  isLoading: boolean;
-  error: string | null;
 
-  getSaleById: (id: string) => Sale | undefined;
-  addSale: (sale: Omit<Sale, 'id'>) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
+export function mapSale(doc:ApiDocument,names:Record<string,string>={}):Sale {
+  const date=new Date(doc.issueDate);
+  return {id:doc.id,folio:doc.number,date:[date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-'),time:date.toLocaleTimeString('en-GB').slice(0,5),
+    customer:names[doc.customerId??'']??doc.customerId??'',customerId:doc.customerId,total:doc.total,currency:doc.currency,
+    paymentMethod:'unknown',status:doc.status==='paid'?'completed':doc.status==='cancelled'?'cancelled':'pending',
+    items:doc.lines.map((line,index)=>({productId:line.productId??doc.id+':'+index,productName:line.description,quantity:line.quantity,price:line.unitPrice}))};
 }
-
-const MOCK_SALES: Sale[] = [
-  {
-    id: '25',
-    folio: 'V-00025',
-    date: '2026-10-01',
-    time: '12:35',
-    customer: 'Juan Pérez',
-    total: 13000,
-    discount: 300,
-    paymentMethod: 'card',
-    status: 'completed',
-    items: [
-      { productId: '1', productName: 'Laptop Lenovo', quantity: 1, price: 12500 },
-      { productId: '2', productName: 'Mouse Logitech', quantity: 2, price: 400 },
-    ],
-  },
-  {
-    id: '24',
-    folio: 'V-00024',
-    date: '2026-10-01',
-    time: '11:20',
-    customer: 'María López',
-    total: 1280,
-    discount: 0,
-    paymentMethod: 'cash',
-    status: 'completed',
-    items: [
-      { productId: '3', productName: 'Teclado Logitech K380', quantity: 1, price: 880 },
-      { productId: '4', productName: 'Mouse Logitech M170', quantity: 1, price: 400 },
-    ],
-  },
-  {
-    id: '23',
-    folio: 'V-00023',
-    date: '2026-09-30',
-    time: '16:42',
-    customer: 'Carlos López',
-    total: 7499,
-    discount: 0,
-    paymentMethod: 'transfer',
-    status: 'pending',
-    items: [
-      { productId: '5', productName: 'Monitor Dell 27 pulgadas', quantity: 1, price: 7499 },
-    ],
-  },
-  {
-    id: '22',
-    folio: 'V-00022',
-    date: '2026-09-30',
-    time: '13:08',
-    customer: 'Ana Torres',
-    total: 1890,
-    discount: 0,
-    paymentMethod: 'card',
-    status: 'completed',
-    items: [
-      { productId: '6', productName: 'SSD Kingston 1 TB', quantity: 1, price: 1890 },
-    ],
-  },
-  {
-    id: '21',
-    folio: 'V-00021',
-    date: '2026-09-29',
-    time: '10:16',
-    customer: 'Roberto Díaz',
-    total: 3650,
-    discount: 0,
-    paymentMethod: 'cash',
-    status: 'cancelled',
-    items: [
-      { productId: '7', productName: 'Impresora Epson EcoTank', quantity: 1, price: 3650 },
-    ],
-  },
-];
-
-const MOCK_SUMMARY: SalesSummary = {
-  todaySales: 14280,
-  todayCount: 2,
-  averageTicket: 7140,
-};
-
-export const useSalesStore = create<SalesState>((set, get) => ({
-  sales: MOCK_SALES,
-  summary: MOCK_SUMMARY,
-  isLoading: false,
-  error: null,
-
-  getSaleById: (id: string) => {
-    return get().sales.find((s) => s.id === id);
-  },
-
-  addSale: (sale: Omit<Sale, 'id'>) => {
-    const newSale: Sale = {
-      ...sale,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      sales: [newSale, ...state.sales],
-      error: null,
-    }));
-  },
-
-  setLoading: (isLoading: boolean) => set({ isLoading }),
-  setError: (error: string | null) => set({ error }),
+interface SalesState { sales:Sale[];summary:SalesSummary;isLoading:boolean;error:string|null;load():Promise<void>;
+  getSaleById(id:string):Sale|undefined;addSale(sale:Omit<Sale,'id'>):Promise<void>;setLoading(value:boolean):void;setError(value:string|null):void; }
+export const useSalesStore=create<SalesState>((set,get)=>({
+  sales:[],summary:{todaySales:0,todayCount:0,averageTicket:0},isLoading:false,error:null,
+  getSaleById:id=>get().sales.find(s=>s.id===id),setLoading:isLoading=>set({isLoading}),setError:error=>set({error}),
+  load:async()=>{set({isLoading:true,error:null});try {
+    const docs=await businessApi.listInvoices();
+    const sales=docs.map(d=>mapSale(d));
+    const now=new Date();const today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+    const todaySales=sales.filter(s=>s.date===today&&s.status==='completed'&&s.currency==='MXN');
+    const total=todaySales.reduce((sum,s)=>sum+s.total,0);
+    set({sales,summary:{todaySales:total,todayCount:todaySales.length,averageTicket:todaySales.length?total/todaySales.length:0}});
+  }catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.',sales:[]});}finally{set({isLoading:false});}},
+  addSale:async()=>{throw new Error('Completa un pedido mediante el flujo de ventas.');},
 }));

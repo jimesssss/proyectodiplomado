@@ -31,7 +31,7 @@ export default function NewCustomerScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanName = name.trim();
     const cleanPhone = phone.trim();
     const cleanEmail = email.trim();
@@ -70,7 +70,7 @@ export default function NewCustomerScreen() {
       return;
     }
 
-    addCustomer({
+    const saved = await addCustomer({
       name: cleanName,
       phone: cleanPhone,
       email: cleanEmail,
@@ -79,6 +79,7 @@ export default function NewCustomerScreen() {
       status: 'active',
     });
 
+    if (!saved) { Alert.alert('No se pudo guardar', useCustomersStore.getState().error ?? 'Inténtalo nuevamente.'); return; }
     // Registrar acción en Auditoría
     addLog({
       user: 'Admin',

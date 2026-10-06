@@ -1,10 +1,5 @@
-/**
- * Purchases Store — Zustand
- *
- * Datos mock para el módulo de compras.
- */
-import { create } from 'zustand';
-
+import {create} from 'zustand';
+import {businessApi,type ApiDocument,type ApiLine} from '../services/business-api';
 export interface Purchase {
   id: string;
   orderNumber: string;
@@ -20,76 +15,18 @@ export interface Purchase {
   }[];
 }
 
-interface PurchasesState {
-  purchases: Purchase[];
-  isLoading: boolean;
 
-  getPurchaseById: (id: string) => Purchase | undefined;
-  addPurchase: (purchase: Omit<Purchase, 'id'>) => void;
-}
-
-const MOCK_PURCHASES: Purchase[] = [
-  {
-    id: '1',
-    orderNumber: 'OC-0001',
-    supplier: 'Tech Supplies SA',
-    date: '2026-09-28',
-    total: 8000,
-    status: 'received',
-    items: [
-      { productId: '1', productName: 'Laptop HP 15', quantity: 1, price: 8000 },
-    ],
-  },
-  {
-    id: '2',
-    orderNumber: 'OC-0002',
-    supplier: 'Accesorios MX',
-    date: '2026-09-27',
-    total: 7500,
-    status: 'pending',
-    items: [
-      { productId: '2', productName: 'Mouse Logitech', quantity: 50, price: 150 },
-    ],
-  },
-  {
-    id: '3',
-    orderNumber: 'OC-0003',
-    supplier: 'Electro Parts',
-    date: '2026-09-26',
-    total: 10000,
-    status: 'received',
-    items: [
-      { productId: '3', productName: 'Teclado Mecánico', quantity: 25, price: 400 },
-    ],
-  },
-  {
-    id: '4',
-    orderNumber: 'OC-0004',
-    supplier: 'Tech Supplies SA',
-    date: '2026-09-25',
-    total: 6000,
-    status: 'cancelled',
-    items: [
-      { productId: '4', productName: 'Monitor Samsung 24"', quantity: 2, price: 3000 },
-    ],
-  },
-];
-
-export const usePurchasesStore = create<PurchasesState>((set, get) => ({
-  purchases: MOCK_PURCHASES,
-  isLoading: false,
-
-  getPurchaseById: (id: string) => {
-    return get().purchases.find((p) => p.id === id);
-  },
-
-  addPurchase: (purchase: Omit<Purchase, 'id'>) => {
-    const newPurchase: Purchase = {
-      ...purchase,
-      id: Date.now().toString(),
-    };
-    set((state) => ({
-      purchases: [newPurchase, ...state.purchases],
-    }));
-  },
+function mapPurchase(d:ApiDocument,names:Record<string,string>):Purchase {return {id:d.id,orderNumber:d.number,supplier:names[d.supplierId??'']??d.supplierId??'',date:d.issueDate.slice(0,10),total:d.total,
+  status:d.status==='completed'?'received':d.status==='cancelled'?'cancelled':'pending',items:d.lines.map((l,i)=>({productId:l.productId??d.id+':'+i,productName:l.description,quantity:l.quantity,price:l.unitPrice}))};}
+interface PurchasesState {purchases:Purchase[];isLoading:boolean;error:string|null;load():Promise<void>;getPurchaseById(id:string):Purchase|undefined;
+  createOrder(input:{supplierId:string;lines:ApiLine[];notes?:string}):Promise<boolean>;addPurchase(input:Omit<Purchase,'id'>):Promise<void>;}
+export const usePurchasesStore=create<PurchasesState>((set,get)=>({purchases:[],isLoading:false,error:null,
+  getPurchaseById:id=>get().purchases.find(p=>p.id===id),
+  load:async()=>{set({isLoading:true,error:null});try{const docs=await businessApi.listOrders();const suppliers=await businessApi.listSuppliers();
+    const names=Object.fromEntries(suppliers.map(s=>[s.id,s.name]));set({purchases:docs.map(d=>mapPurchase(d,names))});}
+    catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.',purchases:[]});}finally{set({isLoading:false});}},
+  createOrder:async input=>{set({isLoading:true,error:null});try{
+    await businessApi.create('/purchasing/orders',{...input,currency:'MXN'});await get().load();return true;
+  }catch(error){set({error:error instanceof Error ? error.message : 'No se pudo completar la operación.'});return false;}finally{set({isLoading:false});}},
+  addPurchase:async()=>{throw Error('Usa la creación de órdenes de compra.');},
 }));

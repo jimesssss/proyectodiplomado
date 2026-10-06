@@ -1,10 +1,11 @@
+import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Caja — Módulo de Caja
  *
  * Muestra el estado de caja y permite registrar movimientos.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatCard, PrimaryButton, SecondaryButton, FormInput } from '../../../../components';
@@ -12,8 +13,9 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useCashRegisterStore } from '../../../../stores/cashRegisterStore';
 
 export default function CashRegisterScreen() {
+  useModuleRefresh(useCashRegisterStore.getState().load,()=>useCashRegisterStore.getState().error);
   const router = useRouter();
-  const { cashRegister, openCashRegister, closeCashRegister, addEntry, addExit } =
+  const { cashRegister, accounts, accountId, selectAccount, openCashRegister, closeCashRegister, addEntry, addExit } =
     useCashRegisterStore();
 
   const [showMovementModal, setShowMovementModal] = useState(false);
@@ -30,15 +32,12 @@ export default function CashRegisterScreen() {
     setShowMovementModal(true);
   };
 
-  const handleSubmitMovement = () => {
+  const handleSubmitMovement = async () => {
     const amount = parseFloat(movementAmount);
     if (!amount || amount <= 0 || !movementReason.trim()) return;
 
-    if (movementType === 'entry') {
-      addEntry(amount, movementReason);
-    } else {
-      addExit(amount, movementReason);
-    }
+    const saved = movementType==='entry' ? await addEntry(amount,movementReason) : await addExit(amount,movementReason);
+    if(!saved){Alert.alert('No se pudo registrar',useCashRegisterStore.getState().error??'Selecciona una cuenta de caja.');return;}
 
     setShowMovementModal(false);
   };
@@ -55,6 +54,7 @@ export default function CashRegisterScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView horizontal>{accounts.map(a=><Pressable key={a.id} onPress={()=>{void selectAccount(a.id);}}><Text style={{padding:12,color:accountId===a.id?colors.primary[600]:colors.neutral[700]}}>{a.name} ({a.currency})</Text></Pressable>)}</ScrollView>
         {/* Estado de caja */}
         <View style={styles.section}>
           <View style={styles.statusRow}>
@@ -83,7 +83,7 @@ export default function CashRegisterScreen() {
               backgroundColor={colors.neutral[50]}
             />
             <StatCard
-              label="Ventas Efectivo"
+              label="Cobros Efectivo"
               value={formatCurrency(cashRegister.cashSales)}
               backgroundColor="#D1FAE5"
               valueColor="#065F46"
@@ -133,14 +133,14 @@ export default function CashRegisterScreen() {
                 />
                 <SecondaryButton
                   title="Cerrar Caja"
-                  onPress={closeCashRegister}
+                  onPress={async()=>{await closeCashRegister();Alert.alert('Cierre pendiente',useCashRegisterStore.getState().error??'');}}
                   style={styles.actionButton}
                 />
               </>
             ) : (
               <PrimaryButton
                 title="Abrir Caja"
-                onPress={() => openCashRegister(1000)}
+                onPress={async()=>{await openCashRegister(0);Alert.alert('Apertura pendiente',useCashRegisterStore.getState().error??'');}}
                 style={styles.actionButton}
                 icon={
                   <Ionicons name="lock-open-outline" size={20} color={colors.neutral[0]} />
@@ -269,6 +269,36 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     color: colors.neutral[800],
     marginBottom: spacing.md,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  statusOpen: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+  },
+  statusClosed: {
+    backgroundColor: '#F3F4F6',
+    borderColor: '#D1D5DB',
+  },
+  statusText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+  },
+  statusTextOpen: {
+    color: '#166534',
+  },
+  statusTextClosed: {
+    color: '#374151',
   },
   statsGrid: {
     flexDirection: 'row',

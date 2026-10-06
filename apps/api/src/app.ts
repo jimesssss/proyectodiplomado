@@ -26,8 +26,8 @@ export function createApp(): Express {
   app.use(requestIdMiddleware);
 
   // Health check
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), requestId: req.requestId });
   });
 
   // API Documentation

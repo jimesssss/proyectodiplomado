@@ -15,7 +15,8 @@ export {
   normalizeLines,
   roundMoney,
 } from '../../../../core/domain/line-totals.js';
-export type { DocumentLineInput as SaleLineInput } from '../../../../core/domain/line-totals.js';
+import type { DocumentLineInput } from '../../../../core/domain/line-totals.js';
+export interface SaleLineInput extends DocumentLineInput { readonly productId?: string | null; }
 
 export const NOTES_MAX = 500;
 

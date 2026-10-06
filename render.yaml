@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: .
-    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm exec tsc --noCheck -p packages/permissions/tsconfig.json && pnpm --filter @erp/api build
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm exec tsc -p packages/permissions/tsconfig.json && pnpm --filter @erp/api build
     startCommand: pnpm --filter @erp/api start
     healthCheckPath: /api/v1/health
     envVars:
@@ -25,4 +25,19 @@ services:
       - key: RESEND_FROM_NAME
         sync: false
       - key: APP_BASE_URL
-        sync: false
+        value: https://erp-sc-web.onrender.com
+
+  - type: web
+    name: erp-sc-web
+    runtime: static
+    plan: free
+    rootDir: apps/web
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @erp/web build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://erp-sc-api.onrender.com/api/v1

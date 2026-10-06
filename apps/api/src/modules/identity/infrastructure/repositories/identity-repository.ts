@@ -126,21 +126,26 @@ export async function findUserByVerificationToken(token: string): Promise<User |
   return doc === null ? null : toUser(doc as unknown as UserDoc);
 }
 
-export async function clearEmailVerificationToken(userId: string): Promise<void> {
+export async function clearEmailVerificationToken(userId: string, tokenHash: string): Promise<void> {
   await UserModel.updateOne(
-    { _id: new Types.ObjectId(userId) },
+    { _id: new Types.ObjectId(userId), emailVerificationTokenHash: tokenHash, emailVerifiedAt: null },
     { $set: { emailVerificationTokenHash: null, emailVerificationExpiresAt: null } },
   );
 }
 
-export async function activateUserAfterVerification(userId: string): Promise<User | null> {
+export async function activateUserAfterVerification(userId: string, tokenHash: string): Promise<User | null> {
   const doc = await UserModel.findOneAndUpdate(
-    { _id: new Types.ObjectId(userId) },
+    {
+      _id: new Types.ObjectId(userId),
+      emailVerifiedAt: null,
+      emailVerificationTokenHash: tokenHash,
+      emailVerificationExpiresAt: { $gt: new Date() },
+    },
     {
       $set: {
         status: 'active',
         emailVerifiedAt: new Date(),
-        emailVerificationTokenHash: null,
+        // Retain only the hash to recognize a used link; it cannot activate again.
         emailVerificationExpiresAt: null,
       },
     },

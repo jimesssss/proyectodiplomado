@@ -13,6 +13,7 @@ export async function connectDatabase(uri: string, logger: Logger): Promise<void
     loggerRef?.warn('database disconnected');
   });
   await mongoose.connect(uri);
+  await Promise.all(Object.values(mongoose.models).map(model => model.init()));
   logger.info('database connected');
 }
 

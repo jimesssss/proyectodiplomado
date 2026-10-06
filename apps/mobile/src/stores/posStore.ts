@@ -32,20 +32,8 @@ interface POSState {
   getCartCount: () => number;
 }
 
-// Datos mock de productos
-const MOCK_PRODUCTS: Product[] = [
-  { id: '1', name: 'Producto A', price: 50.0, stock: 100, category: 'General' },
-  { id: '2', name: 'Producto B', price: 75.0, stock: 80, category: 'General' },
-  { id: '3', name: 'Producto C', price: 100.0, stock: 60, category: 'General' },
-  { id: '4', name: 'Producto D', price: 125.0, stock: 40, category: 'General' },
-  { id: '5', name: 'Producto E', price: 150.0, stock: 30, category: 'General' },
-  { id: '6', name: 'Producto F', price: 200.0, stock: 20, category: 'General' },
-  { id: '7', name: 'Producto G', price: 250.0, stock: 15, category: 'General' },
-  { id: '8', name: 'Producto H', price: 300.0, stock: 10, category: 'General' },
-];
-
 export const usePOSStore = create<POSState>((set, get) => ({
-  products: MOCK_PRODUCTS,
+  products: [],
   cart: [],
   isLoading: false,
 

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { completeOrder } from '../../application/complete-order-service.js';
 import type { Permission } from '@erp/permissions';
 import type { RequestHandler, Router } from 'express';
 import { auditFromRequest } from '../../../../core/audit/audit.js';
@@ -83,6 +85,19 @@ export function createSalesRouter(deps: SalesRouterDeps, kind: SaleKind): Router
 
   const router = createCrudRouter(deps, spec);
 
+  if (kind === 'sales.order') {
+    router.post('/:id/complete', requireAuth(deps.jwt, deps.isSessionActive),
+      ...(['sales.order:update', 'sales.delivery:create', 'sales.delivery:update', 'sales.invoice:create', 'sales.invoice:update', 'receipt:create', 'receipt:update', 'bank.account:read', 'product:read', 'stock.movement:create'] as Permission[]).map(requirePermission),
+      validate({ params: crudIdParamsSchema, body: z.strictObject({
+        warehouseId: z.string().regex(/^[0-9a-fA-F]{24}$/), accountId: z.string().regex(/^[0-9a-fA-F]{24}$/),
+      }) }),
+      async (req, res) => {
+        const result = await completeOrder(currentUser(req).tenantId, req.params.id!, req.body as { warehouseId: string; accountId: string });
+        await auditFromRequest(req, { action: 'sales.order.complete', entityType: 'sales.order', entityId: result.order.id,
+          newValue: { invoiceId: result.invoice.id, deliveryId: result.delivery.id } });
+        res.status(200).json(successResponse(req.requestId, result));
+      });
+  }
   if (kind === 'sales.quote') {
     const auth: RequestHandler = requireAuth(deps.jwt, deps.isSessionActive);
     router.post(
