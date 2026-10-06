@@ -28,6 +28,10 @@
     },
     "extra": {
       "apiBaseUrl": "https://erp-sc-api.onrender.com/api/v1"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
     }
   }
 }

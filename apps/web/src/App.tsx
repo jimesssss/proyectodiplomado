@@ -152,7 +152,7 @@ export default function App() {
             <p className="helper">
               Tu correo ya está verificado. Ahora puedes iniciar sesión en ERP-SC.
             </p>
-            <button className="primary-button" onClick={() => (window.location.href = 'erp-sc:///login')}>
+            <button className="primary-button" onClick={() => (window.location.href = '/login')}>
               Iniciar sesión
             </button>
           </>
@@ -205,7 +205,7 @@ export default function App() {
         {(state === 'invalid' || state === 'expired') && (
           <>
             <p className="helper">Si tu cuenta ya está verificada, puedes iniciar sesión en la aplicación ERP-SC.</p>
-            <button className="primary-button" onClick={() => (window.location.href = 'erp-sc:///login')}>
+            <button className="primary-button" onClick={() => (window.location.href = '/login')}>
               Iniciar sesión
             </button>
           </>

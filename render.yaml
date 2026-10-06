@@ -33,8 +33,11 @@ services:
     plan: free
     rootDir: .
     buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @erp/web build
-    staticPublishPath: apps/web/dist
+    staticPublishPath: apps/mobile/dist
     routes:
+      - type: rewrite
+        source: /verify-email
+        destination: /verify-email.html
       - type: rewrite
         source: /*
         destination: /index.html
