@@ -31,9 +31,9 @@ services:
     name: erp-sc-web
     runtime: static
     plan: free
-    rootDir: apps/web
+    rootDir: .
     buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @erp/web build
-    staticPublishPath: dist
+    staticPublishPath: apps/web/dist
     routes:
       - type: rewrite
         source: /*

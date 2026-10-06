@@ -77,3 +77,6 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Local administrator login verification credential
+apps/api.env
