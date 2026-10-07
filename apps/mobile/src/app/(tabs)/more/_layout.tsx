@@ -6,11 +6,13 @@
  */
 
 import { Stack } from 'expo-router';
+import { colors } from '../../../theme';
 
 export default function MoreLayout() {
   return (
-    <Stack>
+    <Stack screenOptions={{headerShown:false,headerTintColor:colors.primary[700],headerStyle:{backgroundColor:colors.surface},headerShadowVisible:false}}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="suppliers/new" options={{title:'Nuevo proveedor',headerShown:false}} />
 
       <Stack.Screen
         name="sales/index"
@@ -50,7 +52,7 @@ export default function MoreLayout() {
 
       <Stack.Screen
         name="customers/new"
-        options={{ title: 'Nuevo cliente' }}
+        options={{ title: 'Nuevo cliente',headerShown:true }}
       />
 
       <Stack.Screen
@@ -70,7 +72,7 @@ export default function MoreLayout() {
 
       <Stack.Screen
         name="expenses/new"
-        options={{ title: 'Nuevo gasto' }}
+        options={{ title: 'Nuevo gasto',headerShown:true }}
       />
 
       <Stack.Screen

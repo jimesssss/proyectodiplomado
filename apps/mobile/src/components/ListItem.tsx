@@ -91,5 +91,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     color: colors.neutral[600],
     marginRight: spacing.sm,
+    flexShrink: 1,
+    textAlign: 'right',
   },
 });

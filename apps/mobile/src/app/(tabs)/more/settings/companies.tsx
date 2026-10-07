@@ -124,12 +124,12 @@ export default function CompaniesScreen() {
         ) : (
           <>
             <View style={styles.section}>
-              <SectionHeader title="Empresas del tenant" />
+              <SectionHeader title="Empresas registradas" />
               {companies.length === 0 ? (
                 <EmptyState
                   icon="business-outline"
                   title="No hay empresas"
-                  description="No se encontraron empresas reales en el tenant."
+                  description="Todavía no hay empresas registradas para tu negocio."
                 />
               ) : (
                 companies.map((company) => {
@@ -139,7 +139,7 @@ export default function CompaniesScreen() {
                       <View style={styles.unitDetails}>
                         <Text style={styles.unitName}>{company.name}</Text>
                         <Text style={styles.unitSubtext}>
-                          {company.code} · {company.id}
+                          {company.code}
                         </Text>
                         <Text style={styles.parentText}>
                           {belongsToCurrentOrganization

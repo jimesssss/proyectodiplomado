@@ -138,7 +138,7 @@ export default function WarehousesScreen() {
                     <View style={styles.unitDetails}>
                       <Text style={styles.unitName}>{warehouse.name}</Text>
                       <Text style={styles.unitSubtext}>
-                        {warehouse.code} · {warehouse.id}
+                        {warehouse.code}
                       </Text>
                     </View>
                     <StatusBadge
@@ -157,7 +157,7 @@ export default function WarehousesScreen() {
                   <EmptyState
                     icon="business-outline"
                     title="No hay sucursales activas"
-                    description="El backend exige una sucursal activa para crear un almacén. No se puede crear desde el tenant sin esa unidad padre."
+                    description="Registra primero una sucursal activa para poder crear su almacén."
                   />
                 ) : (
                   <>
@@ -175,7 +175,7 @@ export default function WarehousesScreen() {
                           <View style={styles.unitDetails}>
                             <Text style={styles.unitName}>{branch.name}</Text>
                             <Text style={styles.unitSubtext}>
-                              {branch.code} · {branch.id}
+                              {branch.code}
                             </Text>
                           </View>
                           <Ionicons

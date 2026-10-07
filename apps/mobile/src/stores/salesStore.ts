@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { businessApi, type ApiDocument } from '../services/business-api';
+import { useAuthStore } from './authStore';
 export interface Sale {
   id: string;
   folio: string;
@@ -41,7 +42,9 @@ export const useSalesStore=create<SalesState>((set,get)=>({
   getSaleById:id=>get().sales.find(s=>s.id===id),setLoading:isLoading=>set({isLoading}),setError:error=>set({error}),
   load:async()=>{set({isLoading:true,error:null});try {
     const docs=await businessApi.listInvoices();
-    const sales=docs.map(d=>mapSale(d));
+    let names:Record<string,string>={};
+    if(useAuthStore.getState().can('customer:read'))try{names=Object.fromEntries((await businessApi.listCustomers()).map(c=>[c.id,c.name]));}catch{/* Las facturas siguen disponibles si falla el directorio. */}
+    const sales=docs.map(d=>mapSale(d,names));
     const now=new Date();const today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
     const todaySales=sales.filter(s=>s.date===today&&s.status==='completed'&&s.currency==='MXN');
     const total=todaySales.reduce((sum,s)=>sum+s.total,0);

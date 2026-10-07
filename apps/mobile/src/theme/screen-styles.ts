@@ -13,6 +13,29 @@ export function createScreenStyles<T extends StyleSheet.NamedStyles<T>>(source: 
       style.fontSize = 26; style.fontWeight = '700'; style.letterSpacing = -0.5;
     }
     if (/sectionTitle$/.test(key)) { style.fontSize = 18; style.fontWeight = '600'; }
+    // Only presentation: keep the existing layout, handlers and data contracts.
+    if (typeof style.fontSize === 'number' && !style.lineHeight) {
+      style.lineHeight = Math.ceil(style.fontSize * 1.4);
+    }
+    if (/Name$|Label$|Description$|Subtitle$|Email$|Phone$|Concept$/.test(key)) {
+      style.flexShrink = 1;
+    }
+    if (/^(header|modalHeader)$/.test(key)) {
+      style.columnGap = 12;
+      style.minHeight = 76;
+    }
+    if (/^(filterChip|paymentMethod)$/.test(key)) {
+      style.minHeight = 44;
+      style.justifyContent = 'center';
+    }
+    if (key === 'filtersContainer' && typeof style.maxHeight === 'number') {
+      style.maxHeight = Math.max(64, style.maxHeight);
+    }
+    if (/^(customerStats|supplierStatus|saleRight)$/.test(key)) style.marginLeft = 12;
+    if (/^(detailValue|switchLabel|progressLabel)$/.test(key)) {
+      style.flexShrink = 1;
+    }
+    if (/^(detailRow|switchRow|progressInfo)$/.test(key)) style.columnGap = 16;
     if (/Button$|^button$/.test(key) && !style.fontSize) {
       style.minHeight = Math.max(44, Number(style.minHeight) || 0);
       if (typeof style.width === 'number' && style.width < 44) style.width = 44;
@@ -29,6 +52,9 @@ export function createScreenStyles<T extends StyleSheet.NamedStyles<T>>(source: 
       Object.assign(style, shadows.sm);
     }
     if (/Info$|^content$|titleContainer$/.test(key)) style.minWidth = 0;
+    if (/^(customerCard|supplierCard|expenseCard|purchaseCard|saleCard|userCard|logCard)$/.test(key)) {
+      style.paddingVertical = 20;
+    }
     if (/headerAction$|quantityButton$|clearButton$/.test(key) && !style.fontSize) {
       style.minWidth = 44; style.minHeight = 44;
       style.alignItems = 'center'; style.justifyContent = 'center';
@@ -38,7 +64,7 @@ export function createScreenStyles<T extends StyleSheet.NamedStyles<T>>(source: 
         Object.assign(style, { width: '100%', maxWidth: 1200, alignSelf: 'center' });
       }
       if (style.width === '48%' || style.width === '47%') {
-        Object.assign(style, { width: undefined, flexBasis: 240, flexGrow: 1, minWidth: 0 });
+        Object.assign(style, { width: undefined, flexBasis: key==='productCard'?150:240, flexGrow: 1, minWidth: 0 });
       }
       if (/modalContent$|paymentContent$|resultContent$/i.test(key)) {
         Object.assign(style, { width: '100%', maxWidth: 720, alignSelf: 'center' });

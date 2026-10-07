@@ -83,12 +83,12 @@ export default function CustomersScreen() {
               </View>
               <View style={styles.customerStats}>
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{customer.totalPurchases}</Text>
+                  <Text style={styles.statValue}>{customer.purchaseStatsAvailable ? customer.totalPurchases : '—'}</Text>
                   <Text style={styles.statLabel}>Compras</Text>
                 </View>
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{formatCurrency(customer.totalSpent)}</Text>
-                  <Text style={styles.statLabel}>Total</Text>
+                  <Text style={styles.statValue}>{customer.purchaseStatsAvailable ? formatCurrency(customer.totalSpent) : '—'}</Text>
+                  <Text style={styles.statLabel}>Pagado · MXN</Text>
                 </View>
                 <StatusBadge
                   status={customer.status === 'active' ? 'success' : 'neutral'}

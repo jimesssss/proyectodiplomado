@@ -77,5 +77,6 @@ const styles = StyleSheet.create({
     color: colors.neutral[500],
     marginTop: spacing.xs,
     textAlign: 'center',
+    lineHeight: 21,
   },
 });

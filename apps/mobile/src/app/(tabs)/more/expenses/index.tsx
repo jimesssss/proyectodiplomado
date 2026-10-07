@@ -48,7 +48,7 @@ export default function ExpensesScreen() {
       {/* Total de gastos */}
       <View style={styles.totalContainer}>
         <StatCard
-          label="Total de Gastos"
+          label="Pagos contabilizados · MXN"
           value={formatCurrency(totalExpenses)}
           backgroundColor="#FCECEF"
           valueColor="#991B1B"
@@ -80,7 +80,7 @@ export default function ExpensesScreen() {
             <View key={expense.id} style={styles.expenseCard}>
               <View style={styles.expenseInfo}>
                 <Text style={styles.expenseConcept}>{expense.concept}</Text>
-                <Text style={styles.expenseCategory}>{expense.category}</Text>
+                {expense.category&&<Text style={styles.expenseCategory}>Referencia: {expense.category}</Text>}
                 <Text style={styles.expenseDate}>{expense.date}</Text>
               </View>
               <View style={styles.expenseRight}>
@@ -92,7 +92,7 @@ export default function ExpensesScreen() {
                     ? 'Efectivo'
                     : expense.paymentMethod === 'card'
                     ? 'Tarjeta'
-                    : 'Transferencia'}
+                    : expense.paymentMethod==='transfer'?'Transferencia':'No especificado'}
                 </Text>
               </View>
             </View>

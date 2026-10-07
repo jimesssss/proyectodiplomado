@@ -34,6 +34,8 @@ import { usePOSStore, Product } from '../../../stores/posStore';
 import { useProductStore } from '../../../stores/productStore';
 import { useSalesStore } from '../../../stores/salesStore';
 import { DataState } from '../../../components/DataState';
+import { ChoiceField } from '../../../components/ChoiceField';
+import { SecondaryButton } from '../../../components/SecondaryButton';
 
 type PaymentMethod = 'cash' | 'card' | 'transfer';
 
@@ -71,6 +73,8 @@ export default function POSScreen() {
   const removeFromCart=(id:string)=>{if(!blocked())removeFromCartInStore(id);};
   const updateQuantity=(id:string,quantity:number)=>{if(!blocked())updateQuantityInStore(id,quantity);};
   const stockBalances=useInventoryStore(state=>state.stockBalances);
+  const stockLoading = useInventoryStore(state => state.stockLoading);
+  const stockError = useInventoryStore(state => state.stockError);
   useEffect(()=>{
     void (async()=>{
       try {
@@ -312,6 +316,8 @@ export default function POSScreen() {
             <ProductCard
               key={product.id}
               product={product}
+              stockPending={productsLoading || stockLoading}
+              stockUnavailable={Boolean(stockError)}
               onAddToCart={() => handleAddToCart(product)}
             />
           ))}
@@ -546,21 +552,15 @@ export default function POSScreen() {
             </Pressable>
           </View>
 
-          <View style={styles.paymentContent}>
+          <ScrollView style={styles.paymentContent} keyboardShouldPersistTaps="handled">
             <Text style={styles.paymentTotal}>
               Total a pagar: {formatCurrency(finalTotal)}
             </Text>
 
-            <Text style={styles.paymentMethodText}>Cliente</Text>
-            <ScrollView horizontal>
-              <Pressable disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,!customerId&&styles.paymentMethodActive]} onPress={()=>setCustomerId('')}><Text>Cliente común</Text></Pressable>
-              {customers.filter(c=>!isCommonCustomer(c)).map(c=><Pressable key={c.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,customerId===c.id&&styles.paymentMethodActive]} onPress={()=>setCustomerId(c.id)}><Text>{c.name}</Text></Pressable>)}
-              {useAuthStore.getState().can('customer:create') && <Pressable disabled={submitting||!!pendingOrderId.current} style={styles.paymentMethod} onPress={()=>{returnFromCustomer.current=true;setShowPayment(false);setShowCart(false);router.push({pathname:'/more/customers/new',params:{from:'pos'}});}}><Text>+ Nuevo cliente</Text></Pressable>}
-            </ScrollView>
-            <Text style={styles.paymentMethodText}>Almacén</Text>
-            <ScrollView horizontal>{warehouses.map(w=><Pressable key={w.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,warehouseId===w.id&&styles.paymentMethodActive]} onPress={()=>setWarehouseId(w.id)}><Text>{w.name}</Text></Pressable>)}</ScrollView>
-            <Text style={styles.paymentMethodText}>Cuenta de cobro (MXN)</Text>
-            <ScrollView horizontal>{accounts.filter(a=>a.type===(selectedPayment==='cash'?'cash':'bank')).map(a=><Pressable key={a.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,accountId===a.id&&styles.paymentMethodActive]} onPress={()=>setAccountId(a.id)}><Text>{a.name}</Text></Pressable>)}</ScrollView>
+            <ChoiceField label="Cliente" value={customerId} disabled={submitting||!!pendingOrderId.current} options={[{value:'',label:'Cliente común'},...customers.filter(c=>!isCommonCustomer(c)).map(c=>({value:c.id,label:c.name}))]} onChange={setCustomerId}/>
+            {useAuthStore.getState().can('customer:create')&&<SecondaryButton title="+ Nuevo cliente" disabled={submitting||!!pendingOrderId.current} onPress={()=>{returnFromCustomer.current=true;setShowPayment(false);setShowCart(false);router.push({pathname:'/more/customers/new',params:{from:'pos'}});}}/>}
+            <ChoiceField label="Almacén" value={warehouseId} disabled={submitting||!!pendingOrderId.current} options={warehouses.map(w=>({value:w.id,label:w.name}))} onChange={setWarehouseId}/>
+            <ChoiceField label="Cuenta de cobro · MXN" value={accountId} disabled={submitting||!!pendingOrderId.current} options={accounts.filter(a=>a.type===(selectedPayment==='cash'?'cash':'bank')).map(a=>({value:a.id,label:a.name}))} onChange={setAccountId}/>
             <View style={styles.paymentMethods}>
               <Pressable
                 style={[
@@ -575,7 +575,7 @@ export default function POSScreen() {
                   size={24}
                   color={
                     selectedPayment === 'cash'
-                      ? colors.neutral[0]
+                      ? colors.primary[700]
                       : colors.neutral[600]
                   }
                 />
@@ -604,7 +604,7 @@ export default function POSScreen() {
                   size={24}
                   color={
                     selectedPayment === 'card'
-                      ? colors.neutral[0]
+                      ? colors.primary[700]
                       : colors.neutral[600]
                   }
                 />
@@ -633,7 +633,7 @@ export default function POSScreen() {
                   size={24}
                   color={
                     selectedPayment === 'transfer'
-                      ? colors.neutral[0]
+                      ? colors.primary[700]
                       : colors.neutral[600]
                   }
                 />
@@ -659,7 +659,7 @@ export default function POSScreen() {
                 {submitting ? 'Confirmando…' : 'Confirmar Venta'}
               </Text>
             </Pressable>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
 
@@ -712,9 +712,13 @@ export default function POSScreen() {
 function ProductCard({
   product,
   onAddToCart,
+  stockPending,
+  stockUnavailable,
 }: {
   product: Product;
   onAddToCart: () => void;
+  stockPending: boolean;
+  stockUnavailable: boolean;
 }) {
   const outOfStock = product.stock <= 0;
 
@@ -736,10 +740,10 @@ function ProductCard({
       <Text
         style={[
           styles.productStock,
-          outOfStock && styles.productStockEmpty,
+          outOfStock && !stockPending && !stockUnavailable && styles.productStockEmpty,
         ]}
       >
-        {outOfStock
+        {stockPending ? 'Consultando stock…' : stockUnavailable ? 'Stock no disponible' : outOfStock
           ? 'Agotado'
           : `Disponible: ${product.stock}`}
       </Text>
@@ -1159,7 +1163,7 @@ const styles = createScreenStyles({
   },
 
   paymentMethodActive: {
-    backgroundColor: colors.primary[600],
+    backgroundColor: colors.primary[50],
     borderColor: colors.primary[600],
   },
 
@@ -1171,7 +1175,7 @@ const styles = createScreenStyles({
   },
 
   paymentMethodTextActive: {
-    color: colors.neutral[0],
+    color: colors.primary[700],
   },
 
   confirmButton: {

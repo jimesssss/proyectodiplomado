@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatCard, PrimaryButton, SecondaryButton, FormInput } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useCashRegisterStore } from '../../../../stores/cashRegisterStore';
+import { ChoiceField } from '../../../../components/ChoiceField';
 
 export default function CashRegisterScreen() {
   useModuleRefresh(useCashRegisterStore.getState().load,()=>useCashRegisterStore.getState().error);
@@ -55,11 +56,11 @@ export default function CashRegisterScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <ScrollView horizontal>{accounts.map(a=><Pressable key={a.id} onPress={()=>{void selectAccount(a.id);}}><Text style={{padding:12,color:accountId===a.id?colors.primary[600]:colors.neutral[700]}}>{a.name} ({a.currency})</Text></Pressable>)}</ScrollView>
+        <View style={styles.section}><ChoiceField label="Cuenta de tesorería" value={accountId??''} options={accounts.map(a=>({value:a.id,label:`${a.name} · ${a.currency}`}))} onChange={id=>{void selectAccount(id);}}/></View>
         {/* Estado de caja */}
         <View style={styles.section}>
           <View style={styles.statusRow}>
-            <Text style={styles.sectionTitle}>Estado de Caja</Text>
+            <Text style={styles.sectionTitle}>Cuenta de caja · MXN</Text>
             <View
               style={[
                 styles.statusBadge,
@@ -72,7 +73,7 @@ export default function CashRegisterScreen() {
                   cashRegister.isOpen ? styles.statusTextOpen : styles.statusTextClosed,
                 ]}
               >
-                {cashRegister.isOpen ? 'Abierta' : 'Cerrada'}
+                {cashRegister.isOpen ? 'Activa' : 'Sin cuenta activa'}
               </Text>
             </View>
           </View>
@@ -84,18 +85,12 @@ export default function CashRegisterScreen() {
               backgroundColor={colors.neutral[50]}
             />
             <StatCard
-              label="Cobros Efectivo"
-              value={formatCurrency(cashRegister.cashSales)}
-              backgroundColor="#EAF5EF"
-              valueColor="#065F46"
-            />
-            <StatCard
-              label="Entradas"
+              label="Ingresos registrados"
               value={formatCurrency(cashRegister.entries)}
               backgroundColor={colors.accent[50]}
             />
             <StatCard
-              label="Salidas"
+              label="Egresos registrados"
               value={formatCurrency(cashRegister.exits)}
               backgroundColor="#FCECEF"
               valueColor="#991B1B"

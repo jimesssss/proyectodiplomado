@@ -7,13 +7,15 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  *
  * Muestra toda la información de un proveedor.
  */
-import React from 'react';
+import React,{useEffect} from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge, SecondaryButton } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useSuppliersStore } from '../../../../stores/suppliersStore';
+import { usePurchasesStore } from '../../../../stores/purchasesStore';
+import { useAuthStore } from '../../../../stores/authStore';
 
 export default function SupplierDetailScreen() {
   useModuleRefresh(useSuppliersStore.getState().load, () => useSuppliersStore.getState().error);
@@ -24,6 +26,10 @@ export default function SupplierDetailScreen() {
   const { getSupplierById } = useSuppliersStore();
 
   const supplier = getSupplierById(id || '');
+  const canReadPurchases=useAuthStore(s=>s.can('purchase.order:read'));
+  const purchases=usePurchasesStore(s=>s.purchases);
+  const purchasesLoading=usePurchasesStore(s=>s.isLoading),purchasesError=usePurchasesStore(s=>s.error);
+  useEffect(()=>{if(canReadPurchases)void usePurchasesStore.getState().load();},[canReadPurchases]);
 
   if (loading || loadError) return <ScreenContainer><AppHeader title="Detalle de proveedor" onBack={() => router.back()} /><DataState loading={loading} error={loadError} /></ScreenContainer>;
 
@@ -58,7 +64,7 @@ export default function SupplierDetailScreen() {
         {/* Información principal */}
         <View style={styles.section}>
           <Text style={styles.supplierName}>{supplier.name}</Text>
-          <Text style={styles.supplierCompany}>{supplier.company}</Text>
+          {supplier.company!==supplier.name&&<Text style={styles.supplierCompany}>{supplier.company}</Text>}
           <View style={styles.statusRow}>
             <StatusBadge
               status={supplier.status === 'active' ? 'success' : 'neutral'}
@@ -92,6 +98,7 @@ export default function SupplierDetailScreen() {
           </View>
         </View>
 
+        <View style={styles.section}><Text style={styles.sectionTitle}>Compras relacionadas</Text>{!canReadPurchases?<DataState error="No tienes permiso para consultar compras."/>:<><DataState loading={purchasesLoading} error={purchasesError}/>{purchases.filter(p=>p.supplierId===supplier.id).map(p=><Pressable key={p.id} accessibilityRole="button" onPress={()=>router.push(`/more/purchases/${p.id}`)} style={styles.detailRow}><View style={{flex:1}}><Text style={styles.detailValue}>{p.orderNumber}</Text><Text style={styles.detailLabel}>{p.date}</Text></View><Text style={styles.detailValue}>{p.total.toFixed(2)} {p.currency}</Text></Pressable>)}{!purchasesLoading&&!purchasesError&&!purchases.some(p=>p.supplierId===supplier.id)&&<DataState empty/>}</>}</View>
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </ScreenContainer>

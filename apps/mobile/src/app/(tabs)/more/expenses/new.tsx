@@ -19,6 +19,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScreenContainer } from '../../../../components';
+import { ChoiceField } from '../../../../components/ChoiceField';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useExpensesStore } from '../../../../stores/expensesStore';
 import { useAuditStore } from '../../../../stores/auditStore';
@@ -136,8 +137,7 @@ export default function NewExpenseScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text>Cuenta de pago (MXN)</Text>
-          <ScrollView horizontal>{accounts.filter(a=>a.currency==='MXN'&&a.type===(paymentMethod==='cash'?'cash':'bank')).map(a=><Pressable key={a.id} onPress={()=>setAccountId(a.id)}><Text style={{padding:12,color:accountId===a.id?colors.primary[600]:colors.neutral[700]}}>{a.name}</Text></Pressable>)}</ScrollView>
+          <ChoiceField label="Cuenta de pago · MXN" value={accountId} options={accounts.filter(a=>a.currency==='MXN'&&a.type===(paymentMethod==='cash'?'cash':'bank')).map(a=>({value:a.id,label:a.name}))} onChange={setAccountId}/>
           <View style={styles.intro}>
             <View style={styles.iconContainer}>
               <Ionicons

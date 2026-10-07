@@ -5,7 +5,7 @@
  * Utiliza iconos nativos (TabBarIcon) en lugar de fuentes de iconos.
  */
 import { useAuthStore } from '../../stores/authStore';
-import { ActivityIndicator, Platform } from 'react-native';
+import { ActivityIndicator, Platform, useWindowDimensions } from 'react-native';
 import { Tabs, Redirect } from 'expo-router';
 import { TabBarIcon } from '../../components';
 import { colors } from '../../theme';
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { isAuthenticated, isHydrated } = useAuthStore();
   if (!isHydrated) return <ActivityIndicator />;
   if (!isAuthenticated) return <Redirect href="/login" />;
@@ -22,6 +23,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary[600],
         tabBarInactiveTintColor: colors.neutral[400],
+        tabBarLabelPosition: width < 600 ? 'below-icon' : 'beside-icon',
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.neutral[200],

@@ -6,6 +6,7 @@
  */
 import { create } from 'zustand';
 import { useAuthStore } from './authStore';
+import { CANDY_CATEGORIES,productClassification } from '../services/product-classification';
 import {
   archiveProduct as archiveProductWithApi,
   createProduct as createProductWithApi,
@@ -55,8 +56,6 @@ interface ProductState {
   clearError: () => void;
 }
 
-const UNPERSISTED_CATEGORY_OPTIONS = ['Paletas', 'Caramelos', 'Gomitas', 'Chocolates', 'Dulces tradicionales', 'Dulces enchilados', 'Galletas', 'Botanas', 'Bebidas', 'Malvaviscos', 'Chicles', 'Dulces para eventos', 'Temporada', 'Confitería', 'Otros dulces'];
-
 function toProduct(apiProduct: ApiProduct, stock = 0): Product {
   return {
     id: apiProduct.id,
@@ -64,7 +63,7 @@ function toProduct(apiProduct: ApiProduct, stock = 0): Product {
     imageUrl: apiProduct.imageUrl ?? null,
     sku: apiProduct.code,
     barcode: '',
-    category: '',
+    category: productClassification(apiProduct.description),
     purchasePrice: apiProduct.cost ?? 0,
     salePrice: apiProduct.price ?? 0,
     stock,
@@ -100,7 +99,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   products: [],
   isLoading: false,
   error: null,
-  categories: UNPERSISTED_CATEGORY_OPTIONS,
+  categories: CANDY_CATEGORIES,
   selectedProduct: null,
 
   getProductById: (id: string) => {

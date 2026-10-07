@@ -21,6 +21,8 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useDashboardStore } from '../../../stores/dashboardStore';
 import { useSalesStore } from '../../../stores/salesStore';
 import { DataState } from '../../../components/DataState';
+import { StatCard } from '../../../components/StatCard';
+import { DashboardOperations } from '../../../components/DashboardOperations';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -57,7 +59,7 @@ export default function DashboardScreen() {
             })}
           </Text>
         </View>
-        <Pressable onPress={handleLogout} style={styles.logoutButton}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Cerrar sesión" onPress={handleLogout} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color={colors.neutral[600]} />
         </Pressable>
       </View>
@@ -74,33 +76,14 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ventas de tu dulcería · MXN</Text>
           <View style={styles.summaryGrid}>
-            <View style={[styles.summaryCard, styles.cardToday]}>
-              <Text style={styles.summaryLabel}>Ventas del día</Text>
-              <Text style={styles.summaryValue}>
-                {isLoading || error ? '—' : formatCurrency(salesSummary.today)}
-              </Text>
-            </View>
-            <View style={[styles.summaryCard, styles.cardWeek]}>
-              <Text style={styles.summaryLabel}>Semana</Text>
-              <Text style={styles.summaryValue}>
-                {isLoading || error ? '—' : formatCurrency(salesSummary.week)}
-              </Text>
-            </View>
-            <View style={[styles.summaryCard, styles.cardMonth]}>
-              <Text style={styles.summaryLabel}>Mes</Text>
-              <Text style={styles.summaryValue}>
-                {isLoading || error ? '—' : formatCurrency(salesSummary.month)}
-              </Text>
-            </View>
-            <View style={[styles.summaryCard, styles.cardYear]}>
-              <Text style={styles.summaryLabel}>Año</Text>
-              <Text style={styles.summaryValue}>
-                {isLoading || error ? '—' : formatCurrency(salesSummary.year)}
-              </Text>
-            </View>
+            <StatCard label="Ventas del día" value={isLoading || error ? '—' : formatCurrency(salesSummary.today)} backgroundColor={colors.primary[50]} valueColor={colors.primary[700]} style={styles.summaryCard} />
+            <StatCard label="Esta semana" value={isLoading || error ? '—' : formatCurrency(salesSummary.week)} style={styles.summaryCard} />
+            <StatCard label="Este mes" value={isLoading || error ? '—' : formatCurrency(salesSummary.month)} style={styles.summaryCard} />
+            <StatCard label="Este año" value={isLoading || error ? '—' : formatCurrency(salesSummary.year)} style={styles.summaryCard} />
           </View>
         </View>
 
+        <View style={styles.section}><DashboardOperations /></View>
         {/* Productos top */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Productos Más Vendidos</Text>

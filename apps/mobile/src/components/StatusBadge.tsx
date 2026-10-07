@@ -32,6 +32,7 @@ export function StatusBadge({ status, label }: StatusBadgeProps) {
         { backgroundColor: colorScheme.bg },
       ]}
     >
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={[styles.dot, { backgroundColor: colorScheme.text }]} />
       <Text style={[styles.text, { color: colorScheme.text }]}>{label}</Text>
     </View>
   );
@@ -43,9 +44,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radii.full,
     alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
   },
+  dot: { width: 5, height: 5, borderRadius: 3 },
   text: {
     fontSize: 13,
     fontWeight: typography.weight.medium,
+    flexShrink: 1,
+    lineHeight: 18,
   },
 });

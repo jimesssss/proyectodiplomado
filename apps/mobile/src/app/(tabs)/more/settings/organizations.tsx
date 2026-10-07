@@ -88,7 +88,7 @@ export default function OrganizationsScreen() {
                 <EmptyState
                   icon="business-outline"
                   title="No hay organizaciones"
-                  description="Consulta el API y crea la primera organización activa del tenant."
+                  description="Todavía no hay organizaciones registradas para tu negocio."
                 />
               ) : (
                 organizations.map((organization) => (
@@ -96,14 +96,9 @@ export default function OrganizationsScreen() {
                     <View style={styles.unitDetails}>
                       <Text style={styles.unitName}>{organization.name}</Text>
                       <Text style={styles.unitSubtext}>
-                        {organization.code} · {organization.id}
+                        {organization.code}
                       </Text>
                       <View style={styles.diagnostic}>
-                        <Text style={styles.diagnosticText}>ID: {organization.id}</Text>
-                        <Text style={styles.diagnosticText}>
-                          LONGITUD: {organization.id.length}
-                        </Text>
-                        <Text style={styles.diagnosticText}>TIPO: {typeof organization.id}</Text>
                         <Pressable
                           onPress={() => void copyId(organization.id)}
                           style={styles.copyButton}

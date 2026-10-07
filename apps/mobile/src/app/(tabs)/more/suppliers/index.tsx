@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, StatusBadge, EmptyState } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useSuppliersStore } from '../../../../stores/suppliersStore';
+import { useAuthStore } from '../../../../stores/authStore';
 
 export default function SuppliersScreen() {
   useModuleRefresh(useSuppliersStore.getState().load, () => useSuppliersStore.getState().error);
@@ -36,6 +37,7 @@ export default function SuppliersScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.neutral[800]} />
         </Pressable>
         <Text style={styles.headerTitle}>Proveedores</Text>
+        {useAuthStore(state=>state.can('supplier:create'))&&<Pressable accessibilityRole="button" accessibilityLabel="Nuevo proveedor" style={styles.addButton} onPress={()=>router.push('/more/suppliers/new')}><Ionicons name="add" size={24} color={colors.primary[600]}/></Pressable>}
         {/* Pendiente: implementar pantalla de nuevo proveedor */}
         {/* <Pressable
           style={styles.addButton}
@@ -74,7 +76,7 @@ export default function SuppliersScreen() {
             >
               <View style={styles.supplierInfo}>
                 <Text style={styles.supplierName}>{supplier.name}</Text>
-                <Text style={styles.supplierCompany}>{supplier.company}</Text>
+                {supplier.company!==supplier.name&&<Text style={styles.supplierCompany}>{supplier.company}</Text>}
                 <View style={styles.supplierContact}>
                   <Ionicons name="call-outline" size={14} color={colors.neutral[500]} />
                   <Text style={styles.supplierPhone}>{supplier.phone}</Text>

@@ -1,0 +1,58 @@
+{
+  "organizations": {
+    "total": 2,
+    "names": [
+      "Dulcería ERP-SC",
+      "ERP-SC"
+    ]
+  },
+  "companies": {
+    "total": 1
+  },
+  "branches": {
+    "total": 1
+  },
+  "warehouses": {
+    "total": 2
+  },
+  "products": {
+    "total": 107,
+    "active": 101,
+    "withImage": 100,
+    "demo": 100
+  },
+  "customers": {
+    "total": 20
+  },
+  "suppliers": {
+    "total": 15
+  },
+  "purchases": {
+    "total": 10
+  },
+  "sales": {
+    "total": 22
+  },
+  "expenses": {
+    "total": 16,
+    "demo": 6
+  },
+  "accounts": {
+    "total": 2
+  },
+  "treasuryMovements": {
+    "total": 41
+  },
+  "stock": {
+    "total": 104
+  },
+  "inventoryMovements": {
+    "total": 197
+  },
+  "users": {
+    "total": 1
+  },
+  "audit": {
+    "total": 804
+  }
+}

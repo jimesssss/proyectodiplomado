@@ -3,7 +3,7 @@
  *
  * Input de búsqueda con icono y botón de limpiar.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, radii } from '../theme';
@@ -19,8 +19,9 @@ export function SearchBar({
   onChangeText,
   placeholder = 'Buscar...',
 }: SearchBarProps) {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, focused && styles.focused]}>
       <Ionicons
         name="search-outline"
         size={20}
@@ -36,6 +37,8 @@ export function SearchBar({
         onChangeText={onChangeText}
         autoCapitalize="none"
         autoCorrect={false}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
       {value.length > 0 && (
         <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => onChangeText('')} style={styles.clearButton}>
@@ -47,6 +50,7 @@ export function SearchBar({
 }
 
 const styles = StyleSheet.create({
+  focused: { borderColor: colors.primary[600], backgroundColor: colors.primary[50] },
   container: {
     flexDirection: 'row',
     alignItems: 'center',

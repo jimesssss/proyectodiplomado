@@ -4,6 +4,8 @@ export interface Purchase {
   id: string;
   orderNumber: string;
   supplier: string;
+  supplierId?: string;
+  currency?: string;
   date: string;
   total: number;
   status: 'pending' | 'received' | 'cancelled';
@@ -16,7 +18,7 @@ export interface Purchase {
 }
 
 
-function mapPurchase(d:ApiDocument,names:Record<string,string>):Purchase {return {id:d.id,orderNumber:d.number,supplier:names[d.supplierId??'']??d.supplierId??'',date:d.issueDate.slice(0,10),total:d.total,
+function mapPurchase(d:ApiDocument,names:Record<string,string>):Purchase {return {id:d.id,orderNumber:d.number,supplier:names[d.supplierId??'']??d.supplierId??'',supplierId:d.supplierId,currency:d.currency,date:d.issueDate.slice(0,10),total:d.total,
   status:d.status==='completed'?'received':d.status==='cancelled'?'cancelled':'pending',items:d.lines.map((l,i)=>({productId:l.productId??d.id+':'+i,productName:l.description,quantity:l.quantity,price:l.unitPrice}))};}
 interface PurchasesState {purchases:Purchase[];isLoading:boolean;error:string|null;load():Promise<void>;getPurchaseById(id:string):Purchase|undefined;
   createOrder(input:{supplierId:string;lines:ApiLine[];notes?:string}):Promise<boolean>;addPurchase(input:Omit<Purchase,'id'>):Promise<void>;}

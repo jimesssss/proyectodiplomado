@@ -29,7 +29,7 @@ export function PrimaryButton({
       style={({ pressed }) => [
         styles.button,
         pressed && styles.pressed,
-        disabled && styles.disabled,
+        (disabled || loading) && styles.disabled,
         style,
       ]}
       onPress={onPress}
@@ -43,7 +43,7 @@ export function PrimaryButton({
       ) : (
         <>
           {icon}
-          <Text style={styles.text}>{title}</Text>
+          <Text style={[styles.text, disabled && styles.disabledText]}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -80,5 +80,8 @@ const styles = StyleSheet.create({
     color: colors.neutral[0],
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    flexShrink: 1,
+    textAlign: 'center',
   },
+  disabledText: { color: colors.neutral[700] },
 });

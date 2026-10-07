@@ -13,6 +13,7 @@ import { colors, spacing, typography, radii } from '../../../theme';
 import { useInventoryStore } from '../../../stores/inventoryStore';
 import { useProductStore } from '../../../stores/productStore';
 import { useAuthStore } from '../../../stores/authStore';
+import { DataState } from '../../../components/DataState';
 
 export default function InventoryScreen() {
   const router = useRouter();
@@ -76,6 +77,8 @@ export default function InventoryScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Inventario</Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ver movimientos de inventario"
           style={styles.movementsButton}
           onPress={() => router.push('/inventory/movements')}
         >
@@ -89,9 +92,7 @@ export default function InventoryScreen() {
             <ActivityIndicator />
           </View>
         )}
-        {loadError && (
-          <Text style={styles.loadError}>{loadError}</Text>
-        )}
+        <DataState error={loadError} />
         {/* Resumen */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resumen de Inventario</Text>

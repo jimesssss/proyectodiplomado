@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, FormInput, PrimaryButton, SecondaryButton } from '../../../../components';
 import { colors, spacing, typography } from '../../../../theme';
+import { ChoiceField } from '../../../../components/ChoiceField';
 
 export default function NewPurchaseScreen() {
   const router = useRouter();
@@ -51,21 +52,10 @@ export default function NewPurchaseScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <Text>Selecciona proveedor</Text>
-          <ScrollView horizontal>{suppliers.filter(s=>s.status==='active').map(s=><Pressable key={s.id} onPress={()=>setFormData({...formData,supplier:s.id})}><Text style={{padding:12,color:formData.supplier===s.id?colors.primary[600]:colors.neutral[700]}}>{s.name}</Text></Pressable>)}</ScrollView>
-          <Text>Producto</Text>
-          <ScrollView horizontal>{products.filter(p=>p.status==='active').map(p=><Pressable key={p.id} onPress={()=>{setProductId(p.id);setCost(String(p.purchasePrice));}}><Text style={{padding:12,color:productId===p.id?colors.primary[600]:colors.neutral[700]}}>{p.name}</Text></Pressable>)}</ScrollView>
+          <ChoiceField label="Proveedor" value={formData.supplier} disabled={saving} options={suppliers.filter(s=>s.status==='active').map(s=>({value:s.id,label:s.name}))} onChange={id=>setFormData({...formData,supplier:id})}/>
+          <ChoiceField label="Producto" value={productId} disabled={saving} options={products.filter(p=>p.status==='active').map(p=>({value:p.id,label:p.name,description:p.sku}))} onChange={id=>{setProductId(id);setCost(String(products.find(p=>p.id===id)?.purchasePrice??''));}}/>
           <FormInput label="Cantidad" value={quantity} onChangeText={setQuantity} keyboardType="decimal-pad" />
           <FormInput label="Costo unitario" value={cost} onChangeText={setCost} keyboardType="decimal-pad" />
-          <FormInput
-            label="Proveedor"
-            value={suppliers.find(s=>s.id===formData.supplier)?.name??''}
-            editable={false}
-            onChangeText={(text) => setFormData({ ...formData, supplier: text })}
-            placeholder="Seleccionar proveedor"
-            required
-          />
-
           <FormInput
             label="Fecha esperada"
             value={formData.expectedDate}

@@ -24,8 +24,6 @@ export default function SettingsScreen() {
   const router = useRouter();
 
   const {
-    company,
-    branch,
     fiscal,
     preferences,
     notifications,
@@ -59,65 +57,11 @@ export default function SettingsScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
-        {/* Empresa */}
-        <View style={styles.section}>
-          <SectionHeader title="Empresa" />
-
-          <View style={styles.card}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Nombre</Text>
-              <Text style={styles.detailValue}>{company.name}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>RFC</Text>
-              <Text style={styles.detailValue}>{company.rfc}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Dirección</Text>
-              <Text style={styles.detailValue}>{company.address}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Teléfono</Text>
-              <Text style={styles.detailValue}>{company.phone}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Email</Text>
-              <Text style={styles.detailValue}>{company.email}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Sucursal */}
-        <View style={styles.section}>
-          <SectionHeader title="Sucursal" />
-
-          <View style={styles.card}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Nombre</Text>
-              <Text style={styles.detailValue}>{branch.name}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Código</Text>
-              <Text style={styles.detailValue}>{branch.code}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Dirección</Text>
-              <Text style={styles.detailValue}>{branch.address}</Text>
-            </View>
-          </View>
-        </View>
-
         <View style={styles.section}>
           <SectionHeader title="Estructura organizativa" />
           <ListItem
             title="Organizaciones"
-            subtitle="Consultar y crear organizaciones del tenant"
+            subtitle="Consultar las organizaciones y sus datos reales"
             leftIcon="business-outline"
             onPress={() => router.push('/more/settings/organizations')}
           />
@@ -143,7 +87,7 @@ export default function SettingsScreen() {
 
         {/* Datos Fiscales */}
         <View style={styles.section}>
-          <SectionHeader title="Datos Fiscales" />
+          <SectionHeader title="Preferencias fiscales locales" />
 
           <View style={styles.card}>
             <View style={styles.detailRow}>

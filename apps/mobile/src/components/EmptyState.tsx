@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.md,
   },
   title: {
     fontSize: typography.size.lg,
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
     color: colors.neutral[600],
     marginTop: spacing.md,
     textAlign: 'center',
+    lineHeight: 25,
   },
   description: {
     fontSize: typography.size.sm,
@@ -49,5 +51,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
+    lineHeight: 21,
+    maxWidth: 480,
   },
 });

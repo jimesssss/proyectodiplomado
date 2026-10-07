@@ -59,10 +59,12 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
+    lineHeight: 30,
     color: colors.neutral[800],
   },
   subtitle: {

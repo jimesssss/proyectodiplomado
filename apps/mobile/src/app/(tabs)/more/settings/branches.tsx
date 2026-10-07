@@ -153,7 +153,7 @@ export default function BranchesScreen() {
                     <View style={styles.unitDetails}>
                       <Text style={styles.unitName}>{branch.name}</Text>
                       <Text style={styles.unitSubtext}>
-                        {branch.code} · {branch.id}
+                        {branch.code}
                       </Text>
                     </View>
                     <StatusBadge
@@ -172,7 +172,7 @@ export default function BranchesScreen() {
                   <EmptyState
                     icon="business-outline"
                     title="No hay empresas activas"
-                    description="El contrato del backend exige crear cada sucursal bajo una empresa activa. No permite crearla directamente bajo el tenant."
+                    description="Registra primero una empresa activa para poder crear su sucursal."
                   />
                 ) : primaryCodeAlreadyUsed ? (
                   <Text style={styles.helpText}>
@@ -194,7 +194,7 @@ export default function BranchesScreen() {
                           <View style={styles.unitDetails}>
                             <Text style={styles.unitName}>{company.name}</Text>
                             <Text style={styles.unitSubtext}>
-                              {company.code} · {company.id}
+                              {company.code}
                             </Text>
                           </View>
                           <Ionicons

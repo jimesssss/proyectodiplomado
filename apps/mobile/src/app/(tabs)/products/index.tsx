@@ -13,6 +13,7 @@ import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../co
 import { colors, spacing, typography, radii } from '../../../theme';
 import { useProductStore } from '../../../stores/productStore';
 import { useInventoryStore } from '../../../stores/inventoryStore';
+import { DataState } from '../../../components/DataState';
 
 export default function ProductsScreen() {
   const router = useRouter();
@@ -58,6 +59,8 @@ export default function ProductsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Productos</Text>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Nuevo producto"
           style={styles.addButton}
           onPress={() => router.push('/products/new')}
         >
@@ -123,7 +126,7 @@ export default function ProductsScreen() {
         <EmptyState
           icon="cloud-offline-outline"
           title="No se pudieron cargar los productos"
-          description={error}
+          description="Revisa tu conexión y vuelve a intentarlo."
         />
       ) : isLoading && products.length === 0 ? (
         <View style={styles.loadingContainer}>
@@ -133,16 +136,14 @@ export default function ProductsScreen() {
         <EmptyState
           icon="cube-outline"
           title="No se encontraron productos"
-          description={error ?? 'Intenta con otros términos de búsqueda o filtros'}
+          description="Intenta con otros términos de búsqueda o filtros"
         />
       ) : (
         <ScrollView
           style={styles.listContainer}
           showsVerticalScrollIndicator={false}
         >
-          {(error || (stockError && !stockLoading)) && (
-            <Text style={styles.loadError}>{error ?? stockError}</Text>
-          )}
+          <DataState error={error ?? (!stockLoading ? stockError : null)} />
           {filteredProducts.map((product) => {
             const stock = getStockForProduct(product.id);
             const stockStatus = stockAvailable
@@ -151,6 +152,8 @@ export default function ProductsScreen() {
             return (
               <Pressable
                 key={product.id}
+                accessibilityRole="button"
+                accessibilityLabel={`${product.name}, SKU ${product.sku}. Ver producto`}
                 style={styles.productCard}
                 onPress={() => router.push(`/products/${product.id}`)}
               >
@@ -268,6 +271,7 @@ const styles = createScreenStyles({
   },
   productInfo: {
     flex: 1,
+    minWidth: 0,
   },
   productName: {
     fontSize: typography.size.base,
@@ -289,6 +293,8 @@ const styles = createScreenStyles({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   productPrice: {
     fontSize: typography.size.base,

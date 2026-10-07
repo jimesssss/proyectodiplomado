@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { businessApi, type ApiParty } from '../services/business-api';
 import { useAuthStore } from './authStore';
+import { customerMetrics } from '../services/customer-metrics';
+import type { ApiDocument } from '../services/business-api';
 export interface Customer {
   id: string;
   name: string;
@@ -8,6 +10,8 @@ export interface Customer {
   email: string;
   totalPurchases: number;
   totalSpent: number;
+  purchaseStatsAvailable?: boolean;
+  history?: ApiDocument[];
   lastPurchase?: string;
   status: 'active' | 'inactive';
 }
@@ -24,7 +28,11 @@ export const useCustomersStore = create<CustomersState>((set,get)=>({
   customers: [], isLoading: false, error: null,
   load: async () => {
     set({ isLoading: true, error: null });
-    try { const data=await businessApi.listCustomers(); set({ customers: data.map(mapCustomer) }); }
+    try {
+      const data=await businessApi.listCustomers();let invoices:ApiDocument[]|null=null;
+      if(useAuthStore.getState().can('sales.invoice:read'))try{invoices=await businessApi.listInvoices();}catch{/* El directorio permanece disponible; las estadísticas no se presentan como cero. */}
+      set({customers:data.map(c=>({...mapCustomer(c),purchaseStatsAvailable:invoices!==null,...(invoices?customerMetrics(c.id,invoices):{})}))});
+    }
     catch(error) { set({ error: error instanceof Error ? error.message : 'No se pudo completar la operación.', customers: [] }); } finally { set({ isLoading: false }); }
   },
   getCustomerById: id => get().customers.find(c=>c.id===id),

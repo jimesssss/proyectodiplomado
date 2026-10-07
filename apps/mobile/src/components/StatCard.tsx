@@ -45,15 +45,19 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radii.xl,
     minWidth: 100,
+    minHeight: 104,
+    justifyContent: 'center',
   },
   label: {
     fontSize: typography.size.sm,
     color: colors.neutral[600],
     marginBottom: spacing.xs,
+    lineHeight: 20,
   },
   value: {
     fontSize: typography.size.xxl,
     fontWeight: typography.weight.bold,
     flexShrink: 1,
+    letterSpacing: -0.5,
   },
 });

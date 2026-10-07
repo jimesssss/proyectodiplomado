@@ -1,0 +1,191 @@
+[
+  {
+    "report": "sales",
+    "pages": 2,
+    "bytes": 5937,
+    "tables": [
+      {
+        "title": "Ventas",
+        "rows": 22,
+        "notes": [
+          "22 registros incluidos",
+          "Total MXN: 1,612.00"
+        ]
+      }
+    ]
+  },
+  {
+    "report": "purchases",
+    "pages": 1,
+    "bytes": 3276,
+    "tables": [
+      {
+        "title": "Compras",
+        "rows": 10,
+        "notes": [
+          "10 registros incluidos",
+          "Total MXN: 1,944.74"
+        ]
+      }
+    ]
+  },
+  {
+    "report": "inventory",
+    "pages": 8,
+    "bytes": 25623,
+    "tables": [
+      {
+        "title": "Inventario",
+        "rows": 101,
+        "notes": [
+          "101 registros incluidos",
+          "Existencias actuales. El catálogo no especifica moneda para costos y valor."
+        ]
+      }
+    ]
+  },
+  {
+    "report": "products",
+    "pages": 8,
+    "bytes": 22678,
+    "tables": [
+      {
+        "title": "Productos",
+        "rows": 101,
+        "notes": [
+          "101 productos. Catálogo actual; no especifica moneda para precios y costos."
+        ]
+      }
+    ]
+  },
+  {
+    "report": "customers",
+    "pages": 2,
+    "bytes": 5235,
+    "tables": [
+      {
+        "title": "Clientes",
+        "rows": 20,
+        "notes": [
+          "20 registros. Directorio actual, sin filtro histórico."
+        ]
+      }
+    ]
+  },
+  {
+    "report": "suppliers",
+    "pages": 2,
+    "bytes": 4586,
+    "tables": [
+      {
+        "title": "Proveedores",
+        "rows": 15,
+        "notes": [
+          "15 registros. Directorio actual, sin filtro histórico."
+        ]
+      }
+    ]
+  },
+  {
+    "report": "expenses",
+    "pages": 2,
+    "bytes": 5048,
+    "tables": [
+      {
+        "title": "Gastos / pagos",
+        "rows": 16,
+        "notes": [
+          "16 pagos. Incluye estado; solo los contabilizados se suman.",
+          "Total MXN: 9,424.74",
+          "Incluye pagos de compras y otros pagos, no exclusivamente gastos operativos."
+        ]
+      }
+    ]
+  },
+  {
+    "report": "cashflow",
+    "pages": 5,
+    "bytes": 13874,
+    "tables": [
+      {
+        "title": "Caja / tesorería",
+        "rows": 41,
+        "notes": [
+          "41 registros incluidos",
+          "MXN · Ingresos: 2,612.00 · Egresos: 9,424.74",
+          "Aperturas registradas en el periodo · MXN: 75,000.00"
+        ]
+      }
+    ]
+  },
+  {
+    "report": "general",
+    "pages": 30,
+    "bytes": 80633,
+    "tables": [
+      {
+        "title": "Ventas",
+        "rows": 22,
+        "notes": [
+          "22 registros incluidos",
+          "Total MXN: 1,612.00"
+        ]
+      },
+      {
+        "title": "Compras",
+        "rows": 10,
+        "notes": [
+          "10 registros incluidos",
+          "Total MXN: 1,944.74"
+        ]
+      },
+      {
+        "title": "Inventario",
+        "rows": 101,
+        "notes": [
+          "101 registros incluidos",
+          "Existencias actuales. El catálogo no especifica moneda para costos y valor."
+        ]
+      },
+      {
+        "title": "Productos",
+        "rows": 101,
+        "notes": [
+          "101 productos. Catálogo actual; no especifica moneda para precios y costos."
+        ]
+      },
+      {
+        "title": "Clientes",
+        "rows": 20,
+        "notes": [
+          "20 registros. Directorio actual, sin filtro histórico."
+        ]
+      },
+      {
+        "title": "Proveedores",
+        "rows": 15,
+        "notes": [
+          "15 registros. Directorio actual, sin filtro histórico."
+        ]
+      },
+      {
+        "title": "Gastos / pagos",
+        "rows": 16,
+        "notes": [
+          "16 pagos. Incluye estado; solo los contabilizados se suman.",
+          "Total MXN: 9,424.74",
+          "Incluye pagos de compras y otros pagos, no exclusivamente gastos operativos."
+        ]
+      },
+      {
+        "title": "Caja / tesorería",
+        "rows": 41,
+        "notes": [
+          "41 registros incluidos",
+          "MXN · Ingresos: 2,612.00 · Egresos: 9,424.74",
+          "Aperturas registradas en el periodo · MXN: 75,000.00"
+        ]
+      }
+    ]
+  }
+]

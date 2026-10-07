@@ -86,19 +86,21 @@ export default function CustomerDetailScreen() {
           <Text style={styles.sectionTitle}>Estadísticas</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{customer.totalPurchases}</Text>
+              <Text style={styles.statValue}>{customer.purchaseStatsAvailable ? customer.totalPurchases : '—'}</Text>
               <Text style={styles.statLabel}>Compras</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{formatCurrency(customer.totalSpent)}</Text>
-              <Text style={styles.statLabel}>Total</Text>
+              <Text style={styles.statValue}>{customer.purchaseStatsAvailable ? formatCurrency(customer.totalSpent) : '—'}</Text>
+              <Text style={styles.statLabel}>Pagado · MXN</Text>
             </View>
           </View>
         </View>
 
         {/* Historial de compras */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Última Compra</Text>
+          <Text style={styles.sectionTitle}>Historial de compras</Text>
+          {customer.history?.map(sale=><Pressable key={sale.id} accessibilityRole="button" accessibilityLabel={`Ver venta ${sale.number}`} onPress={()=>router.push(`/more/sales/${sale.id}`)} style={styles.detailRow}><View style={{flex:1}}><Text style={styles.detailValue}>{sale.number}</Text><Text style={styles.detailLabel}>{sale.issueDate.slice(0,10)}</Text></View><Text style={styles.detailValue}>{sale.total.toFixed(2)} {sale.currency}</Text></Pressable>)}
+          {!customer.purchaseStatsAvailable&&<Text style={styles.detailLabel}>El historial no está disponible para esta sesión.</Text>}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Fecha</Text>
             <Text style={styles.detailValue}>{customer.lastPurchase || 'N/A'}</Text>

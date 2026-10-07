@@ -3,7 +3,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Reportes — Módulo de Reportes
  *
- * Muestra tarjetas de reportes y gráficas simples (mock visual).
+ * Presenta los reportes y series reales del backend.
  */
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
@@ -13,6 +13,7 @@ import { ScreenContainer, ModuleCard } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useReportsStore } from '../../../../stores/reportsStore';
 import { DataState } from '../../../../components/DataState';
+import { ReportExportPanel } from '../../../../components/ReportExportPanel';
 
 export default function ReportsScreen() {
   useModuleRefresh(useReportsStore.getState().load, () => useReportsStore.getState().error);
@@ -51,7 +52,7 @@ export default function ReportsScreen() {
 };
 
   return (
-    <ScreenContainer loading={useReportsStore(state => state.isLoading)} error={useReportsStore(state => state.error)}>
+    <ScreenContainer>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -62,6 +63,8 @@ export default function ReportsScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ReportExportPanel />
+        <DataState loading={useReportsStore(state => state.isLoading)} error={useReportsStore(state => state.error)} />
         {/* Tarjetas de reportes */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Reportes Disponibles</Text>
@@ -196,11 +199,12 @@ const styles = createScreenStyles({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'flex-end',
-    height: 150,
+    minHeight: 180,
   },
   barContainer: {
     alignItems: 'center',
     flex: 1,
+    minWidth: 0,
   },
   barWrapper: {
     height: 120,

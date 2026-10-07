@@ -40,7 +40,7 @@ export function ProductImage({ uri, name, size = 60, large = false, style }: Pro
 }
 
 const styles = StyleSheet.create({
-  frame: { overflow: 'hidden', borderRadius: radii.md, backgroundColor: colors.neutral[100] },
+  frame: { overflow: 'hidden', flexShrink: 0, borderRadius: radii.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.neutral[200] },
   image: { width: '100%', height: '100%' },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   caption: { marginTop: 12, color: colors.neutral[500], fontSize: 14 },

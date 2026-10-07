@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.size.sm,
+    lineHeight: 20,
     fontWeight: typography.weight.medium,
     color: colors.neutral[700],
     marginBottom: spacing.xs,
@@ -72,5 +73,6 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: typography.size.sm,
     marginTop: spacing.xs,
+    lineHeight: 20,
   },
 });

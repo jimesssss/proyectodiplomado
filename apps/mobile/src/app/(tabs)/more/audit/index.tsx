@@ -5,15 +5,18 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  *
  * Muestra el historial de acciones del sistema.
  */
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useAuditStore } from '../../../../stores/auditStore';
+import { useAuthStore } from '../../../../stores/authStore';
+import { businessApi } from '../../../../services/business-api';
 
 type ModuleFilter = 'all' | 'Productos' | 'Ventas' | 'Inventario' | 'Compras' | 'Gastos' | 'Caja' | 'Usuarios';
+const moduleLabel=(value:string)=>value==='product'?'Productos':value.startsWith('sales.')?'Ventas':value.startsWith('stock.')?'Inventario':value.startsWith('purchasing.')||value.startsWith('purchase.')||value==='supplier.invoice'?'Compras':value==='payment'?'Gastos':value.startsWith('bank.')||value==='receipt'?'Caja':value==='user'||value==='role'?'Usuarios':value;
 
 export default function AuditScreen() {
   useModuleRefresh(useAuditStore.getState().load, () => useAuditStore.getState().error);
@@ -21,19 +24,22 @@ export default function AuditScreen() {
   const { logs } = useAuditStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [moduleFilter, setModuleFilter] = useState<ModuleFilter>('all');
+  const userId=useAuthStore(s=>s.user?.id),canUsers=useAuthStore(s=>s.can('user:read'));
+  const [userNames,setUserNames]=useState<Record<string,string>>({});
+  useEffect(()=>{let active=true;setUserNames({});if(canUsers)void businessApi.listUsers().then(users=>{if(active)setUserNames(Object.fromEntries(users.map(u=>[u.id,u.displayName])));}).catch(()=>undefined);return()=>{active=false;};},[userId,canUsers]);
 
   const modules: ModuleFilter[] = ['all', 'Productos', 'Ventas', 'Inventario', 'Compras', 'Gastos', 'Caja', 'Usuarios'];
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       const matchesSearch =
-        log.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (userNames[log.user]??log.user).toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
         log.details?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesModule = moduleFilter === 'all' || log.module === moduleFilter;
+      const matchesModule = moduleFilter === 'all' || moduleLabel(log.module) === moduleFilter;
       return matchesSearch && matchesModule;
     });
-  }, [logs, searchQuery, moduleFilter]);
+  }, [logs, searchQuery, moduleFilter,userNames]);
 
 
   return (
@@ -92,29 +98,32 @@ export default function AuditScreen() {
           description="Intenta con otros términos de búsqueda o filtros"
         />
       ) : (
-        <ScrollView
+        <FlatList
           style={styles.listContainer}
           showsVerticalScrollIndicator={false}
-        >
-          {filteredLogs.map((log) => (
-            <View key={log.id} style={styles.logCard}>
+          data={filteredLogs}
+          keyExtractor={log=>log.id}
+          initialNumToRender={12}
+          windowSize={5}
+          ListFooterComponent={<View style={styles.bottomSpacer}/>}
+          renderItem={({item:log}) => (
+            <View style={styles.logCard}>
               <View style={styles.logHeader}>
                 <View style={styles.logInfo}>
                   <Text style={styles.logAction}>{log.action}</Text>
-                  <Text style={styles.logModule}>{log.module}</Text>
+                  <Text style={styles.logModule}>{moduleLabel(log.module)}</Text>
                 </View>
-                <Text style={styles.logDate}>{log.date}</Text>
+                <Text style={styles.logDate}>{new Date(log.date).toLocaleString('es-MX')}</Text>
               </View>
               {log.details && (
                 <Text style={styles.logDetails}>{log.details}</Text>
               )}
               <View style={styles.logFooter}>
-                <StatusBadge status="neutral" label={`Usuario: ${log.user}`} />
+                <StatusBadge status="neutral" label={`Usuario: ${userNames[log.user]??log.user}`} />
               </View>
             </View>
-          ))}
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+          )}
+        />
       )}
     </ScreenContainer>
   );
