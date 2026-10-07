@@ -22,7 +22,7 @@ export function AppHeader({ title, subtitle, onBack, rightAction }: AppHeaderPro
   return (
     <View style={styles.container}>
       {onBack && (
-        <Pressable onPress={onBack} style={styles.backButton}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Volver" onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.neutral[800]} />
         </Pressable>
       )}
@@ -50,6 +50,10 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.neutral[200],
   },
   backButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
     padding: spacing.xs,
   },
@@ -67,6 +71,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   actionButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: spacing.xs,
   },
 });

@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Auditoría — Módulo de Auditoría
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra el historial de acciones del sistema.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../../components';
@@ -36,7 +37,7 @@ export default function AuditScreen() {
 
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useAuditStore(state => state.isLoading)} error={useAuditStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -119,7 +120,7 @@ export default function AuditScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

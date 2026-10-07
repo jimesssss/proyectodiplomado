@@ -1,3 +1,6 @@
+// ERP-SC release signing: configure an existing keystore outside this repository.
+def erpscSigning = ['ERPSC_KEYSTORE_FILE', 'ERPSC_KEYSTORE_PASSWORD', 'ERPSC_KEY_ALIAS', 'ERPSC_KEY_PASSWORD'].collectEntries { [(it): System.getenv(it)] }
+def erpscSigningReady = erpscSigning.values().every { it != null && !it.trim().isEmpty() }
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
@@ -85,7 +88,7 @@ android {
 
     namespace "com.erpsc"
     defaultConfig {
-        applicationId "com.erpsc"
+        applicationId "com.erpsc.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -94,6 +97,14 @@ android {
         buildConfigField("boolean", "REACT_NATIVE_UNSTABLE_USE_RUNTIME_SCHEDULER_ALWAYS", (findProperty("reactNative.unstable_useRuntimeSchedulerAlways") ?: true).toString())
     }
     signingConfigs {
+        release {
+            if (erpscSigningReady) {
+                storeFile file(erpscSigning['ERPSC_KEYSTORE_FILE'])
+                storePassword erpscSigning['ERPSC_KEYSTORE_PASSWORD']
+                keyAlias erpscSigning['ERPSC_KEY_ALIAS']
+                keyPassword erpscSigning['ERPSC_KEY_PASSWORD']
+            }
+        }
         debug {
             storeFile file('debug.keystore')
             storePassword 'android'
@@ -108,7 +119,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig erpscSigningReady ? signingConfigs.release : null
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -174,3 +185,9 @@ dependencies {
 
 apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
 applyNativeModulesAppBuildGradle(project)
+
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.project == project && (it.name == 'assembleRelease' || it.name == 'bundleRelease' || it.name == 'packageRelease') } && !erpscSigningReady) {
+        throw new GradleException('Release requires ERPSC_KEYSTORE_FILE, ERPSC_KEYSTORE_PASSWORD, ERPSC_KEY_ALIAS and ERPSC_KEY_PASSWORD. Debug remains available.')
+    }
+}

@@ -1,3 +1,6 @@
+import { DataState } from '../../../../components/DataState';
+import { AppHeader } from '../../../../components/AppHeader';
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Compra Detalle — Ver detalle de compra
@@ -5,7 +8,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra toda la información de una orden de compra.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge, SecondaryButton } from '../../../../components';
@@ -14,11 +17,15 @@ import { usePurchasesStore } from '../../../../stores/purchasesStore';
 
 export default function PurchaseDetailScreen() {
   useModuleRefresh(usePurchasesStore.getState().load, () => usePurchasesStore.getState().error);
+  const loading = usePurchasesStore(state => state.isLoading);
+  const loadError = usePurchasesStore(state => state.error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getPurchaseById } = usePurchasesStore();
 
   const purchase = getPurchaseById(id || '');
+
+  if (loading || loadError) return <ScreenContainer><AppHeader title="Detalle de compra" onBack={() => router.back()} /><DataState loading={loading} error={loadError} /></ScreenContainer>;
 
   if (!purchase) {
     return (
@@ -128,7 +135,7 @@ export default function PurchaseDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

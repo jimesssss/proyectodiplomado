@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Reportes — Módulo de Reportes
@@ -5,12 +6,13 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra tarjetas de reportes y gráficas simples (mock visual).
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, ModuleCard } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
 import { useReportsStore } from '../../../../stores/reportsStore';
+import { DataState } from '../../../../components/DataState';
 
 export default function ReportsScreen() {
   useModuleRefresh(useReportsStore.getState().load, () => useReportsStore.getState().error);
@@ -49,7 +51,7 @@ export default function ReportsScreen() {
 };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useReportsStore(state => state.isLoading)} error={useReportsStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -79,7 +81,8 @@ export default function ReportsScreen() {
 
         {/* Gráfica de ventas por día */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ventas por Día (MXN)</Text>
+          <Text style={styles.sectionTitle}>Ventas · últimos 7 días · MXN</Text>
+          {salesByDay.length === 0 && <DataState empty />}
           <View style={styles.chartContainer}>
             <View style={styles.chart}>
               {salesByDay.map((item, index) => (
@@ -95,6 +98,7 @@ export default function ReportsScreen() {
                       ]}
                     />
                   </View>
+                  <Text style={styles.barValue} accessibilityLabel={`${item.label}: ${item.value.toFixed(2)} pesos`}>{item.value.toLocaleString('es-MX', { maximumFractionDigits: 0 })}</Text>
                   <Text style={styles.barLabel}>{item.label}</Text>
                 </View>
               ))}
@@ -105,6 +109,7 @@ export default function ReportsScreen() {
         {/* Productos más vendidos */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Productos Más Vendidos</Text>
+          {topProducts.length === 0 && <DataState empty />}
           <View style={styles.chartContainer}>
             {topProducts.map((product, index) => (
               <View key={index} style={styles.progressItem}>
@@ -134,7 +139,8 @@ export default function ReportsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
+  barValue: { fontSize: 13, fontWeight: '600', color: colors.neutral[700], marginTop: spacing.sm },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

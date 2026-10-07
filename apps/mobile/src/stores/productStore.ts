@@ -5,6 +5,7 @@
  * en la interfaz mientras el backend no los incluya en su contrato.
  */
 import { create } from 'zustand';
+import { useAuthStore } from './authStore';
 import {
   archiveProduct as archiveProductWithApi,
   createProduct as createProductWithApi,
@@ -53,7 +54,7 @@ interface ProductState {
   clearError: () => void;
 }
 
-const UNPERSISTED_CATEGORY_OPTIONS = ['Electrónica', 'Accesorios', 'Oficina', 'Hogar'];
+const UNPERSISTED_CATEGORY_OPTIONS = ['Paletas', 'Caramelos', 'Gomitas', 'Chocolates', 'Dulces tradicionales', 'Dulces enchilados', 'Galletas', 'Botanas', 'Bebidas', 'Malvaviscos', 'Chicles', 'Dulces para eventos', 'Temporada', 'Confitería', 'Otros dulces'];
 
 function toProduct(apiProduct: ApiProduct, stock = 0): Product {
   return {
@@ -248,6 +249,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
   },
 
   deleteProduct: async (id) => {
+    if (!useAuthStore.getState().can('product:delete')) {
+      set({ error: 'No tienes permiso para archivar productos.' });
+      return false;
+    }
     set({ isLoading: true, error: null });
     try {
       const archived = toProduct(await archiveProductWithApi(id));

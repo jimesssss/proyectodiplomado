@@ -1,3 +1,6 @@
+import { DataState } from '../../../../components/DataState';
+import { AppHeader } from '../../../../components/AppHeader';
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Cliente Detalle — Ver detalle de cliente
@@ -5,7 +8,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra toda la información de un cliente y su historial de compras.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge } from '../../../../components';
@@ -14,11 +17,15 @@ import { useCustomersStore } from '../../../../stores/customersStore';
 
 export default function CustomerDetailScreen() {
   useModuleRefresh(useCustomersStore.getState().load, () => useCustomersStore.getState().error);
+  const loading = useCustomersStore(state => state.isLoading);
+  const loadError = useCustomersStore(state => state.error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getCustomerById } = useCustomersStore();
 
   const customer = getCustomerById(id || '');
+
+  if (loading || loadError) return <ScreenContainer><AppHeader title="Detalle de cliente" onBack={() => router.back()} /><DataState loading={loading} error={loadError} /></ScreenContainer>;
 
   if (!customer) {
     return (
@@ -104,7 +111,7 @@ export default function CustomerDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

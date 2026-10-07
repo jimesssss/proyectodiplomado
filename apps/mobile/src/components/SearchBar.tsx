@@ -28,6 +28,7 @@ export function SearchBar({
         style={styles.icon}
       />
       <TextInput
+        accessibilityLabel={placeholder}
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor={colors.neutral[400]}
@@ -37,7 +38,7 @@ export function SearchBar({
         autoCorrect={false}
       />
       {value.length > 0 && (
-        <Pressable onPress={() => onChangeText('')} style={styles.clearButton}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Limpiar búsqueda" onPress={() => onChangeText('')} style={styles.clearButton}>
           <Ionicons name="close-circle" size={20} color={colors.neutral[400]} />
         </Pressable>
       )}
@@ -59,12 +60,18 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   input: {
+    minHeight: 48,
+    minWidth: 0,
     flex: 1,
     paddingVertical: spacing.sm + 4,
     fontSize: typography.size.base,
     color: colors.neutral[800],
   },
   clearButton: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: spacing.xs,
   },
 });

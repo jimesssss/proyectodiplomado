@@ -1,9 +1,11 @@
+import { DataState } from '../../../../components/DataState';
+import { AppHeader } from '../../../../components/AppHeader';
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
 } from 'react-native';
@@ -16,6 +18,8 @@ import { useUsersStore } from '../../../../stores/usersStore';
 
 export default function UserDetailScreen() {
   useModuleRefresh(useUsersStore.getState().load, () => useUsersStore.getState().error);
+  const loading = useUsersStore(state => state.isLoading);
+  const loadError = useUsersStore(state => state.error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getUserById } = useUsersStore();
@@ -23,6 +27,7 @@ export default function UserDetailScreen() {
   const user = getUserById(id || '');
 
   const roleLabels: Record<string, string> = {
+    owner: 'Propietario',
     admin: 'Administrador',
     manager: 'Gerente',
     cashier: 'Cajero',
@@ -33,6 +38,8 @@ export default function UserDetailScreen() {
     active: 'Activo',
     inactive: 'Inactivo',
   };
+
+  if (loading || loadError) return <ScreenContainer><AppHeader title="Detalle de usuario" onBack={() => router.back()} /><DataState loading={loading} error={loadError} /></ScreenContainer>;
 
   if (!user) {
     return (
@@ -212,7 +219,7 @@ export default function UserDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -295,7 +302,7 @@ const styles = StyleSheet.create({
   },
 
   activeBadge: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#EAF5EF',
   },
 
   inactiveBadge: {

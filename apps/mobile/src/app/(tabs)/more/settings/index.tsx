@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 /**
  * Configuración — Módulo de Configuración
  *
@@ -8,7 +9,6 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
   Switch,
@@ -435,7 +435,7 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -56,6 +56,8 @@ temp/
 *.cer
 *.p12
 *.pfx
+*.keystore
+*.jks
 
 # Android native artifacts (future module support)
 android/**/*.iml

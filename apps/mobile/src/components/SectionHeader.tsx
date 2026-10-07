@@ -18,7 +18,7 @@ export function SectionHeader({ title, actionText, onAction }: SectionHeaderProp
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       {actionText && onAction && (
-        <Pressable onPress={onAction}>
+        <Pressable accessibilityRole="button" accessibilityLabel={actionText} style={styles.actionTarget} onPress={onAction}>
           <Text style={styles.action}>{actionText}</Text>
         </Pressable>
       )}
@@ -27,6 +27,7 @@ export function SectionHeader({ title, actionText, onAction }: SectionHeaderProp
 }
 
 const styles = StyleSheet.create({
+  actionTarget: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.sm },
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -34,6 +35,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   title: {
+    flexShrink: 1,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
     color: colors.neutral[800],

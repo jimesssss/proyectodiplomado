@@ -1,3 +1,6 @@
+import { DataState } from '../../../../components/DataState';
+import { AppHeader } from '../../../../components/AppHeader';
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Proveedor Detalle — Ver detalle de proveedor
@@ -5,7 +8,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra toda la información de un proveedor.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge, SecondaryButton } from '../../../../components';
@@ -14,11 +17,15 @@ import { useSuppliersStore } from '../../../../stores/suppliersStore';
 
 export default function SupplierDetailScreen() {
   useModuleRefresh(useSuppliersStore.getState().load, () => useSuppliersStore.getState().error);
+  const loading = useSuppliersStore(state => state.isLoading);
+  const loadError = useSuppliersStore(state => state.error);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getSupplierById } = useSuppliersStore();
 
   const supplier = getSupplierById(id || '');
+
+  if (loading || loadError) return <ScreenContainer><AppHeader title="Detalle de proveedor" onBack={() => router.back()} /><DataState loading={loading} error={loadError} /></ScreenContainer>;
 
   if (!supplier) {
     return (
@@ -91,7 +98,7 @@ export default function SupplierDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

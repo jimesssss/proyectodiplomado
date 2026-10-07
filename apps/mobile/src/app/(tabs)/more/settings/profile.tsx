@@ -1,8 +1,8 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   Pressable,
@@ -239,7 +239,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
   },

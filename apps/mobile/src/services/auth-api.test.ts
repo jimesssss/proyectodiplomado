@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { loginWithApi, registerWithApi } from './auth-api.js';
+import { loginWithApi, registerWithApi, refreshWithApi } from './auth-api.js';
 
 vi.mock('expo-constants', () => ({
   default: {
@@ -14,6 +14,7 @@ const originalFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = originalFetch;
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('mobile auth API', () => {
@@ -105,4 +106,19 @@ describe('mobile auth API', () => {
       }),
     );
   });
+  it('allows a cold server to wake up during refresh but still times out after 60 seconds without retrying', async () => {
+    vi.useFakeTimers();
+    let signal!: AbortSignal;
+    globalThis.fetch = vi.fn().mockImplementation((_url, options) => {
+      signal = options.signal;
+      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))));
+    });
+    const result = refreshWithApi('isolated-refresh').catch(error => error);
+    await vi.advanceTimersByTimeAsync(55_000);
+    expect(signal.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(await result).toMatchObject({ code: 'REQUEST_TIMEOUT' });
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
 });

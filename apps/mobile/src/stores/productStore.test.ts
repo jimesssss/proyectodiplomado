@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const auth = vi.hoisted(() => ({ allowed: true }));
+vi.mock('./authStore', () => ({ useAuthStore: { getState: () => ({ can: (permission: string) => auth.allowed && permission === 'product:delete' }) } }));
+
 vi.mock('../services/inventory-api', () => ({
   InventoryApiError: class InventoryApiError extends Error {
     constructor(
@@ -43,6 +46,7 @@ const apiProduct = {
 describe('product store API integration', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    auth.allowed = true;
     useProductStore.setState({
       products: [],
       isLoading: false,
@@ -212,4 +216,20 @@ describe('product store API integration', () => {
     expect(useProductStore.getState().products).toEqual([]);
     expect(useProductStore.getState().selectedProduct?.status).toBe('inactive');
   });
+  it('does not call the archive API without product:delete permission', async () => {
+    auth.allowed = false;
+    expect(await useProductStore.getState().deleteProduct('product-id')).toBe(false);
+    expect(archiveProductWithApi).not.toHaveBeenCalled();
+    expect(useProductStore.getState().error).toContain('permiso');
+  });
+
+  it('preserves the product in the list when the backend rejects archiving', async () => {
+    vi.mocked(listProducts).mockResolvedValue([apiProduct]);
+    await useProductStore.getState().loadProducts();
+    vi.mocked(archiveProductWithApi).mockRejectedValue(new InventoryApiError('CONFLICT', 'No se puede archivar', 409));
+    expect(await useProductStore.getState().deleteProduct('product-id')).toBe(false);
+    expect(useProductStore.getState().products).toMatchObject([{ id: 'product-id', status: 'active' }]);
+    expect(useProductStore.getState().error).toBe('No se puede archivar');
+  });
+
 });

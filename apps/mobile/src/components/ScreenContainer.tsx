@@ -4,9 +4,10 @@
  * Proporciona SafeAreaView y ScrollView con estilo consistente.
  */
 import React from 'react';
-import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme';
+import { DataState } from './DataState';
 
 interface ScreenContainerProps {
   children: React.ReactNode;
@@ -14,6 +15,8 @@ interface ScreenContainerProps {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   refreshControl?: React.ReactElement;
+  loading?: boolean;
+  error?: string | null;
 }
 
 export function ScreenContainer({
@@ -22,11 +25,16 @@ export function ScreenContainer({
   style,
   contentContainerStyle,
   refreshControl,
+  loading,
+  error,
 }: ScreenContainerProps) {
+  const elements = React.Children.toArray(children);
+  const visible = loading || error ? elements.slice(0, 1) : elements;
+  const content = <>{visible[0]}<DataState loading={loading} error={error} />{visible.slice(1)}</>;
   if (!scrollable) {
     return (
       <SafeAreaView style={[styles.container, style]}>
-        <View style={[styles.content, contentContainerStyle]}>{children}</View>
+        <View style={[styles.content, contentContainerStyle]}>{content}</View>
       </SafeAreaView>
     );
   }
@@ -39,7 +47,7 @@ export function ScreenContainer({
         showsVerticalScrollIndicator={false}
         refreshControl={refreshControl}
       >
-        {children}
+        {content}
       </ScrollView>
     </SafeAreaView>
   );
@@ -52,11 +60,17 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: '100%',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? { maxWidth: 1200, minWidth: 0 } : {}),
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    width: '100%',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web' ? { maxWidth: 1200, minWidth: 0 } : {}),
   },
 });

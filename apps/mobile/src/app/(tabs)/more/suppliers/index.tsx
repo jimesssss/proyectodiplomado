@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Proveedores — Lista de proveedores
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra todos los proveedores con buscador.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, StatusBadge, EmptyState } from '../../../../components';
@@ -28,7 +29,7 @@ export default function SuppliersScreen() {
   }, [suppliers, searchQuery]);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useSuppliersStore(state => state.isLoading)} error={useSuppliersStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -104,7 +105,7 @@ export default function SuppliersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

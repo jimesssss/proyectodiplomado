@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Gastos — Lista de gastos
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra todos los gastos con filtros y total.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, StatCard, EmptyState } from '../../../../components';
@@ -29,7 +30,7 @@ export default function ExpensesScreen() {
   const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useExpensesStore(state => state.isLoading)} error={useExpensesStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -49,7 +50,7 @@ export default function ExpensesScreen() {
         <StatCard
           label="Total de Gastos"
           value={formatCurrency(totalExpenses)}
-          backgroundColor="#FEE2E2"
+          backgroundColor="#FCECEF"
           valueColor="#991B1B"
         />
       </View>
@@ -103,7 +104,7 @@ export default function ExpensesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

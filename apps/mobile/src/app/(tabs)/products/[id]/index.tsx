@@ -1,19 +1,25 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 /**
  * Producto Detalle — Ver detalle de producto
  *
  * Muestra toda la información de un producto.
  */
-import React, { useEffect } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatusBadge, SecondaryButton } from '../../../../components';
 import { colors, spacing, typography, radii } from '../../../../theme';
+import { useAuthStore } from '../../../../stores/authStore';
 import { useProductStore } from '../../../../stores/productStore';
 import { useInventoryStore } from '../../../../stores/inventoryStore';
 
 export default function ProductDetailScreen() {
   const router = useRouter();
+  const canArchive = useAuthStore(state => state.can('product:delete'));
+  const archivePending = useRef(false);
+  const [archiving, setArchiving] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const {
     getProductById,
@@ -66,6 +72,32 @@ export default function ProductDetailScreen() {
     );
   }
 
+  const archive = async () => {
+    if (archivePending.current || !useAuthStore.getState().can('product:delete')) return;
+    archivePending.current = true;
+    setArchiving(true);
+    setArchiveError(null);
+    try {
+      if (await useProductStore.getState().deleteProduct(product.id)) {
+        router.back();
+      } else {
+        setArchiveError(useProductStore.getState().error ?? 'No se pudo archivar el producto.');
+      }
+    } finally { archivePending.current = false; setArchiving(false); }
+  };
+  const confirmArchive = () => {
+    if (archiving) return;
+    const message = '¿Archivar "' + product.name + '"? Dejará de aparecer en el listado activo; su historial se conservará.';
+    if (Platform.OS === 'web') {
+      const browser = globalThis as unknown as { confirm(message: string): boolean };
+      if (browser.confirm(message)) void archive();
+    } else {
+      Alert.alert('Archivar producto', message, [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Archivar', style: 'destructive', onPress: () => { void archive(); } },
+      ]);
+    }
+  };
   const stock = getStockForProduct(product.id);
   const stockAvailable = !stockLoading && stockError === null;
   const getStockStatus = (currentStock: number, minStock: number, minStockDefined?: boolean) => {
@@ -203,13 +235,24 @@ export default function ProductDetailScreen() {
           </View>
         )}
 
+        {archiveError && <Text accessibilityRole="alert" style={styles.errorText}>{archiveError}</Text>}
+        {canArchive && product.status === 'active' && (
+          <View style={styles.section}>
+            <SecondaryButton
+              title={archiving ? 'Archivando…' : 'Archivar producto'}
+              disabled={archiving || isLoading}
+              onPress={confirmArchive}
+              icon={<Ionicons name="trash-outline" size={20} color={colors.error} />}
+            />
+          </View>
+        )}
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </ScreenContainer>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

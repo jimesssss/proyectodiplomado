@@ -31,6 +31,9 @@ export function SecondaryButton({
         style,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled }}
       disabled={disabled}
     >
       {icon}
@@ -41,6 +44,7 @@ export function SecondaryButton({
 
 const styles = StyleSheet.create({
   button: {
+    minHeight: 48,
     backgroundColor: colors.surface,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,

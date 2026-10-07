@@ -15,11 +15,11 @@ interface StatusBadgeProps {
 }
 
 const STATUS_COLORS: Record<StatusType, { bg: string; text: string }> = {
-  success: { bg: '#D1FAE5', text: '#065F46' },
-  warning: { bg: '#FEF3C7', text: '#92400E' },
-  error: { bg: '#FEE2E2', text: '#991B1B' },
-  info: { bg: '#DBEAFE', text: '#1E40AF' },
-  neutral: { bg: '#F3F4F6', text: '#4B5563' },
+  success: { bg: '#EAF5EF', text: '#21634E' },
+  warning: { bg: '#FFF3DA', text: '#80530C' },
+  error: { bg: '#FCECEF', text: '#992C3A' },
+  info: { bg: '#EAF3F4', text: '#285662' },
+  neutral: { bg: '#F4EFEC', text: '#5D5360' },
 };
 
 export function StatusBadge({ status, label }: StatusBadgeProps) {
@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: radii.sm,
+    borderRadius: radii.full,
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: typography.size.xs,
+    fontSize: 13,
     fontWeight: typography.weight.medium,
   },
 });

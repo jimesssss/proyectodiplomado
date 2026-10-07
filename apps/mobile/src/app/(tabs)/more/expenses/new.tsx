@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Nuevo Gasto — Registro de gasto
@@ -7,7 +8,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   Pressable,
@@ -441,7 +441,7 @@ export default function NewExpenseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
   },

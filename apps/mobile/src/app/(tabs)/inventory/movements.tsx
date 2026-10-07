@@ -1,10 +1,11 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Movimientos de Inventario — Lista completa
  *
  * Muestra todos los movimientos de inventario con filtros.
  */
 import React, { useEffect, useState, useMemo } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { ActivityIndicator, View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState } from '../../../components';
@@ -180,7 +181,7 @@ export default function InventoryMovementsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -31,6 +31,8 @@ export function ModuleCard({
         style,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
     >
       <View style={styles.iconContainer}>
         <Ionicons name={icon} size={28} color={colors.primary[600]} />
@@ -56,6 +58,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral[50],
   },
   iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   title: {
@@ -65,7 +73,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
-    fontSize: typography.size.xs,
+    fontSize: typography.size.sm,
     color: colors.neutral[500],
     marginTop: spacing.xs,
     textAlign: 'center',

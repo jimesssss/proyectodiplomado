@@ -1,10 +1,11 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Nuevo Producto — Formulario de creación
  *
  * Formulario para crear un nuevo producto.
  */
 import React, { useState } from 'react';
-import { Alert, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Alert, View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, FormInput, PrimaryButton, SecondaryButton } from '../../../components';
@@ -254,7 +255,7 @@ export default function NewProductScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

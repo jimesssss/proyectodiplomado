@@ -36,6 +36,8 @@ export function ListItem({
       style={[styles.container, showBorder && styles.border, style]}
       onPress={onPress}
       disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={title}
     >
       {leftIcon && (
         <View style={styles.leftIconContainer}>
@@ -73,6 +75,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     fontSize: typography.size.base,

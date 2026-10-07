@@ -1,10 +1,11 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Productos — Lista de productos
  *
  * Muestra todos los productos con buscador y filtros por categoría.
  */
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../components';
@@ -188,7 +189,7 @@ export default function ProductsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

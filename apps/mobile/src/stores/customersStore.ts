@@ -17,7 +17,7 @@ function mapCustomer(c: ApiParty): Customer { return { id: c.id, name: c.name, p
 interface CustomersState {
   customers: Customer[]; isLoading: boolean; error: string | null;
   load(): Promise<void>; getCustomerById(id: string): Customer | undefined;
-  addCustomer(input: Omit<Customer, 'id'> & { code?: string }): Promise<boolean>;
+  addCustomer(input: Omit<Customer, 'id'> & { code?: string }): Promise<Customer | false>;
   updateCustomer(id: string, input: Partial<Customer>): Promise<boolean>;
 }
 export const useCustomersStore = create<CustomersState>((set,get)=>({
@@ -34,7 +34,8 @@ export const useCustomersStore = create<CustomersState>((set,get)=>({
     try {
       const c=await businessApi.create<ApiParty>('/customers', { code: input.code?.trim() || 'CLI-' + Date.now(), name: input.name.trim(), type: 'person',
         ...(input.phone.trim() ? { phone: input.phone.trim() } : {}), ...(input.email.trim() ? { email: input.email.trim() } : {}) });
-      set({ customers: [...get().customers,mapCustomer(c)] }); return true;
+      const customer = mapCustomer(c);
+      set({ customers: [...get().customers,customer] }); return customer;
     } catch(error) { set({ error: error instanceof Error ? error.message : 'No se pudo completar la operación.' }); return false; } finally { set({ isLoading:false }); }
   },
   updateCustomer: async (id,input) => {

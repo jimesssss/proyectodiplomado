@@ -114,7 +114,7 @@ export async function registerWithApi(input: {
 }
 
 export async function refreshWithApi(refreshToken: string): Promise<LoginResponse> {
-  return (await apiRequest<LoginResponse>('/auth/refresh', { method: 'POST', body: { refreshToken }, public: true })).data;
+  return (await apiRequest<LoginResponse>('/auth/refresh', { method: 'POST', body: { refreshToken }, public: true, timeoutMs: 60_000 })).data;
 }
 export async function verifyEmailWithApi(token: string): Promise<void> { await post('verify-email', { token }); }
 export async function resendVerificationWithApi(email: string): Promise<void> { await post('resend-verification', { email: email.trim().toLowerCase() }); }

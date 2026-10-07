@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 import {useAuthStore} from '../../../stores/authStore';
 /**
  * Menú "Más" — Acceso a módulos secundarios
@@ -9,7 +10,6 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
 } from 'react-native';
@@ -46,7 +46,7 @@ const MODULES: ModuleSection[] = [
         description: 'Historial y detalle de ventas',
         icon: 'trending-up',
         route: '/more/sales',
-        color: '#10B981',
+        color: '#23785F',
       },
       {
         id: 'purchases',
@@ -54,7 +54,7 @@ const MODULES: ModuleSection[] = [
         description: 'Órdenes y recepciones',
         icon: 'cart',
         route: '/more/purchases',
-        color: '#8B5CF6',
+        color: '#703552',
       },
       {
         id: 'cash',
@@ -62,7 +62,7 @@ const MODULES: ModuleSection[] = [
         description: 'Control de efectivo',
         icon: 'cash',
         route: '/more/cash-register',
-        color: '#F59E0B',
+        color: '#96610F',
       },
       {
         id: 'expenses',
@@ -70,7 +70,7 @@ const MODULES: ModuleSection[] = [
         description: 'Registro y control de gastos',
         icon: 'receipt',
         route: '/more/expenses',
-        color: '#EF4444',
+        color: '#B53843',
       },
     ],
   },
@@ -85,7 +85,7 @@ const MODULES: ModuleSection[] = [
         description: 'Catálogo y datos de clientes',
         icon: 'people',
         route: '/more/customers',
-        color: '#EC4899',
+        color: '#8B365A',
       },
       {
         id: 'suppliers',
@@ -93,7 +93,7 @@ const MODULES: ModuleSection[] = [
         description: 'Catálogo de proveedores',
         icon: 'business',
         route: '/more/suppliers',
-        color: '#3B82F6',
+        color: '#316B75',
       },
     ],
   },
@@ -108,7 +108,7 @@ const MODULES: ModuleSection[] = [
         description: 'Informes y estadísticas',
         icon: 'bar-chart',
         route: '/more/reports',
-        color: '#6366F1',
+        color: '#703552',
       },
       {
         id: 'users',
@@ -116,7 +116,7 @@ const MODULES: ModuleSection[] = [
         description: 'Gestión de usuarios y permisos',
         icon: 'person',
         route: '/more/users',
-        color: '#14B8A6',
+        color: '#23785F',
       },
       {
         id: 'audit',
@@ -124,7 +124,7 @@ const MODULES: ModuleSection[] = [
         description: 'Historial de acciones del sistema',
         icon: 'document-text',
         route: '/more/audit',
-        color: '#F97316',
+        color: '#96610F',
       },
       {
         id: 'settings',
@@ -132,7 +132,7 @@ const MODULES: ModuleSection[] = [
         description: 'Ajustes generales del ERP',
         icon: 'settings',
         route: '/more/settings',
-        color: '#64748B',
+        color: '#655E6A',
       },
     ],
   },
@@ -153,27 +153,27 @@ export default function MoreScreen() {
         {/* Encabezado */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Más</Text>
+            <Text style={styles.title}>Tu dulcería</Text>
             <Text style={styles.subtitle}>
-              Administra tu negocio desde un solo lugar
+              Operación, contactos y administración
             </Text>
           </View>
 
           <View style={styles.headerIcon}>
-            <Ionicons name="grid" size={25} color="#7C3AED" />
+            <Ionicons name="grid" size={25} color="#703552" />
           </View>
         </View>
 
         {/* Tarjeta ERP-SC */}
         <View style={styles.heroCard}>
           <View style={styles.heroIcon}>
-            <Ionicons name="storefront" size={28} color="#7C3AED" />
+            <Ionicons name="storefront" size={28} color="#703552" />
           </View>
 
           <View style={styles.heroInfo}>
             <Text style={styles.heroTitle}>ERP-SC</Text>
             <Text style={styles.heroText}>
-              Gestión integral de tu negocio
+              Cada detalle de tu dulcería, en orden
             </Text>
           </View>
 
@@ -184,7 +184,7 @@ export default function MoreScreen() {
         </View>
 
         {/* Módulos */}
-        {MODULES.map((section) => (
+        {MODULES.map(section => section.id === 'operation' ? { ...section, items: section.items.filter(item => !['cash', 'expenses'].includes(item.id)) } : section.id === 'administration' ? { ...section, items: [...MODULES[0]!.items.filter(item => ['cash', 'expenses'].includes(item.id)), ...section.items] } : section).map((section) => (
           <View key={section.id} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons
@@ -248,7 +248,7 @@ export default function MoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   scrollView: {
     flex: 1,
   },
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 16,
-    backgroundColor: '#EDE9FE',
+    backgroundColor: '#F1E1E9',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#10B981',
+    backgroundColor: '#23785F',
     marginRight: 5,
   },
 

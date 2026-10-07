@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Usuarios — Lista de usuarios
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra todos los usuarios con sus roles.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, StatusBadge, EmptyState } from '../../../../components';
@@ -13,6 +14,7 @@ import { colors, spacing, typography, radii } from '../../../../theme';
 import { useUsersStore } from '../../../../stores/usersStore';
 
 const ROLES: Record<string, { label: string; status: 'success' | 'warning' | 'error' | 'info' | 'neutral' }> = {
+  owner: { label: 'Propietario', status: 'info' },
   admin: { label: 'Administrador', status: 'error' },
   manager: { label: 'Gerente', status: 'warning' },
   cashier: { label: 'Cajero', status: 'info' },
@@ -34,7 +36,7 @@ export default function UsersScreen() {
   }, [users, searchQuery]);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useUsersStore(state => state.isLoading)} error={useUsersStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -107,7 +109,7 @@ export default function UsersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

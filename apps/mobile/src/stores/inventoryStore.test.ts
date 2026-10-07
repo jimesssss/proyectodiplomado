@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('./authStore', () => ({ useAuthStore: { getState: () => ({ can: () => true }) } }));
+
 vi.mock('../services/inventory-api', () => ({
   InventoryApiError: class InventoryApiError extends Error {},
   createMovement: vi.fn(),

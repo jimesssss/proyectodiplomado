@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Dashboard — Pantalla principal
  *
@@ -8,7 +9,6 @@ import React, { useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
   RefreshControl,
@@ -19,12 +19,15 @@ import { useRouter } from 'expo-router';
 import { colors, spacing, typography, radii } from '../../../theme';
 import { useAuthStore } from '../../../stores/authStore';
 import { useDashboardStore } from '../../../stores/dashboardStore';
+import { useSalesStore } from '../../../stores/salesStore';
+import { DataState } from '../../../components/DataState';
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { salesSummary, topProducts, recentSales, isLoading, refresh } =
     useDashboardStore();
+  const error = useSalesStore(state => state.error);
 
   useEffect(() => {
     refresh();
@@ -66,32 +69,33 @@ export default function DashboardScreen() {
           <RefreshControl refreshing={isLoading} onRefresh={refresh} />
         }
       >
+        <DataState loading={isLoading} error={error} />
         {/* Resumen de ventas */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resumen de Ventas</Text>
+          <Text style={styles.sectionTitle}>Ventas de tu dulcería · MXN</Text>
           <View style={styles.summaryGrid}>
             <View style={[styles.summaryCard, styles.cardToday]}>
-              <Text style={styles.summaryLabel}>Hoy</Text>
+              <Text style={styles.summaryLabel}>Ventas del día</Text>
               <Text style={styles.summaryValue}>
-                {formatCurrency(salesSummary.today)}
+                {isLoading || error ? '—' : formatCurrency(salesSummary.today)}
               </Text>
             </View>
             <View style={[styles.summaryCard, styles.cardWeek]}>
               <Text style={styles.summaryLabel}>Semana</Text>
               <Text style={styles.summaryValue}>
-                {formatCurrency(salesSummary.week)}
+                {isLoading || error ? '—' : formatCurrency(salesSummary.week)}
               </Text>
             </View>
             <View style={[styles.summaryCard, styles.cardMonth]}>
               <Text style={styles.summaryLabel}>Mes</Text>
               <Text style={styles.summaryValue}>
-                {formatCurrency(salesSummary.month)}
+                {isLoading || error ? '—' : formatCurrency(salesSummary.month)}
               </Text>
             </View>
             <View style={[styles.summaryCard, styles.cardYear]}>
               <Text style={styles.summaryLabel}>Año</Text>
               <Text style={styles.summaryValue}>
-                {formatCurrency(salesSummary.year)}
+                {isLoading || error ? '—' : formatCurrency(salesSummary.year)}
               </Text>
             </View>
           </View>
@@ -100,6 +104,7 @@ export default function DashboardScreen() {
         {/* Productos top */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Productos Más Vendidos</Text>
+          {!isLoading && !error && topProducts.length === 0 && <DataState empty />}
           <View style={styles.card}>
             {topProducts.map((product, index) => (
               <View
@@ -129,6 +134,7 @@ export default function DashboardScreen() {
         {/* Ventas recientes */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ventas Recientes</Text>
+          {!isLoading && !error && recentSales.length === 0 && <DataState empty />}
           <View style={styles.card}>
             {recentSales.map((sale, index) => (
               <View
@@ -182,7 +188,7 @@ export default function DashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -242,13 +248,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[50],
   },
   cardWeek: {
-    backgroundColor: colors.accent[50],
+    backgroundColor: colors.surface,
   },
   cardMonth: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.surface,
   },
   cardYear: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.surface,
   },
   summaryLabel: {
     fontSize: typography.size.sm,
@@ -351,13 +357,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
   },
   statusCompleted: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: '#EAF5EF',
   },
   statusPending: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FFF3DA',
   },
   statusCancelled: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FCECEF',
   },
   statusText: {
     fontSize: typography.size.xs,

@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useEffect } from 'react';
 import { Alert } from 'react-native';
 import { usePurchasesStore } from '../../../../stores/purchasesStore';
@@ -9,7 +10,7 @@ import { useProductStore } from '../../../../stores/productStore';
  * Formulario para crear una nueva orden de compra.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, FormInput, PrimaryButton, SecondaryButton } from '../../../../components';
@@ -102,7 +103,7 @@ export default function NewPurchaseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,10 +1,10 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -128,7 +128,7 @@ export default function OrganizationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     alignItems: 'center',

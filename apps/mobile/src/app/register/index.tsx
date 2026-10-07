@@ -1,5 +1,6 @@
+import { createScreenStyles } from '../../theme/screen-styles';
 import React, { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FormInput, PrimaryButton, ScreenContainer } from '../../components';
@@ -248,7 +249,7 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   screenContent: {
     flexGrow: 1,
     alignItems: 'center',

@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../theme/screen-styles';
 /**
  * Pantalla de Bienvenida — ERP-SC
  *
@@ -8,7 +9,6 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   Image,
   Pressable,
   ScrollView,
@@ -72,7 +72,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
     backgroundColor: colors.background,

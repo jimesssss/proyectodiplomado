@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 /**
  * Nuevo Cliente — Registro de cliente
  */
@@ -6,7 +7,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   Pressable,
@@ -14,7 +14,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { usePOSStore } from '../../../../stores/posStore';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ScreenContainer } from '../../../../components';
@@ -24,6 +25,7 @@ import { useAuditStore } from '../../../../stores/auditStore';
 
 export default function NewCustomerScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const { addCustomer } = useCustomersStore();
   const { addLog } = useAuditStore();
 
@@ -87,6 +89,12 @@ export default function NewCustomerScreen() {
       module: 'Clientes',
       details: `Se registró el cliente "${cleanName}"`,
     });
+
+    if (from === 'pos') {
+      usePOSStore.getState().selectCustomer(saved.id);
+      router.back();
+      return;
+    }
 
     Alert.alert(
       'Cliente registrado',
@@ -246,7 +254,7 @@ export default function NewCustomerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
   },

@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Ventas — Lista de ventas
@@ -10,7 +11,6 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -182,7 +182,7 @@ export default function SalesScreen() {
   ]);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useSalesStore(state => state.isLoading)} error={useSalesStore(state => state.error)}>
       {/* Encabezado */}
       <View style={styles.header}>
         <Text style={styles.title}>Ventas</Text>
@@ -499,7 +499,7 @@ export default function SalesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,

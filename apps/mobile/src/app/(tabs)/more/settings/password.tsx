@@ -1,9 +1,9 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { changePasswordWithApi } from '../../../../services/auth-api';
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   Pressable,
@@ -262,7 +262,7 @@ export default function ChangePasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
   },

@@ -1,5 +1,5 @@
 import { apiList, apiRequest } from './api-client';
-export interface ApiParty { id: string; code: string; name: string; email: string | null; phone: string | null;
+export interface ApiParty { id: string; code: string; name: string; type?: 'company' | 'person'; email: string | null; phone: string | null;
   taxId: string | null; address: { street?: string; city?: string; region?: string; country?: string } | null; archived: boolean; }
 export interface ApiLine { description: string; quantity: number; unitPrice: number; taxRate: number; discountPct: number; productId?: string | null; total?: number; }
 export interface ApiDocument { id: string; number: string; customerId?: string; supplierId?: string; status: string;

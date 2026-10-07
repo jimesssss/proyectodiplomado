@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../theme/screen-styles';
 /**
  * Pantalla de Login — ERP-SC
  *
@@ -8,7 +9,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   Pressable,
   ScrollView,
@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { colors, spacing, typography, radii } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleLogin = async () => {
@@ -71,19 +73,19 @@ export default function LoginScreen() {
           </View>
 
           {/* Título */}
-          <Text style={styles.title}>Iniciar Sesión</Text>
+          <Text style={styles.brand}>ERP-SC · DULCERÍA</Text>
+          <Text style={styles.title}>Bienvenido a tu negocio</Text>
           <Text style={styles.subtitle}>
-            Ingresa tus credenciales para continuar
+            Tus ventas, productos e inventario en un solo lugar.
           </Text>
 
-          <Pressable onPress={()=>router.push('/forgot-password')}><Text style={styles.subtitle}>Olvidé mi contraseña</Text></Pressable>
-          <Pressable onPress={()=>router.push('/resend-verification')}><Text style={styles.subtitle}>Reenviar verificación de correo</Text></Pressable>
           {/* Formulario */}
           <View style={styles.formContainer}>
             {/* Email */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>Correo electrónico</Text>
               <TextInput
+                accessibilityLabel="Correo electrónico"
                 style={styles.input}
                 placeholder="tu@email.com"
                 placeholderTextColor={colors.neutral[400]}
@@ -102,8 +104,10 @@ export default function LoginScreen() {
             {/* Password */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Contraseña</Text>
+              <View style={styles.passwordRow}>
               <TextInput
-                style={styles.input}
+                style={styles.passwordInput}
+                accessibilityLabel="Contraseña"
                 placeholder="••••••••"
                 placeholderTextColor={colors.neutral[400]}
                 value={password}
@@ -112,15 +116,20 @@ export default function LoginScreen() {
                   setLocalError(null);
                   clearError();
                 }}
-                secureTextEntry
+                secureTextEntry={!passwordVisible}
                 autoCapitalize="none"
               />
+              <Pressable accessibilityRole="button" accessibilityLabel={passwordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={styles.visibilityButton} onPress={() => setPasswordVisible(!passwordVisible)}>
+                <Ionicons name={passwordVisible ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.neutral[600]} />
+              </Pressable>
+              </View>
             </View>
+            <Pressable accessibilityRole="link" style={styles.helpLink} onPress={()=>router.push('/forgot-password')}><Text style={styles.registerLink}>Olvidé mi contraseña</Text></Pressable>
 
             {/* Error */}
             {displayError && (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{displayError}</Text>
+                <Text accessibilityRole="alert" style={styles.errorText}>{displayError}</Text>
               </View>
             )}
 
@@ -131,12 +140,14 @@ export default function LoginScreen() {
                 pressed && styles.buttonPressed,
               ]}
               onPress={handleLogin}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLoading, busy: isLoading }}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color={colors.neutral[0]} />
               ) : (
-                <Text style={styles.buttonText}>Ingresar</Text>
+                <Text style={styles.buttonText}>Iniciar sesión</Text>
               )}
             </Pressable>
 
@@ -150,6 +161,7 @@ export default function LoginScreen() {
                 <Text style={styles.registerLink}>Crear una cuenta</Text>
               </Pressable>
             </View>
+            <Pressable accessibilityRole="link" style={styles.helpLink} onPress={()=>router.push('/resend-verification')}><Text style={styles.helpText}>Reenviar verificación de correo</Text></Pressable>
           </View>
 
           {/* Footer */}
@@ -162,7 +174,13 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
+  brand: { fontSize: 13, fontWeight: '700', letterSpacing: 1.8, color: colors.primary[700], marginBottom: spacing.md },
+  passwordRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.neutral[300], borderRadius: radii.md, backgroundColor: colors.surface },
+  passwordInput: { flex: 1, minWidth: 0, minHeight: 48, paddingHorizontal: spacing.md, fontSize: 16, color: colors.neutral[800] },
+  visibilityButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  helpLink: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  helpText: { fontSize: 14, color: colors.neutral[600] },
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -182,8 +200,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 76,
+    height: 76,
     borderRadius: radii.full,
   },
   title: {
@@ -194,6 +212,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
+    maxWidth: 440,
     fontSize: typography.size.base,
     color: colors.neutral[500],
     marginBottom: spacing.xl,
@@ -201,6 +220,12 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
+    maxWidth: 440,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     marginBottom: spacing.xl,
   },
   inputContainer: {

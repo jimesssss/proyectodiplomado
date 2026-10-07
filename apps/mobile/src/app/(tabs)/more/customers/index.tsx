@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Clientes — Lista de clientes
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra todos los clientes con buscador y botón de nuevo cliente.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../../components';
@@ -30,7 +31,7 @@ export default function CustomersScreen() {
   const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useCustomersStore(state => state.isLoading)} error={useCustomersStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Clientes</Text>
@@ -103,7 +104,7 @@ export default function CustomersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

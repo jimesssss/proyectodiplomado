@@ -1,4 +1,7 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 import { useEffect } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { isCommonCustomer, resolveCommonCustomer } from '../../../services/common-customer';
 import { businessApi, type ApiParty, type ApiAccount } from '../../../services/business-api';
 import { listWarehouses, type ApiOrgUnit } from '../../../services/organization-api';
 import { createPosOrder, completePosOrder, COMPLETE_ORDER_PERMISSIONS } from '../../../services/pos-api';
@@ -12,11 +15,10 @@ import { useInventoryStore } from '../../../stores/inventoryStore';
  * Las ventas confirmadas se registran en salesStore.
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   Pressable,
   TextInput,
@@ -30,10 +32,13 @@ import { colors, spacing, typography, radii } from '../../../theme';
 import { usePOSStore, Product } from '../../../stores/posStore';
 import { useProductStore } from '../../../stores/productStore';
 import { useSalesStore } from '../../../stores/salesStore';
+import { DataState } from '../../../components/DataState';
 
 type PaymentMethod = 'cash' | 'card' | 'transfer';
 
 export default function POSScreen() {
+  const router = useRouter();
+  const returnFromCustomer = useRef(false);
   const searchInputRef = useRef<TextInput>(null);
 
   const {
@@ -47,10 +52,14 @@ export default function POSScreen() {
   } = usePOSStore();
 
   const { products: storeProducts } = useProductStore();
+  const productsLoading = useProductStore(state => state.isLoading);
+  const productsError = useProductStore(state => state.error);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [customers,setCustomers]=useState<ApiParty[]>([]);
   const [warehouses,setWarehouses]=useState<ApiOrgUnit[]>([]);
   const [accounts,setAccounts]=useState<ApiAccount[]>([]);
-  const [customerId,setCustomerId]=useState('');
+  const customerId = usePOSStore(state => state.customerId);
+  const setCustomerId = usePOSStore(state => state.selectCustomer);
   const [warehouseId,setWarehouseId]=useState('');
   const [accountId,setAccountId]=useState('');
   const [submitting,setSubmitting]=useState(false);
@@ -68,7 +77,7 @@ export default function POSScreen() {
         await useInventoryStore.getState().loadStock();
         const [people,storage,money]=await Promise.all([businessApi.listCustomers(),listWarehouses(),businessApi.listAccounts()]);
         setCustomers(people.filter(c=>!c.archived));setWarehouses(storage.filter(w=>w.status==='active'));setAccounts(money.filter(a=>!a.archived&&a.currency==='MXN'));
-      }catch(error){Alert.alert('No se pudo cargar POS',error instanceof Error?error.message:'Inténtalo nuevamente.');}
+      }catch(error){setLoadError(error instanceof Error?error.message:'Inténtalo nuevamente.');Alert.alert('No se pudo cargar POS',error instanceof Error?error.message:'Inténtalo nuevamente.');}
     })();
   },[]);
 
@@ -86,6 +95,19 @@ export default function POSScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void businessApi.listCustomers().then(people => {
+      if (active) setCustomers(people.filter(c => !c.archived));
+    }).catch(error => {
+      if (active) Alert.alert('No se pudieron cargar clientes', error instanceof Error ? error.message : 'Inténtalo nuevamente.');
+    });
+    if (returnFromCustomer.current) {
+      returnFromCustomer.current = false;
+      setShowPayment(true);
+    }
+    return () => { active = false; };
+  }, []));
 
   const [selectedPayment, setSelectedPayment] =
     useState<PaymentMethod>('cash');
@@ -169,7 +191,7 @@ export default function POSScreen() {
   // Retain the same order on a failed response, so an uncertain result cannot charge twice.
   const handleCompleteSale = async () => {
     if(submitLock.current||!cart.length)return;
-    if(!customerId||!warehouseId||!accountId){Alert.alert('Datos requeridos','Selecciona cliente, almacén y cuenta de cobro.');return;}
+    if(!warehouseId||!accountId){Alert.alert('Datos requeridos','Selecciona almacén y cuenta de cobro.');return;}
     if(!COMPLETE_ORDER_PERMISSIONS.every(p=>useAuthStore.getState().can(p))){Alert.alert('Sin permiso','Tu usuario no tiene todos los permisos del flujo de venta.');return;}
     const account=accounts.find(a=>a.id===accountId);
     if(!account||account.type!==(selectedPayment==='cash'?'cash':'bank')){Alert.alert('Cuenta requerida','Selecciona una cuenta compatible con el método de pago.');return;}
@@ -177,8 +199,9 @@ export default function POSScreen() {
     submitLock.current=true;setSubmitting(true);
     try {
       if(!pendingOrderId.current) {
+        const selectedCustomerId = customerId || (await resolveCommonCustomer(useAuthStore.getState().can('customer:create'))).id;
         const pct=cartTotal>0?discountValue/cartTotal*100:0;
-        const order=await createPosOrder(customerId,cart.map(item=>({productId:item.product.id,description:item.product.name,
+        const order=await createPosOrder(selectedCustomerId,cart.map(item=>({productId:item.product.id,description:item.product.name,
           quantity:item.quantity,unitPrice:item.product.price,taxRate:0,discountPct:pct})),selectedPayment);
         pendingOrderId.current=order.id;
       }
@@ -193,6 +216,7 @@ export default function POSScreen() {
 
   // Preparar nueva venta
   const handleNewSale = () => {
+    setCustomerId('');
     setShowResult(false);
     setDiscount('');
     setSelectedPayment('cash');
@@ -201,6 +225,7 @@ export default function POSScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <DataState loading={productsLoading} error={loadError || productsError} />
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Venta</Text>
@@ -524,7 +549,11 @@ export default function POSScreen() {
             </Text>
 
             <Text style={styles.paymentMethodText}>Cliente</Text>
-            <ScrollView horizontal>{customers.map(c=><Pressable key={c.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,customerId===c.id&&styles.paymentMethodActive]} onPress={()=>setCustomerId(c.id)}><Text>{c.name}</Text></Pressable>)}</ScrollView>
+            <ScrollView horizontal>
+              <Pressable disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,!customerId&&styles.paymentMethodActive]} onPress={()=>setCustomerId('')}><Text>Cliente común</Text></Pressable>
+              {customers.filter(c=>!isCommonCustomer(c)).map(c=><Pressable key={c.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,customerId===c.id&&styles.paymentMethodActive]} onPress={()=>setCustomerId(c.id)}><Text>{c.name}</Text></Pressable>)}
+              {useAuthStore.getState().can('customer:create') && <Pressable disabled={submitting||!!pendingOrderId.current} style={styles.paymentMethod} onPress={()=>{returnFromCustomer.current=true;setShowPayment(false);setShowCart(false);router.push({pathname:'/more/customers/new',params:{from:'pos'}});}}><Text>+ Nuevo cliente</Text></Pressable>}
+            </ScrollView>
             <Text style={styles.paymentMethodText}>Almacén</Text>
             <ScrollView horizontal>{warehouses.map(w=><Pressable key={w.id} disabled={submitting||!!pendingOrderId.current} style={[styles.paymentMethod,warehouseId===w.id&&styles.paymentMethodActive]} onPress={()=>setWarehouseId(w.id)}><Text>{w.name}</Text></Pressable>)}</ScrollView>
             <Text style={styles.paymentMethodText}>Cuenta de cobro (MXN)</Text>
@@ -740,7 +769,7 @@ function ProductCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
     backgroundColor: colors.background,

@@ -39,8 +39,11 @@ export function StatCard({
 
 const styles = StyleSheet.create({
   container: {
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    flexGrow: 1,
     padding: spacing.md,
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     minWidth: 100,
   },
   label: {
@@ -49,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   value: {
-    fontSize: typography.size.xl,
+    fontSize: typography.size.xxl,
     fontWeight: typography.weight.bold,
     flexShrink: 1,
   },

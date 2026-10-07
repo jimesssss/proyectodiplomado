@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Compras — Lista de compras
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra todas las compras/órdenes de compra.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, SearchBar, EmptyState, StatusBadge } from '../../../../components';
@@ -34,7 +35,7 @@ export default function PurchasesScreen() {
   const formatCurrency = (value: number) => `$${value.toFixed(2)}`;
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={usePurchasesStore(state => state.isLoading)} error={usePurchasesStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Compras</Text>
@@ -147,7 +148,7 @@ export default function PurchasesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   addButton: {
-    backgroundColor: '#9333EA',
+    backgroundColor: '#8B365A',
     width: 40,
     height: 40,
     borderRadius: 9999,
@@ -187,13 +188,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 9999,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F4EFEC',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   filterChipActive: {
-    backgroundColor: '#9333EA',
-    borderColor: '#9333EA',
+    backgroundColor: '#8B365A',
+    borderColor: '#8B365A',
   },
   filterChipText: {
     fontSize: 12,

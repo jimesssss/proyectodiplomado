@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Venta Detalle — Ver detalle de venta
@@ -10,7 +11,6 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -389,7 +389,7 @@ export default function SaleDetailScreen() {
    ESTILOS
 ========================================================= */
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
 
   header: {
     flexDirection: 'row',

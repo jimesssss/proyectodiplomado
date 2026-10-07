@@ -23,6 +23,8 @@ interface POSState {
   products: Product[];
   cart: CartItem[];
   isLoading: boolean;
+  customerId: string;
+  selectCustomer: (id: string) => void;
 
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
@@ -36,6 +38,8 @@ export const usePOSStore = create<POSState>((set, get) => ({
   products: [],
   cart: [],
   isLoading: false,
+  customerId: '',
+  selectCustomer: customerId => set({ customerId }),
 
   addToCart: (product: Product) => {
     const { cart } = get();

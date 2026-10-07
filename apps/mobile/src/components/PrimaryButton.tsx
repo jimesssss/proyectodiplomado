@@ -33,6 +33,9 @@ export function PrimaryButton({
         style,
       ]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
     >
       {loading ? (
@@ -49,6 +52,7 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
+    minHeight: 48,
     backgroundColor: colors.primary[600],
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
@@ -59,9 +63,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 1,
   },
   pressed: {
     backgroundColor: colors.primary[700],

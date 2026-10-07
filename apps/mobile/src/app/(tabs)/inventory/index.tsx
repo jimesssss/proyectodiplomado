@@ -1,10 +1,11 @@
+import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Inventario — Pantalla principal
  *
  * Muestra resumen de inventario, productos con stock bajo y movimientos recientes.
  */
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { ActivityIndicator, View, Text, ScrollView, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatCard, SectionHeader, StatusBadge, EmptyState } from '../../../components';
@@ -103,19 +104,19 @@ export default function InventoryScreen() {
             <StatCard
               label="Stock Bajo"
               value={stockError ? '—' : summary.lowStock.toString()}
-              backgroundColor="#FEF3C7"
+              backgroundColor="#FFF3DA"
               valueColor="#92400E"
             />
             <StatCard
               label="Agotados"
               value={stockError ? '—' : summary.outOfStock.toString()}
-              backgroundColor="#FEE2E2"
+              backgroundColor="#FCECEF"
               valueColor="#991B1B"
             />
             <StatCard
               label="Valor Estimado"
               value={formatCurrency(summary.estimatedValue)}
-              backgroundColor="#D1FAE5"
+              backgroundColor="#EAF5EF"
               valueColor="#065F46"
             />
           </View>
@@ -273,7 +274,7 @@ export default function InventoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

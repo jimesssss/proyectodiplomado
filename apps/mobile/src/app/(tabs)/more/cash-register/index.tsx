@@ -1,3 +1,4 @@
+import { createScreenStyles } from '../../../../theme/screen-styles';
 import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
 /**
  * Caja — Módulo de Caja
@@ -5,7 +6,7 @@ import { useModuleRefresh } from '../../../../hooks/useModuleRefresh';
  * Muestra el estado de caja y permite registrar movimientos.
  */
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenContainer, StatCard, PrimaryButton, SecondaryButton, FormInput } from '../../../../components';
@@ -43,7 +44,7 @@ export default function CashRegisterScreen() {
   };
 
   return (
-    <ScreenContainer>
+    <ScreenContainer loading={useCashRegisterStore(state => state.isLoading)} error={useCashRegisterStore(state => state.error)}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -85,7 +86,7 @@ export default function CashRegisterScreen() {
             <StatCard
               label="Cobros Efectivo"
               value={formatCurrency(cashRegister.cashSales)}
-              backgroundColor="#D1FAE5"
+              backgroundColor="#EAF5EF"
               valueColor="#065F46"
             />
             <StatCard
@@ -96,7 +97,7 @@ export default function CashRegisterScreen() {
             <StatCard
               label="Salidas"
               value={formatCurrency(cashRegister.exits)}
-              backgroundColor="#FEE2E2"
+              backgroundColor="#FCECEF"
               valueColor="#991B1B"
             />
           </View>
@@ -226,7 +227,7 @@ export default function CashRegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createScreenStyles({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
     borderColor: '#86EFAC',
   },
   statusClosed: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F4EFEC',
     borderColor: '#D1D5DB',
   },
   statusText: {

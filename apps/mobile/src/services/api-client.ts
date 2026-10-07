@@ -22,7 +22,7 @@ const messages: Record<number, string> = {
   504: 'El servidor tardó demasiado. Inténtalo más tarde.',
 };
 export async function apiRequest<T>(path: string, options: {
-  method?: string; body?: unknown; public?: boolean; retry?: boolean;
+  method?: string; body?: unknown; public?: boolean; retry?: boolean; timeoutMs?: number;
 } = {}): Promise<ApiResult<T>> {
   const base: unknown = Constants.expoConfig?.extra?.apiBaseUrl;
   if (typeof base !== 'string' || !base.trim()) throw new ApiError('API_CONFIGURATION_ERROR', 'La dirección del servicio no está configurada.');
@@ -30,7 +30,7 @@ export async function apiRequest<T>(path: string, options: {
   if (!options.public && !token) throw new ApiError('UNAUTHENTICATED', messages[401]!, 401);
   const identity=session?.identity?.();
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 15_000);
   try {
     const url = `${base.replace(/\/+$/, '')}${path}`;
     const response = await fetch(url, {

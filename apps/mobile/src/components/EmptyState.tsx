@@ -21,7 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={64} color={colors.neutral[300]} />
+      <View style={styles.icon}><Ionicons name={icon} size={32} color={colors.primary[600]} /></View>
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
     </View>
@@ -29,11 +29,12 @@ export function EmptyState({
 }
 
 const styles = StyleSheet.create({
+  icon: { width: 68, height: 68, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary[50] },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.xxl * 2,
+    paddingVertical: spacing.xxl,
   },
   title: {
     fontSize: typography.size.lg,

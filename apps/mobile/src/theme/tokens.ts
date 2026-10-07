@@ -10,55 +10,55 @@
 export const colors = {
   // Primarios (púrpura/magenta del logo)
   primary: {
-    50: '#FAF5FF',
-    100: '#F3E8FF',
-    200: '#E9D5FF',
-    300: '#D8B4FE',
-    400: '#C084FC',
-    500: '#A855F7', // púrpura principal
-    600: '#9333EA',
-    700: '#7C3AED',
-    800: '#6B21A8',
-    900: '#581C87',
+    50: '#FCF5F8',
+    100: '#F6E8EF',
+    200: '#EBCEDB',
+    300: '#D9A7BD',
+    400: '#BD7595',
+    500: '#A85278', // púrpura principal
+    600: '#8B365A',
+    700: '#703552',
+    800: '#572C43',
+    900: '#3E2231',
   },
 
   // Acentos (azul profundo del logo)
   accent: {
-    50: '#EFF6FF',
-    100: '#DBEAFE',
-    200: '#BFDBFE',
-    300: '#93C5FD',
-    400: '#60A5FA',
-    500: '#3B82F6',
-    600: '#2563EB',
-    700: '#1D4ED8',
-    800: '#1E40AF',
-    900: '#1E3A8A',
+    50: '#F0F7F7',
+    100: '#E2EFF0',
+    200: '#BDDCDD',
+    300: '#91C2C6',
+    400: '#6AA7AE',
+    500: '#47858F',
+    600: '#316B75',
+    700: '#285662',
+    800: '#254752',
+    900: '#213B43',
   },
 
   // Neutros (fondos, texto, bordes)
   neutral: {
     0: '#FFFFFF',
-    50: '#F9FAFB',
-    100: '#F3F4F6',
-    200: '#E5E7EB',
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#374151',
-    800: '#1F2937',
-    900: '#111827',
+    50: '#FBF8F6',
+    100: '#F4EFEC',
+    200: '#E9E0DD',
+    300: '#D8CBC7',
+    400: '#786C78',
+    500: '#6E6470',
+    600: '#5D5360',
+    700: '#493F4D',
+    800: '#332A38',
+    900: '#241D28',
   },
 
   // Semánticos
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
+  success: '#23785F',
+  warning: '#96610F',
+  error: '#B53843',
+  info: '#316B75',
 
   // Fondo de la app
-  background: '#F9FAFB',
+  background: '#FBF8F6',
   surface: '#FFFFFF',
 } as const;
 
@@ -111,34 +111,34 @@ export const typography = {
 
 // ── Bordes y sombras ──────────────────────────────────────────────────
 export const radii = {
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
   full: 9999,
 } as const;
 
 export const shadows = {
   sm: {
-    shadowColor: '#000',
+    shadowColor: '#3E2231',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: '#3E2231',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 3,
   },
   lg: {
-    shadowColor: '#000',
+    shadowColor: '#3E2231',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 3,
   },
 } as const;
 
