@@ -113,11 +113,11 @@
     "title": "File:WeisseLuftschokolade.jpg",
     "source": "https://commons.wikimedia.org/wiki/File%3AWeisseLuftschokolade.jpg",
     "author": "Gohnarch",
-    "license": "CC-BY-SA-3.0-migrated",
+    "license": "CC-BY-SA-3.0",
     "sha256": "d0e0bba9347666b8f2f63c632fef427aecef582e1810a4959982103742e3e66c",
     "bytes": 80129,
     "changes": "Downloaded Wikimedia preview; no edits",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0-migrated/"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
   },
   {
     "key": "almendras",
@@ -220,7 +220,7 @@
     "file": "18856054c9c43796.jpg",
     "title": "File:Lollipop in the package.jpg",
     "source": "https://commons.wikimedia.org/wiki/File%3ALollipop_in_the_package.jpg",
-    "author": "See source page",
+    "author": "Linuxerist",
     "license": "CC-BY-SA-2.5",
     "sha256": "18856054c9c43796cb4184bda5e8b7e7f82f0497d2197ffb7c5976f1949367ce",
     "bytes": 136791,
@@ -250,18 +250,6 @@
     "bytes": 101115,
     "changes": "Downloaded Wikimedia preview; no edits",
     "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
-  },
-  {
-    "key": "caramelo",
-    "file": "0a556b754f5771e5.jpg",
-    "title": "File:Caramel-3.jpg",
-    "source": "https://commons.wikimedia.org/wiki/File%3ACaramel-3.jpg",
-    "author": "See source page",
-    "license": "CC-BY-SA-3.0-migrated",
-    "sha256": "0a556b754f5771e545855e69fc3e3c9d6305116375389c10e46bf1ed46a6263d",
-    "bytes": 171667,
-    "changes": "Downloaded Wikimedia preview; no edits",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0-migrated/"
   },
   {
     "key": "frutas",
@@ -389,11 +377,11 @@
     "title": "File:LemonadeJuly2006.JPG",
     "source": "https://commons.wikimedia.org/wiki/File%3ALemonadeJuly2006.JPG",
     "author": "User:Polylerus",
-    "license": "CC-BY-SA-3.0-migrated",
+    "license": "CC-BY-SA-3.0",
     "sha256": "de7f2829728471a81ddb5477d4cfd3ded38c854d7e06d5740be3fbf7612660a1",
     "bytes": 22500,
     "changes": "Downloaded Wikimedia preview; no edits",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0-migrated/"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
   },
   {
     "key": "mango",
@@ -413,11 +401,11 @@
     "title": "File:Apple juice with 3apples.jpg",
     "source": "https://commons.wikimedia.org/wiki/File%3AApple_juice_with_3apples.jpg",
     "author": "Flunse (Patrick Geltinger)",
-    "license": "CC-BY-SA-3.0-migrated",
+    "license": "CC-BY-SA-3.0",
     "sha256": "34bae86d13e0c2e0b6d3f3de3a23e64bdfbdd4639a3be8f9eeea70b43a69780e",
     "bytes": 90798,
     "changes": "Downloaded Wikimedia preview; no edits",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0-migrated/"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
   },
   {
     "key": "bebidaChocolate",
@@ -568,12 +556,12 @@
     "file": "100011061dd3918d.jpg",
     "title": "File:Calavera.jpg",
     "source": "https://commons.wikimedia.org/wiki/File%3ACalavera.jpg",
-    "author": "See source page",
-    "license": "CC-BY-SA-3.0,2.5,2.0,1.0",
+    "author": "Spangineer",
+    "license": "CC-BY-SA-3.0",
     "sha256": "100011061dd3918d7e233d4a4bca0abc67bced909c92bc79f030c54f9f974e5c",
     "bytes": 156261,
     "changes": "Downloaded Wikimedia preview; no edits",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0,2.5,2.0,1.0/"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
   },
   {
     "key": "calaveraChocolate",
@@ -754,5 +742,17 @@
     "bytes": 680116,
     "changes": "Downloaded Wikimedia preview; no edits",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  {
+    "key": "caramelo",
+    "file": "43b5627b3ef88cd8.jpg",
+    "title": "File:Caramels.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File%3ACaramels.jpg",
+    "author": "Evan-Amos",
+    "license": "CC-BY-SA-3.0",
+    "sha256": "43b5627b3ef88cd8f13cf598e60d5bc328884bf911e2040b64a80b140d6e4406",
+    "bytes": 73991,
+    "changes": "Downloaded Wikimedia preview; no edits",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
   }
 ]
