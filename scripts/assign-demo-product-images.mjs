@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import { planProductImages } from './product-image-plan.mjs';
+import { planProductImages, verifyPublishedPhoto } from './product-image-plan.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const config = Object.assign({}, ...['apps/api/.env', 'apps/api.env'].map(file => path.join(root, file)).filter(fs.existsSync).map(file => dotenv.parse(fs.readFileSync(file))), process.env);
@@ -46,7 +45,7 @@ try {
     if (!response.ok || !/^image\/(jpeg|png|webp)(;|$)/.test(response.headers.get('content-type') ?? '')) throw new Error('Static photograph unavailable: ' + new URL(imageUrl).pathname);
     const bytes = new Uint8Array(await response.arrayBuffer());
     const expected = credits.find(row => row.file === path.basename(new URL(imageUrl).pathname));
-    if (!expected || crypto.createHash('sha256').update(bytes).digest('hex') !== expected.sha256) throw new Error('Published photograph differs from validated static file');
+    if (!verifyPublishedPhoto(bytes, expected, response.headers.get('content-type'), response.headers.get('cf-polished'))) throw new Error('Published photograph differs from validated static file: ' + new URL(imageUrl).pathname);
   }
   const stockBefore = JSON.stringify(await list('/inventory/stock'));
   let updated = 0;

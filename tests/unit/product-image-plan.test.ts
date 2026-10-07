@@ -1,9 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { planProductImages } from '../../scripts/product-image-plan.mjs';
+import { planProductImages, verifyPublishedPhoto } from '../../scripts/product-image-plan.mjs';
 
 describe('demo product photographs', () => {
+  const original = Buffer.alloc(200);
+  original.set([255, 216, 255], 0);
+  original.set([255, 217], 198);
+  const originalPhoto = { bytes: original.length, sha256: crypto.createHash('sha256').update(original).digest('hex') };
+  it('accepts the original published photograph with matching bytes', () => {
+    expect(verifyPublishedPhoto(original, originalPhoto, 'image/jpeg', null)).toBe(true);
+  });
+  it('accepts verified CDN optimization without making duplicate image assignments', () => {
+    const optimized = Buffer.from(original);
+    optimized[50] = 1;
+    expect(verifyPublishedPhoto(optimized, originalPhoto, 'image/jpeg', 'ok, orig_size=200')).toBe(true);
+  });
+  it('rejects corrupt files, SPA fallbacks and unrelated optimized images', () => {
+    const different = Buffer.from(original);
+    different[50] = 1;
+    expect(verifyPublishedPhoto(different, originalPhoto, 'image/jpeg', null)).toBe(false);
+    expect(verifyPublishedPhoto(different, originalPhoto, 'image/jpeg', 'ok, orig_size=999')).toBe(false);
+    expect(verifyPublishedPhoto(Buffer.from('<html>fallback</html>'), originalPhoto, 'image/jpeg', 'ok, orig_size=200')).toBe(false);
+  });
+
   const catalog = JSON.parse(fs.readFileSync('scripts/demo-product-images.json', 'utf8'));
   const products = catalog.map((entry: { code: string; name: string }, i: number) => ({ ...entry, id: String(i), price: 18, imageUrl: null }));
   it('covers the 100 existing codes with deduplicated verified static files', () => {

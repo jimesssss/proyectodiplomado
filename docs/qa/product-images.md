@@ -20,9 +20,9 @@ detalle. Las fotografías proceden de Wikimedia Commons y Open Food Facts.
 Después de publicar API y web:
 
 ```powershell
-pnpm images:demo          # preflight, sin escribir productos
-pnpm images:demo --apply  # solamente PATCH { imageUrl }
-pnpm images:demo --apply  # segunda ejecución: cero cambios
+pnpm --config.verifyDepsBeforeRun=false images:demo          # preflight, sin escribir productos
+pnpm --config.verifyDepsBeforeRun=false images:demo --apply  # solamente PATCH { imageUrl }
+pnpm --config.verifyDepsBeforeRun=false images:demo --apply  # segunda ejecución: cero cambios
 ```
 
 El script reutiliza `DEMO_ADMIN_PASSWORD` de los archivos de entorno existentes.
@@ -31,6 +31,10 @@ identidad de cada producto y disponibilidad HTTP de todos los archivos antes
 de escribir. Conserva referencias existentes accesibles, comprueba que no
 cambien los demás campos ni el stock y cierra su sesión. El resultado queda
 en `.cache/demo-product-images-result.json`, excluido de Git.
+
+La comprobación HTTP admite la optimización existente de Cloudflare Polish:
+valida firma binaria, tipo de imagen y `cf-polished` con el tamaño original
+esperado. Los hashes originales siguen verificándose en los tests del catálogo.
 
 Web y Android utilizan `ProductImage` con la misma URL proveniente de la API.
 El componente incluye miniatura, imagen grande, caché y fallback si falla la
