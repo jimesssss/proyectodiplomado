@@ -19,8 +19,15 @@ const limitField = z.coerce.number().int().min(1).max(100).default(20);
 const archivedField = z.enum(['true', 'false']).transform((value) => value === 'true');
 
 // --- Maestro de productos (patrón customers/suppliers) ---
+const productImageUrl = z.string().trim().max(2048).url().refine(value => {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password;
+  } catch { return false; }
+}, 'Image reference must be an HTTPS URL without credentials').nullable().optional();
 
 export const createProductBodySchema = z.strictObject({
+  imageUrl: productImageUrl,
   code: z.string().min(1).max(64),
   name: z.string().min(1).max(200),
   description: z.string().max(2_000).optional(),
@@ -31,6 +38,7 @@ export const createProductBodySchema = z.strictObject({
 });
 
 export const patchProductBodySchema = z.strictObject({
+  imageUrl: productImageUrl,
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2_000).nullable().optional(),
   unit: z.string().min(1).max(32).optional(),

@@ -249,6 +249,29 @@ describe('inventory: productos, ledger, transferencias, conteos y posting', () =
     ).toBe(false);
   });
 
+  it('imagen opcional: PATCH persiste, borra y valida sin alterar datos comerciales', async () => {
+    const created = await postA('/api/v1/inventory/products', { code: 'PHOTO-01', name: 'Gomitas', price: 18, cost: 10 });
+    expect(created.status).toBe(201);
+    const original = created.body.data;
+    expect(original.imageUrl).toBeNull();
+    const url = 'https://erp-sc-web.onrender.com/product-images/gomitas.jpg';
+    const patched = await patchA('/api/v1/inventory/products/' + original.id, { imageUrl: url });
+    expect(patched.status).toBe(200);
+    expect(patched.body.data.imageUrl).toBe(url);
+    for (const field of ['code', 'name', 'price', 'cost', 'unit', 'archived']) expect(patched.body.data[field]).toEqual(original[field]);
+    const read = await getA('/api/v1/inventory/products/' + original.id);
+    expect(read.body.data.imageUrl).toBe(url);
+    for (const imageUrl of ['invalid', 'http://example.com/a.jpg', 'https://user:secret@example.com/a.jpg', 'data:image/png;base64,abc', 42]) {
+      const rejected = await patchA('/api/v1/inventory/products/' + original.id, { imageUrl });
+      expect(rejected.status).toBe(400);
+    }
+    const denied = await request(app).patch('/api/v1/inventory/products/' + original.id).set('Authorization', 'Bearer ' + tokenB).send({ imageUrl: url });
+    expect(denied.status).toBe(404);
+    const cleared = await patchA('/api/v1/inventory/products/' + original.id, { imageUrl: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.data.imageUrl).toBeNull();
+  });
+
   it('movimientos: ledger append-only con saldo nunca negativo (422 en salida insuficiente)', async () => {
     const in10 = await postA('/api/v1/inventory/movements', {
       productId,

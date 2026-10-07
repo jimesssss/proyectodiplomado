@@ -61,6 +61,13 @@ function jsonResponse(
 }
 
 describe('inventory API service', () => {
+  it('reads image references and preserves compatibility with products without images', async () => {
+    const imageUrl = 'https://erp-sc-web.onrender.com/product-images/gomitas.jpg';
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(jsonResponse({ ...product('1'), imageUrl })).mockResolvedValueOnce(jsonResponse(product('2'))));
+    await expect(getProduct('1')).resolves.toMatchObject({ imageUrl });
+    await expect(getProduct('2')).resolves.toMatchObject({ imageUrl: null });
+  });
+
   beforeEach(() => {
     useAuthStore.setState({
       isAuthenticated: true,

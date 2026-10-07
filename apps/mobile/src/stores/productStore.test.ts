@@ -44,6 +44,13 @@ const apiProduct = {
 };
 
 describe('product store API integration', () => {
+  it('passes the real image reference from API to the product used by screens', async () => {
+    const imageUrl = 'https://erp-sc-web.onrender.com/product-images/gomitas.jpg';
+    vi.mocked(listProducts).mockResolvedValue([{ ...apiProduct, imageUrl }]);
+    await useProductStore.getState().loadProducts();
+    expect(useProductStore.getState().products[0]).toMatchObject({ imageUrl, sku: 'CANDY-1', salePrice: 5 });
+  });
+
   beforeEach(() => {
     vi.resetAllMocks();
     auth.allowed = true;

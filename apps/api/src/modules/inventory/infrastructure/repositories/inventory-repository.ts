@@ -157,6 +157,7 @@ function mapProduct(doc: ProductDoc): Product {
     code: doc.code,
     name: doc.name,
     description: doc.description ?? null,
+    imageUrl: doc.imageUrl ?? null,
     unit: doc.unit,
     cost: doc.cost ?? null,
     price: doc.price ?? null,

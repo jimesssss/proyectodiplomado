@@ -1,3 +1,4 @@
+import { ProductImage } from '../../../components/ProductImage';
 import { createScreenStyles } from '../../../theme/screen-styles';
 /**
  * Productos — Lista de productos
@@ -153,9 +154,7 @@ export default function ProductsScreen() {
                 style={styles.productCard}
                 onPress={() => router.push(`/products/${product.id}`)}
               >
-                <View style={styles.productImagePlaceholder}>
-                  <Ionicons name="cube-outline" size={32} color={colors.neutral[400]} />
-                </View>
+                <ProductImage uri={product.imageUrl} name={product.name} style={styles.productImagePlaceholder} />
                 <View style={styles.productInfo}>
                   <Text style={styles.productName}>{product.name}</Text>
                   <Text style={styles.productSku}>SKU: {product.sku}</Text>

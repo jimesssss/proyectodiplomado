@@ -15,6 +15,7 @@ import { productRepo } from '../infrastructure/repositories/inventory-repository
  */
 
 export interface CreateProductInput {
+  readonly imageUrl?: string | null | undefined;
   readonly code: string;
   readonly name: string;
   readonly description?: string | undefined;
@@ -25,6 +26,7 @@ export interface CreateProductInput {
 }
 
 export interface PatchProductInput {
+  readonly imageUrl?: string | null | undefined;
   readonly name?: string | undefined;
   readonly description?: string | null | undefined;
   readonly unit?: string | undefined;
@@ -66,6 +68,7 @@ export async function createProduct(
   if (input.description !== undefined) {
     payload.description = input.description.trim();
   }
+  if (input.imageUrl !== undefined) payload.imageUrl = input.imageUrl;
   if (input.cost !== undefined) {
     payload.cost = roundMoney(input.cost);
   }
@@ -107,6 +110,7 @@ export async function updateProduct(
     throw new NotFoundError();
   }
   const set: Record<string, unknown> = {};
+  if (input.imageUrl !== undefined) set.imageUrl = input.imageUrl;
   if (input.name !== undefined) {
     set.name = input.name.trim();
   }

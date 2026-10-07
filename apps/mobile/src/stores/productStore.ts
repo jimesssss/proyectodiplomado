@@ -19,6 +19,7 @@ import {
 } from '../services/inventory-api';
 
 export interface Product {
+  imageUrl?: string | null;
   id: string;
   name: string;
   sku: string;
@@ -60,6 +61,7 @@ function toProduct(apiProduct: ApiProduct, stock = 0): Product {
   return {
     id: apiProduct.id,
     name: apiProduct.name,
+    imageUrl: apiProduct.imageUrl ?? null,
     sku: apiProduct.code,
     barcode: '',
     category: '',
@@ -175,6 +177,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const apiProduct = await createProductWithApi({
+        ...(productInput.imageUrl !== undefined ? { imageUrl: productInput.imageUrl } : {}),
         code: productInput.sku,
         name: productInput.name,
         description: productInput.description,
@@ -227,6 +230,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     try {
       const product = toProduct(
         await updateProductWithApi(id, {
+          ...(updates.imageUrl !== undefined ? { imageUrl: updates.imageUrl } : {}),
           ...(updates.name !== undefined ? { name: updates.name } : {}),
           ...(updates.description !== undefined ? { description: updates.description } : {}),
           ...(updates.unit !== undefined ? { unit: updates.unit } : {}),

@@ -1,3 +1,4 @@
+import { ProductImage } from '../../../../components/ProductImage';
 import { createScreenStyles } from '../../../../theme/screen-styles';
 /**
  * Producto Detalle — Ver detalle de producto
@@ -134,9 +135,7 @@ export default function ProductDetailScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Imagen placeholder */}
         <View style={styles.imageContainer}>
-          <View style={styles.imagePlaceholder}>
-            <Ionicons name="cube-outline" size={64} color={colors.neutral[400]} />
-          </View>
+          <ProductImage uri={product.imageUrl} name={product.name} size={220} large style={styles.imagePlaceholder} />
         </View>
 
         {/* Información principal */}
@@ -294,8 +293,8 @@ const styles = createScreenStyles({
     paddingVertical: spacing.xl,
   },
   imagePlaceholder: {
-    width: 150,
-    height: 150,
+    width: 220,
+    height: 220,
     borderRadius: radii.lg,
     backgroundColor: colors.neutral[100],
     alignItems: 'center',

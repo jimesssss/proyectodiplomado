@@ -21,7 +21,8 @@
     "dev": "pnpm -r run dev",
     "clean": "pnpm -r run clean && rm -rf node_modules",
     "prepare": "husky install",
-    "seed:demo": "node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.base.json scripts/seed-demo-data.mjs"
+    "seed:demo": "node node_modules/tsx/dist/cli.mjs --tsconfig tsconfig.base.json scripts/seed-demo-data.mjs",
+    "images:demo": "node scripts/assign-demo-product-images.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

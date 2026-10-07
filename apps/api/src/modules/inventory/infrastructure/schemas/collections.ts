@@ -22,6 +22,7 @@ const productSchema = new Schema<ProductDoc>(
     code: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String, default: null },
+    imageUrl: { type: String, default: null },
     unit: { type: String, required: true, default: 'unit' },
     cost: { type: Number, default: null },
     price: { type: Number, default: null },

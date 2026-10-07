@@ -6,6 +6,7 @@ function getApiBaseUrl(): string { return String(Constants.expoConfig?.extra?.ap
 function logRequestDiagnostic(diagnostic: Readonly<Record<string, unknown>>): void { console.error('inventory API request failed', diagnostic); }
 
 export interface ApiProduct {
+  readonly imageUrl?: string | null;
   readonly id: string;
   readonly code: string;
   readonly name: string;
@@ -131,6 +132,7 @@ async function request(
 function parseProduct(value: unknown): ApiProduct {
   if (
     !isRecord(value) ||
+    !(value.imageUrl === undefined || value.imageUrl === null || typeof value.imageUrl === 'string') ||
     typeof value.id !== 'string' ||
     typeof value.code !== 'string' ||
     typeof value.name !== 'string' ||
@@ -148,6 +150,7 @@ function parseProduct(value: unknown): ApiProduct {
   }
   return {
     id: value.id,
+    imageUrl: (value.imageUrl as string | null | undefined) ?? null,
     code: value.code,
     name: value.name,
     description: value.description,
@@ -284,6 +287,7 @@ export async function getProduct(id: string): Promise<ApiProduct> {
 }
 
 export async function createProduct(input: {
+  readonly imageUrl?: string | null;
   readonly code: string;
   readonly name: string;
   readonly description?: string;
@@ -299,6 +303,7 @@ export async function createProduct(input: {
 export async function updateProduct(
   id: string,
   input: {
+    readonly imageUrl?: string | null;
     readonly name?: string;
     readonly description?: string | null;
     readonly unit?: string;

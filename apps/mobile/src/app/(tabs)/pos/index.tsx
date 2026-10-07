@@ -1,3 +1,4 @@
+import { ProductImage } from '../../../components/ProductImage';
 import { createScreenStyles } from '../../../theme/screen-styles';
 import { useEffect } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -90,6 +91,7 @@ export default function POSScreen() {
       price: product.salePrice,
       stock: warehouseId ? stockBalances.filter(b=>b.productId===product.id&&b.warehouseId===warehouseId).reduce((sum,b)=>sum+b.qty,0) : product.stock,
       category: product.category,
+      imageUrl: product.imageUrl ?? null,
     }));
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -380,6 +382,7 @@ export default function POSScreen() {
                   key={item.product.id}
                   style={styles.cartItem}
                 >
+                  <ProductImage uri={products.find(product => product.id === item.product.id)?.imageUrl ?? item.product.imageUrl} name={item.product.name} size={40} style={{ marginRight: spacing.sm }} />
                   <View style={styles.cartItemInfo}>
                     <Text
                       style={styles.cartItemName}
@@ -717,13 +720,7 @@ function ProductCard({
 
   return (
     <View style={styles.productCard}>
-      <View style={styles.productImagePlaceholder}>
-        <Ionicons
-          name="cube-outline"
-          size={32}
-          color={colors.neutral[400]}
-        />
-      </View>
+      <ProductImage uri={product.imageUrl} name={product.name} size={80} style={styles.productImagePlaceholder} />
 
       <Text
         style={styles.productName}

@@ -12,6 +12,8 @@ export interface Product {
   readonly code: string;
   readonly name: string;
   readonly description: string | null;
+  /** Referencia HTTPS a una fotografía estática; los productos antiguos no la requieren. */
+  readonly imageUrl?: string | null;
   /** Unidad de medida libre ('unit', 'kg', 'm', …). */
   readonly unit: string;
   /** Costo/unitario a 2 decimales (dinero, redondeo comercial). */
@@ -31,6 +33,7 @@ export interface PublicProduct {
   readonly code: string;
   readonly name: string;
   readonly description: string | null;
+  readonly imageUrl?: string | null;
   readonly unit: string;
   readonly cost: number | null;
   readonly price: number | null;
@@ -44,6 +47,7 @@ export function toPublicProduct(product: Product): PublicProduct {
     code: product.code,
     name: product.name,
     description: product.description,
+    imageUrl: product.imageUrl ?? null,
     unit: product.unit,
     cost: product.cost,
     price: product.price,

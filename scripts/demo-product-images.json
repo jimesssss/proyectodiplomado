@@ -1,0 +1,502 @@
+[
+  {
+    "code": "DEMO-DUL-001",
+    "name": "Mazapán de cacahuate",
+    "file": "3d7632fa374c188d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-002",
+    "name": "Pulparindo de tamarindo",
+    "file": "910645554165289f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-003",
+    "name": "Dulce de tamarindo en vasito",
+    "file": "936f45703a1d0c28.jpg"
+  },
+  {
+    "code": "DEMO-DUL-004",
+    "name": "Obleas con cajeta",
+    "file": "e6848105c1cee5ea.jpg"
+  },
+  {
+    "code": "DEMO-DUL-005",
+    "name": "Alegría de amaranto",
+    "file": "31919d2fa24ce140.jpg"
+  },
+  {
+    "code": "DEMO-DUL-006",
+    "name": "Cocada de leche",
+    "file": "676248ccc714d33e.jpg"
+  },
+  {
+    "code": "DEMO-DUL-007",
+    "name": "Dulce de leche en barra",
+    "file": "4eb04697ae14837b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-008",
+    "name": "Palanqueta de cacahuate",
+    "file": "c36ca400b0e35b6b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-009",
+    "name": "Ate de guayaba individual",
+    "file": "8108bbe4e7dd970d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-010",
+    "name": "Rollo de guayaba con nuez",
+    "file": "8108bbe4e7dd970d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-011",
+    "name": "Chocolate con leche 25 g",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-012",
+    "name": "Chocolate amargo 30 g",
+    "file": "5a4a4130d880de20.jpg"
+  },
+  {
+    "code": "DEMO-DUL-013",
+    "name": "Chocolate blanco 25 g",
+    "file": "d0e0bba9347666b8.jpg"
+  },
+  {
+    "code": "DEMO-DUL-014",
+    "name": "Chocolate con almendras",
+    "file": "18b59eb6c3faad76.jpg"
+  },
+  {
+    "code": "DEMO-DUL-015",
+    "name": "Chocolate con cacahuate",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-016",
+    "name": "Chocolate relleno de caramelo",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-017",
+    "name": "Chocolate con galleta",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-018",
+    "name": "Monedas de chocolate bolsa",
+    "file": "b1e3a0c22b0f3426.jpg"
+  },
+  {
+    "code": "DEMO-DUL-019",
+    "name": "Trufas de chocolate bolsa",
+    "file": "689388dfec9ca030.jpg"
+  },
+  {
+    "code": "DEMO-DUL-020",
+    "name": "Chocolate con arroz inflado",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-021",
+    "name": "Gomitas de ositos 100 g",
+    "file": "93a61b34aeb4b759.jpg"
+  },
+  {
+    "code": "DEMO-DUL-022",
+    "name": "Gomitas enchiladas 100 g",
+    "file": "93a61b34aeb4b759.jpg"
+  },
+  {
+    "code": "DEMO-DUL-023",
+    "name": "Gomitas de gusanos 100 g",
+    "file": "08d7227cadff69ba.jpg"
+  },
+  {
+    "code": "DEMO-DUL-024",
+    "name": "Gomitas de manguito 100 g",
+    "file": "93a61b34aeb4b759.jpg"
+  },
+  {
+    "code": "DEMO-DUL-025",
+    "name": "Gomitas de sandía 100 g",
+    "file": "b98163762e63d05a.jpg"
+  },
+  {
+    "code": "DEMO-DUL-026",
+    "name": "Gomitas de cola 100 g",
+    "file": "21aef56c29ec1778.jpg"
+  },
+  {
+    "code": "DEMO-DUL-027",
+    "name": "Gomitas de aros de durazno",
+    "file": "8c57bcfb6ac58424.jpg"
+  },
+  {
+    "code": "DEMO-DUL-028",
+    "name": "Gomitas de frutas mixtas",
+    "file": "23cb63cff3212f90.jpg"
+  },
+  {
+    "code": "DEMO-DUL-029",
+    "name": "Gomitas de corazones",
+    "file": "c1a90aa77390b487.jpg"
+  },
+  {
+    "code": "DEMO-DUL-030",
+    "name": "Gomitas ácidas surtidas",
+    "file": "08d7227cadff69ba.jpg"
+  },
+  {
+    "code": "DEMO-DUL-031",
+    "name": "Paleta de caramelo",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-032",
+    "name": "Paleta de mango con chile",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-033",
+    "name": "Paleta de sandía con chile",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-034",
+    "name": "Paleta de cereza",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-035",
+    "name": "Paleta de tamarindo",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-036",
+    "name": "Paleta de fresa con crema",
+    "file": "18856054c9c43796.jpg"
+  },
+  {
+    "code": "DEMO-DUL-037",
+    "name": "Paleta de chocolate",
+    "file": "6f3feb2e1c1efab9.jpg"
+  },
+  {
+    "code": "DEMO-DUL-038",
+    "name": "Paleta de cajeta",
+    "file": "0a556b754f5771e5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-039",
+    "name": "Paleta de malvavisco",
+    "file": "8d524ea1b88a74f2.jpg"
+  },
+  {
+    "code": "DEMO-DUL-040",
+    "name": "Paleta espiral multicolor",
+    "file": "0b5764660e760008.jpg"
+  },
+  {
+    "code": "DEMO-DUL-041",
+    "name": "Caramelos de menta 100 g",
+    "file": "7dfbbc316b5e7278.jpg"
+  },
+  {
+    "code": "DEMO-DUL-042",
+    "name": "Caramelos de café 100 g",
+    "file": "ce762f818a9697d1.jpg"
+  },
+  {
+    "code": "DEMO-DUL-043",
+    "name": "Caramelos de leche 100 g",
+    "file": "0a556b754f5771e5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-044",
+    "name": "Caramelos de miel 100 g",
+    "file": "0a556b754f5771e5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-045",
+    "name": "Caramelos de frutas 100 g",
+    "file": "3ecc3f089ee477ef.jpg"
+  },
+  {
+    "code": "DEMO-DUL-046",
+    "name": "Caramelos de eucalipto",
+    "file": "7dfbbc316b5e7278.jpg"
+  },
+  {
+    "code": "DEMO-DUL-047",
+    "name": "Caramelos suaves de vainilla",
+    "file": "0a556b754f5771e5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-048",
+    "name": "Caramelos de coco",
+    "file": "676248ccc714d33e.jpg"
+  },
+  {
+    "code": "DEMO-DUL-049",
+    "name": "Caramelos de limón",
+    "file": "3ecc3f089ee477ef.jpg"
+  },
+  {
+    "code": "DEMO-DUL-050",
+    "name": "Caramelos rellenos de chocolate",
+    "file": "91cfc07c0d8b895f.jpg"
+  },
+  {
+    "code": "DEMO-DUL-051",
+    "name": "Papas saladas 45 g",
+    "file": "059935ac083b196d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-052",
+    "name": "Papas con limón 45 g",
+    "file": "059935ac083b196d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-053",
+    "name": "Papas adobadas 45 g",
+    "file": "059935ac083b196d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-054",
+    "name": "Cacahuates japoneses 80 g",
+    "file": "7e6e4432f8cf3ffd.jpg"
+  },
+  {
+    "code": "DEMO-DUL-055",
+    "name": "Cacahuates enchilados 80 g",
+    "file": "6b5c318721b5bcef.png"
+  },
+  {
+    "code": "DEMO-DUL-056",
+    "name": "Cacahuates salados 80 g",
+    "file": "6b5c318721b5bcef.png"
+  },
+  {
+    "code": "DEMO-DUL-057",
+    "name": "Churritos con chile 80 g",
+    "file": "730b2bea1ac5b091.jpg"
+  },
+  {
+    "code": "DEMO-DUL-058",
+    "name": "Frituras de maíz 60 g",
+    "file": "730b2bea1ac5b091.jpg"
+  },
+  {
+    "code": "DEMO-DUL-059",
+    "name": "Habitas enchiladas 80 g",
+    "file": "9392a9bf105afef6.jpg"
+  },
+  {
+    "code": "DEMO-DUL-060",
+    "name": "Semillas de girasol 60 g",
+    "file": "91b9674605980193.jpg"
+  },
+  {
+    "code": "DEMO-DUL-061",
+    "name": "Agua natural 600 ml",
+    "file": "f5d19afa696b62fa.jpg"
+  },
+  {
+    "code": "DEMO-DUL-062",
+    "name": "Agua mineral 600 ml",
+    "file": "508b213a679b3aac.jpg"
+  },
+  {
+    "code": "DEMO-DUL-063",
+    "name": "Refresco de cola 355 ml",
+    "file": "e84893d53dfb7d89.jpg"
+  },
+  {
+    "code": "DEMO-DUL-064",
+    "name": "Refresco de naranja 355 ml",
+    "file": "6b4657e188530d04.jpg"
+  },
+  {
+    "code": "DEMO-DUL-065",
+    "name": "Refresco de limón 355 ml",
+    "file": "de7f2829728471a8.jpg"
+  },
+  {
+    "code": "DEMO-DUL-066",
+    "name": "Jugo de mango 250 ml",
+    "file": "641e67003dfce4b4.jpg"
+  },
+  {
+    "code": "DEMO-DUL-067",
+    "name": "Jugo de manzana 250 ml",
+    "file": "34bae86d13e0c2e0.jpg"
+  },
+  {
+    "code": "DEMO-DUL-068",
+    "name": "Néctar de durazno 250 ml",
+    "file": "62d678a7e260773c.jpg"
+  },
+  {
+    "code": "DEMO-DUL-069",
+    "name": "Bebida de chocolate 250 ml",
+    "file": "e2e0c15f440c452e.jpg"
+  },
+  {
+    "code": "DEMO-DUL-070",
+    "name": "Agua de jamaica 500 ml",
+    "file": "5e7010cc6d61cbf5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-071",
+    "name": "Galletas de vainilla 90 g",
+    "file": "7d21b3dd8096fb7b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-072",
+    "name": "Galletas de chocolate 90 g",
+    "file": "340569c2ae715fea.jpg"
+  },
+  {
+    "code": "DEMO-DUL-073",
+    "name": "Galletas con chispas 90 g",
+    "file": "340569c2ae715fea.jpg"
+  },
+  {
+    "code": "DEMO-DUL-074",
+    "name": "Galletas de avena 90 g",
+    "file": "76ea7ec3d855f223.jpg"
+  },
+  {
+    "code": "DEMO-DUL-075",
+    "name": "Galletas rellenas de fresa",
+    "file": "7d21b3dd8096fb7b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-076",
+    "name": "Galletas rellenas de limón",
+    "file": "7d21b3dd8096fb7b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-077",
+    "name": "Galletas saladas 80 g",
+    "file": "b7ed72df21f85f68.jpg"
+  },
+  {
+    "code": "DEMO-DUL-078",
+    "name": "Galletas de coco 90 g",
+    "file": "7d21b3dd8096fb7b.jpg"
+  },
+  {
+    "code": "DEMO-DUL-079",
+    "name": "Galletas de animalitos 100 g",
+    "file": "519c3c7076e643ac.jpg"
+  },
+  {
+    "code": "DEMO-DUL-080",
+    "name": "Barquillos de chocolate 80 g",
+    "file": "b879bbb6c2f69cb7.png"
+  },
+  {
+    "code": "DEMO-DUL-081",
+    "name": "Chicles de hierbabuena",
+    "file": "1da42506c1e502db.jpg"
+  },
+  {
+    "code": "DEMO-DUL-082",
+    "name": "Chicles de frutas",
+    "file": "1da42506c1e502db.jpg"
+  },
+  {
+    "code": "DEMO-DUL-083",
+    "name": "Chicles de canela",
+    "file": "1da42506c1e502db.jpg"
+  },
+  {
+    "code": "DEMO-DUL-084",
+    "name": "Malvaviscos blancos 100 g",
+    "file": "8d524ea1b88a74f2.jpg"
+  },
+  {
+    "code": "DEMO-DUL-085",
+    "name": "Malvaviscos mini 100 g",
+    "file": "8d524ea1b88a74f2.jpg"
+  },
+  {
+    "code": "DEMO-DUL-086",
+    "name": "Malvaviscos con chocolate",
+    "file": "e46b8bedf6bf3d3e.jpg"
+  },
+  {
+    "code": "DEMO-DUL-087",
+    "name": "Grageas de chocolate 100 g",
+    "file": "078ac4992dcef101.jpg"
+  },
+  {
+    "code": "DEMO-DUL-088",
+    "name": "Lunetas de colores 50 g",
+    "file": "078ac4992dcef101.jpg"
+  },
+  {
+    "code": "DEMO-DUL-089",
+    "name": "Merengues surtidos bolsa",
+    "file": "67b9d1b5563f6b28.jpg"
+  },
+  {
+    "code": "DEMO-DUL-090",
+    "name": "Algodón de azúcar en bolsa",
+    "file": "d2048889aee75352.jpg"
+  },
+  {
+    "code": "DEMO-DUL-091",
+    "name": "Calaverita de azúcar pequeña",
+    "file": "100011061dd3918d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-092",
+    "name": "Calaverita de chocolate pequeña",
+    "file": "47cea0fc837504f4.jpg"
+  },
+  {
+    "code": "DEMO-DUL-093",
+    "name": "Bolsita de dulces para posada",
+    "file": "796ee8e3f3518ad6.jpg"
+  },
+  {
+    "code": "DEMO-DUL-094",
+    "name": "Bastones de caramelo navideños",
+    "file": "9885366e2e690cf5.jpg"
+  },
+  {
+    "code": "DEMO-DUL-095",
+    "name": "Huevitos de chocolate surtidos",
+    "file": "961898a4a1b65f7d.jpg"
+  },
+  {
+    "code": "DEMO-DUL-096",
+    "name": "Corazones de chocolate regalo",
+    "file": "35ce258cd37936bf.jpg"
+  },
+  {
+    "code": "DEMO-DUL-097",
+    "name": "Dulces surtidos para piñata",
+    "file": "796ee8e3f3518ad6.jpg"
+  },
+  {
+    "code": "DEMO-DUL-098",
+    "name": "Gomitas Halloween 100 g",
+    "file": "93a61b34aeb4b759.jpg"
+  },
+  {
+    "code": "DEMO-DUL-099",
+    "name": "Bombones navideños bolsa",
+    "file": "8d524ea1b88a74f2.jpg"
+  },
+  {
+    "code": "DEMO-DUL-100",
+    "name": "Canastita de dulces de temporada",
+    "file": "796ee8e3f3518ad6.jpg"
+  }
+]
